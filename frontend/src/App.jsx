@@ -1,0 +1,36 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import VisitaForm from './pages/VisitaForm';
+
+const theme = createTheme({
+  palette: {
+    primary: { main: '#1976d2' },
+    secondary: { main: '#dc004e' },
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/visita/:id?" element={<VisitaForm />} />
+          <Route path="/clientes/new" element={<div>Crear Cliente - Página en desarrollo</div>} />
+          <Route path="/usuarios/new" element={<div>Crear Usuario - Página en desarrollo</div>} />
+          <Route path="/" element={<Login />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
+  );
+}
+
+export default App;
