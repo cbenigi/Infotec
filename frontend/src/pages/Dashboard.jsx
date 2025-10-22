@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Typography, List, ListItem, ListItemText, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Navbar from '../components/Navbar';
 
 const Dashboard = () => {
   const [visitas, setVisitas] = useState([]);
@@ -19,16 +20,12 @@ const Dashboard = () => {
     fetchVisitas();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/login');
-  };
-
   return (
-    <Container maxWidth="md">
-      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
+    <>
+      <Navbar />
+      <Container maxWidth="md">
+      <Box sx={{ mt: 4 }}>
         <Typography variant="h4">Dashboard</Typography>
-        <Button variant="outlined" onClick={handleLogout}>Logout</Button>
       </Box>
       <Button variant="contained" onClick={() => navigate('/visita')} sx={{ mt: 2 }}>Nueva Visita</Button>
       <List sx={{ mt: 2 }}>

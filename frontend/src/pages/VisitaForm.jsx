@@ -4,6 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import ImageUpload from '../components/ImageUpload';
+import Navbar from '../components/Navbar';
 
 const VisitaForm = () => {
   const { id } = useParams();
@@ -55,8 +56,10 @@ const VisitaForm = () => {
   const hasPhoto = form.zonas.some(z => z.foto_url);
 
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4">{id ? 'Editar Visita' : 'Nueva Visita'}</Typography>
+    <>
+      <Navbar />
+      <Container maxWidth="md" sx={{ mt: 3 }}>
+        <Typography variant="h4">{id ? 'Editar Visita' : 'Nueva Visita'}</Typography>
       <Box component="form" sx={{ mt: 2 }}>
         <FormControl fullWidth margin="normal">
           <InputLabel>Cliente</InputLabel>
@@ -134,6 +137,7 @@ const VisitaForm = () => {
         {hasPhoto && <Button variant="outlined" onClick={() => axios.post(`http://localhost:5000/generar-pdf/${id || 'new'}`, { enviar_email: false })} sx={{ mt: 1 }}>Generar PDF</Button>}
       </Box>
     </Container>
+    </>
   );
 };
 

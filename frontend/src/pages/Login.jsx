@@ -14,6 +14,13 @@ const Login = () => {
       localStorage.setItem('token', 'basic'); // Simular token
       localStorage.setItem('rol', res.data.rol);
       
+      // Obtener información del usuario
+      const usersRes = await axios.get('http://localhost:5000/usuarios');
+      const currentUser = usersRes.data.find(u => u.email === email);
+      if (currentUser) {
+        localStorage.setItem('userName', currentUser.nombre);
+      }
+      
       // Verificar si el usuario tiene empresa registrada
       const empresaRes = await axios.get('http://localhost:5000/empresa');
       

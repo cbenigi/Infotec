@@ -12,6 +12,9 @@ const Register = () => {
     try {
       const response = await axios.post('http://localhost:5000/usuarios', { ...form, rol: 'user' });
       
+      // Guardar nombre del usuario
+      localStorage.setItem('userName', form.nombre);
+      
       // Verificar si el usuario tiene empresa registrada
       const empresaRes = await axios.get('http://localhost:5000/empresa');
       
