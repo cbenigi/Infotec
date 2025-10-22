@@ -47,7 +47,7 @@ const Register = () => {
   return (
     <Grid container sx={{ minHeight: '100vh' }}>
       {/* Columna Izquierda - Imagen/Branding */}
-      <Grid item xs={12} md={6} sx={{
+      <Grid size={{ xs: 12, md: 6 }} sx={{
         background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
         display: 'flex',
         flexDirection: 'column',
@@ -71,7 +71,7 @@ const Register = () => {
       </Grid>
 
       {/* Columna Derecha - Formulario */}
-      <Grid item xs={12} md={6} sx={{
+      <Grid size={{ xs: 12, md: 6 }} sx={{
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
