@@ -40,10 +40,21 @@ def create_usuario():
     # if session.get('rol') != 'admin':
     #     return jsonify({'message': 'Acceso denegado'}), 403
     data = request.json
+    
+    # Verificar si el email ya existe
+    existing_user = User.query.filter_by(email=data['email']).first()
+    if existing_user:
+        return jsonify({'message': 'El email ya está registrado'}), 400
+    
     user = User(nombre=data['nombre'], email=data['email'], rol=data.get('rol', 'user'))
     user.set_password(data['password'])
     db.session.add(user)
-    db.session.commit()
+    
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error al crear usuario'}), 500
     
     # Iniciar sesión automáticamente después del registro
     session['user_id'] = user.id
