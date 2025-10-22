@@ -3,7 +3,7 @@ from flask_mail import Mail, Message
 from flask import Blueprint, request, jsonify, session, send_from_directory, current_app
 import os
 from werkzeug.utils import secure_filename
-from models import db, User, Cliente, Visita, Zona
+from models import db, User, Empresa, Cliente, Visita, Zona
 from werkzeug.security import check_password_hash
 from datetime import datetime
 
@@ -72,6 +72,75 @@ def manage_usuario(id):
         db.session.delete(user)
         db.session.commit()
         return jsonify({'message': 'Usuario eliminado'}), 200
+
+# CRUD Empresa
+@routes.route('/empresa', methods=['GET'])
+def get_empresa():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+    
+    empresa = Empresa.query.filter_by(user_id=user_id).first()
+    if not empresa:
+        return jsonify({'exists': False}), 200
+    
+    return jsonify({
+        'exists': True,
+        'id': empresa.id,
+        'nombre': empresa.nombre,
+        'nit': empresa.nit,
+        'telefono': empresa.telefono,
+        'correo': empresa.correo,
+        'direccion': empresa.direccion,
+        'logo_url': empresa.logo_url
+    }), 200
+
+@routes.route('/empresa', methods=['POST'])
+def create_empresa():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+    
+    # Verificar que no tenga empresa ya
+    existing = Empresa.query.filter_by(user_id=user_id).first()
+    if existing:
+        return jsonify({'message': 'Ya tienes una empresa registrada'}), 400
+    
+    data = request.json
+    empresa = Empresa(
+        user_id=user_id,
+        nombre=data['nombre'],
+        nit=data['nit'],
+        telefono=data['telefono'],
+        correo=data['correo'],
+        direccion=data.get('direccion', ''),
+        logo_url=data.get('logo_url', '')
+    )
+    db.session.add(empresa)
+    db.session.commit()
+    return jsonify({'message': 'Empresa creada exitosamente', 'id': empresa.id}), 201
+
+@routes.route('/empresa', methods=['PUT'])
+def update_empresa():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+    
+    empresa = Empresa.query.filter_by(user_id=user_id).first()
+    if not empresa:
+        return jsonify({'message': 'No tienes una empresa registrada'}), 404
+    
+    data = request.json
+    empresa.nombre = data.get('nombre', empresa.nombre)
+    empresa.nit = data.get('nit', empresa.nit)
+    empresa.telefono = data.get('telefono', empresa.telefono)
+    empresa.correo = data.get('correo', empresa.correo)
+    empresa.direccion = data.get('direccion', empresa.direccion)
+    if 'logo_url' in data:
+        empresa.logo_url = data['logo_url']
+    
+    db.session.commit()
+    return jsonify({'message': 'Empresa actualizada exitosamente'}), 200
 
 # CRUD Clientes
 @routes.route('/clientes', methods=['GET'])

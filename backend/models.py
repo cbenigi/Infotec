@@ -18,6 +18,19 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+class Empresa(db.Model):
+    __tablename__ = 'empresas'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    nit = db.Column(db.String(20), nullable=False)
+    telefono = db.Column(db.String(20), nullable=False)
+    correo = db.Column(db.String(120), nullable=False)
+    direccion = db.Column(db.String(200))
+    logo_url = db.Column(db.String(200))  # URL relativa al logo subido
+    
+    user = db.relationship('User', backref='empresa')
+
 class Cliente(db.Model):
     __tablename__ = 'clientes'
     id = db.Column(db.Integer, primary_key=True)

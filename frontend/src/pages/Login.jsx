@@ -13,7 +13,16 @@ const Login = () => {
       const res = await axios.post('http://localhost:5000/login', { email, password });
       localStorage.setItem('token', 'basic'); // Simular token
       localStorage.setItem('rol', res.data.rol);
-      navigate('/dashboard');
+      
+      // Verificar si el usuario tiene empresa registrada
+      const empresaRes = await axios.get('http://localhost:5000/empresa');
+      
+      if (empresaRes.data.exists) {
+        navigate('/dashboard');
+      } else {
+        alert('Por favor registra tu empresa para continuar');
+        navigate('/empresa');
+      }
     } catch (err) {
       alert('Credenciales inválidas');
     }

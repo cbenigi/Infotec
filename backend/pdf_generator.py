@@ -3,7 +3,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.units import inch
-from models import Visita, Zona, Cliente, User
+from models import Visita, Zona, Cliente, User, Empresa
 from datetime import datetime
 import os
 
@@ -18,15 +18,28 @@ def generate_pdf(visita_id):
     if not has_photo:
         return None
 
+    # Obtener datos de la empresa del usuario
+    empresa = Empresa.query.filter_by(user_id=visita.supervisor_id).first()
+    if not empresa:
+        # Intentar con el técnico si el supervisor no tiene empresa
+        empresa = Empresa.query.filter_by(user_id=visita.tecnico_id).first()
+    
+    # Usar datos de la empresa o valores por defecto
+    empresa_nombre = empresa.nombre if empresa else "Empresa"
+    empresa_telefono = empresa.telefono if empresa else "N/A"
+    empresa_direccion = empresa.direccion if empresa else "N/A"
+    empresa_correo = empresa.correo if empresa else "N/A"
+
     filename = f"informe_{visita_id}.pdf"
     doc = SimpleDocTemplate(filename, pagesize=letter)
     elements = []
     styles = getSampleStyleSheet()
 
-    # Header
-    empresa_nombre = "Empresa"  # Usar nombre de empresa del primer registro (cliente o user admin)
-    logo_path = "logo.png"  # Placeholder: crear imagen verde con texto empresa
-    if os.path.exists(logo_path):
+    # Header con logo
+    if empresa and empresa.logo_url:
+        # Usar el logo de la empresa si existe
+        logo_path = os.path.join('uploads', empresa.logo_url.split('/')[-1])
+        if os.path.exists(logo_path):
         logo = Image(logo_path, 1*inch, 1*inch)
         elements.append(logo)
     else:
@@ -107,7 +120,7 @@ def generate_pdf(visita_id):
 
     # Footer
     elements.append(Spacer(1, 1*inch))
-    footer_text = f"{empresa_nombre} - Calle X - Tel: Y - Fecha: {datetime.now().strftime('%d/%m/%Y')}"
+    footer_text = f"{empresa_nombre} - {empresa_direccion} - Tel: {empresa_telefono} - Email: {empresa_correo} - Fecha: {datetime.now().strftime('%d/%m/%Y')}"
     elements.append(Paragraph(footer_text, ParagraphStyle('Footer', alignment=1, fontSize=10)))
 
     doc.build(elements)

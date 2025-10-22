@@ -11,9 +11,19 @@ const Register = () => {
   const handleRegister = async () => {
     try {
       const response = await axios.post('http://localhost:5000/usuarios', { ...form, rol: 'user' });
-      alert('Registro exitoso. Bienvenido a la plataforma!');
-      // Redirigir directamente al dashboard ya que el backend inicia sesión automáticamente
-      navigate('/dashboard');
+      
+      // Verificar si el usuario tiene empresa registrada
+      const empresaRes = await axios.get('http://localhost:5000/empresa');
+      
+      if (empresaRes.data.exists) {
+        // Ya tiene empresa, ir al dashboard
+        alert('Registro exitoso. Bienvenido de nuevo!');
+        navigate('/dashboard');
+      } else {
+        // No tiene empresa, debe registrarla primero
+        alert('Registro exitoso! Ahora registra tu empresa para empezar a crear informes.');
+        navigate('/empresa');
+      }
     } catch (err) {
       alert('Error al registrar usuario');
     }
