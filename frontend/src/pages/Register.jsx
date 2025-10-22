@@ -10,9 +10,10 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      await axios.post('http://localhost:5000/usuarios', { ...form, rol: 'user' });
-      alert('Usuario registrado exitosamente');
-      navigate('/login');
+      const response = await axios.post('http://localhost:5000/usuarios', { ...form, rol: 'user' });
+      alert('Registro exitoso. Bienvenido a la plataforma!');
+      // Redirigir directamente al dashboard ya que el backend inicia sesión automáticamente
+      navigate('/dashboard');
     } catch (err) {
       alert('Error al registrar usuario');
     }

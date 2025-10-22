@@ -44,7 +44,16 @@ def create_usuario():
     user.set_password(data['password'])
     db.session.add(user)
     db.session.commit()
-    return jsonify({'message': 'Usuario creado'}), 201
+    
+    # Iniciar sesión automáticamente después del registro
+    session['user_id'] = user.id
+    session['rol'] = user.rol
+    
+    return jsonify({
+        'message': 'Usuario creado y sesión iniciada',
+        'rol': user.rol,
+        'nombre': user.nombre
+    }), 201
 
 @routes.route('/usuarios/<int:id>', methods=['PUT', 'DELETE'])
 def manage_usuario(id):
