@@ -35,7 +35,8 @@ const Dashboard = () => {
           </ListItem>
         ))}
       </List>
-    </Container>
+      </Container>
+    </>
   );
 };
 
