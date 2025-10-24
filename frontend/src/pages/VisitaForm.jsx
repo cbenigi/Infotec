@@ -176,7 +176,7 @@ const VisitaForm = () => {
         {zonasData.map((zona, index) => (
           <Paper key={index} sx={{ p: 2, mb: 2, backgroundColor: '#f8f9fa' }}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   label="Concepto Actividad"
                   value={zona.concepto_actividad}
@@ -185,7 +185,7 @@ const VisitaForm = () => {
                   size="small"
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Calificación</InputLabel>
                   <Select
@@ -198,7 +198,7 @@ const VisitaForm = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <IconButton
                     onClick={() => removeZona(seccion, index)}
@@ -209,7 +209,7 @@ const VisitaForm = () => {
                   </IconButton>
                 </Box>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label="Observaciones"
                   value={zona.observaciones}
@@ -221,7 +221,7 @@ const VisitaForm = () => {
                 />
               </Grid>
               {tieneFoto && (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
                     Evidencia (Foto)
                   </Typography>
@@ -254,37 +254,37 @@ const VisitaForm = () => {
               Información de la Visita
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <FormControl fullWidth>
                   <InputLabel>Cliente *</InputLabel>
-                  <Select
-                    value={form.cliente_id}
-                    onChange={(e) => setForm({ ...form, cliente_id: e.target.value })}
+          <Select
+            value={form.cliente_id}
+            onChange={(e) => setForm({ ...form, cliente_id: e.target.value })}
                   >
                     {clientes.map(cliente => (
                       <MenuItem key={cliente.id} value={cliente.id}>
                         {cliente.nombre}
                       </MenuItem>
                     ))}
-                  </Select>
-                </FormControl>
+          </Select>
+        </FormControl>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <FormControl fullWidth>
                   <InputLabel>Supervisor *</InputLabel>
-                  <Select
-                    value={form.supervisor_id}
-                    onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
+          <Select
+            value={form.supervisor_id}
+            onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
                   >
                     {supervisores.map(supervisor => (
                       <MenuItem key={supervisor.id} value={supervisor.id}>
                         {supervisor.nombre}
                       </MenuItem>
                     ))}
-                  </Select>
-                </FormControl>
+          </Select>
+        </FormControl>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
                   label="Fecha"
                   type="date"
@@ -337,8 +337,8 @@ const VisitaForm = () => {
               {loading ? 'Guardando...' : (id ? 'Actualizar Visita' : 'Crear Visita')}
             </Button>
           </Box>
-        </Box>
-      </Container>
+      </Box>
+    </Container>
     </>
   );
 };

@@ -285,6 +285,102 @@ def upload_file():
 @routes.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+# CRUD Visitas
+@routes.route('/visita', methods=['POST'])
+def create_visita():
+    try:
+        data = request.json
+        # Generar ID automático
+        fecha = datetime.strptime(data['fecha'], '%Y-%m-%d')
+        visita_id = f"{fecha.strftime('%d%m%Y')}-{data.get('tipo_codigo', 'AL')}-{datetime.now().strftime('%H%M')}"
+        
+        visita = Visita(
+            id=visita_id,
+            fecha=fecha,
+            supervisor_id=data['supervisor_id'],
+            cliente_id=data['cliente_id'],
+            conclusiones=data.get('conclusiones', '')
+        )
+        
+        db.session.add(visita)
+        db.session.flush()  # Para obtener el ID
+        
+        # Agregar zonas
+        for zona_data in data.get('zonas', []):
+            zona = Zona(
+                visita_id=visita.id,
+                seccion=zona_data['seccion'],
+                concepto_actividad=zona_data['concepto_actividad'],
+                calificacion=zona_data['calificacion'],
+                observaciones=zona_data.get('observaciones', ''),
+                foto_url=zona_data.get('foto_url', '')
+            )
+            db.session.add(zona)
+        
+        db.session.commit()
+        return jsonify({'message': 'Visita creada exitosamente', 'id': visita.id}), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error al crear visita: {str(e)}'}), 500
+
+@routes.route('/visita/<string:visita_id>', methods=['GET'])
+def get_visita(visita_id):
+    try:
+        visita = Visita.query.get_or_404(visita_id)
+        return jsonify({
+            'id': visita.id,
+            'fecha': visita.fecha.strftime('%Y-%m-%d'),
+            'supervisor_id': visita.supervisor_id,
+            'cliente_id': visita.cliente_id,
+            'conclusiones': visita.conclusiones,
+            'supervisor': {'nombre': visita.supervisor.nombre},
+            'cliente': {'nombre': visita.cliente.nombre},
+            'zonas': [{
+                'id': zona.id,
+                'seccion': zona.seccion,
+                'concepto_actividad': zona.concepto_actividad,
+                'calificacion': zona.calificacion,
+                'observaciones': zona.observaciones,
+                'foto_url': zona.foto_url
+            } for zona in visita.zonas]
+        }), 200
+    except Exception as e:
+        return jsonify({'message': f'Error al obtener visita: {str(e)}'}), 500
+
+@routes.route('/visita/<string:visita_id>', methods=['PUT'])
+def update_visita(visita_id):
+    try:
+        visita = Visita.query.get_or_404(visita_id)
+        data = request.json
+        
+        visita.fecha = datetime.strptime(data['fecha'], '%Y-%m-%d')
+        visita.supervisor_id = data['supervisor_id']
+        visita.cliente_id = data['cliente_id']
+        visita.conclusiones = data.get('conclusiones', '')
+        
+        # Eliminar zonas existentes
+        Zona.query.filter_by(visita_id=visita_id).delete()
+        
+        # Agregar nuevas zonas
+        for zona_data in data.get('zonas', []):
+            zona = Zona(
+                visita_id=visita.id,
+                seccion=zona_data['seccion'],
+                concepto_actividad=zona_data['concepto_actividad'],
+                calificacion=zona_data['calificacion'],
+                observaciones=zona_data.get('observaciones', ''),
+                foto_url=zona_data.get('foto_url', '')
+            )
+            db.session.add(zona)
+        
+        db.session.commit()
+        return jsonify({'message': 'Visita actualizada exitosamente'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error al actualizar visita: {str(e)}'}), 500
 # CRUD Zonas
 # Generar PDF
 @routes.route('/generar-pdf/<string:visita_id>', methods=['POST'])
