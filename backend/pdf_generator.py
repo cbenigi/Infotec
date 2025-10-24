@@ -75,72 +75,187 @@ def generate_pdf(visita_id):
         ]))
         elements.append(logo_table)
 
-    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=14, textColor=colors.lightblue, alignment=1)
+    # Título principal con estilo profesional
+    title_style = ParagraphStyle(
+        'Title', 
+        parent=styles['Heading1'], 
+        fontSize=16, 
+        textColor=colors.darkblue, 
+        alignment=1,
+        spaceAfter=12,
+        fontName='Helvetica-Bold'
+    )
     elements.append(Paragraph("INFORME PRESTACIÓN DEL SERVICIO", title_style))
-    elements.append(Spacer(1, 0.2*inch))
+    elements.append(Spacer(1, 0.3*inch))
 
     # Tabla Datos Iniciales
     data = [
         ['Cliente', visita.cliente.nombre, 'NIT', visita.cliente.nit],
         ['Administrador', visita.cliente.administrador, 'Correo', visita.cliente.correo],
         ['Código', visita.cliente.tipo_codigo, 'Fecha Visita Técnica', visita.fecha.strftime('%d/%m/%Y')],
-        ['Supervisor', visita.supervisor.nombre, 'ID Visita Técnica', visita.id],
-        ['Goal', str(visita.goal), 'Calificación', str(visita.calificacion)]
+        ['Supervisor', visita.supervisor.nombre, 'ID Visita Técnica', visita.id]
     ]
     table = Table(data, colWidths=[1.5*inch, 2*inch, 1.5*inch, 2*inch])
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgreen),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),  # Header azul profesional
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),      # Texto blanco en header
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 1, colors.green),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('GRID', (0, 0), (-1, -1), 1, colors.darkblue),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),  # Filas alternadas
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     elements.append(table)
     elements.append(Spacer(1, 0.5*inch))
 
-    # Secciones Zonas
+    # Agrupar zonas por sección
+    secciones = {}
     for zona in zonas:
-        elements.append(Paragraph(f"<b>{zona.nombre}</b>", styles['Heading2']))
-        zona_data = [
-            ['Observaciones', zona.observaciones],
-            ['Actividades', zona.actividades],
-            ['Calificación', zona.calificacion]
-        ]
-        zona_table = Table(zona_data, colWidths=[1.5*inch, 4*inch])
-        zona_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.whitesmoke),
-            ('GRID', (0, 0), (-1, -1), 1, colors.green),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ]))
-        elements.append(zona_table)
-        if zona.foto_url:
-            img_path = os.path.join('uploads', zona.foto_url.split('/')[-1])
-            if os.path.exists(img_path):
-                img = Image(img_path, 2*inch, 2*inch)
-                elements.append(img)
+        if zona.seccion not in secciones:
+            secciones[zona.seccion] = []
+        secciones[zona.seccion].append(zona)
+
+    # Renderizar cada sección
+    for seccion_nombre, zonas_seccion in secciones.items():
         elements.append(Spacer(1, 0.3*inch))
+        # Títulos de sección con colores profesionales
+        seccion_colors = {
+            'Aseo y Limpieza': colors.darkgreen,
+            'Seguridad y Salud': colors.darkred,
+            'Colaborador': colors.darkorange
+        }
+        color = seccion_colors.get(seccion_nombre, colors.darkblue)
+        
+        seccion_style = ParagraphStyle(
+            'Seccion',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=color,
+            fontName='Helvetica-Bold',
+            spaceAfter=6,
+            spaceBefore=12
+        )
+        elements.append(Paragraph(f"SECCIÓN: {seccion_nombre.upper()}", seccion_style))
+        
+        # Crear tabla de dos columnas para las actividades
+        actividades_data = []
+        for i in range(0, len(zonas_seccion), 2):
+            row = []
+            for j in range(2):
+                if i + j < len(zonas_seccion):
+                    zona = zonas_seccion[i + j]
+                    actividad_text = f"""
+                    <b>Concepto Actividad:</b> {zona.concepto_actividad}<br/>
+                    <b>Calificación:</b> {zona.calificacion}<br/>
+                    <b>Observaciones:</b> {zona.observaciones or 'Sin observaciones'}
+                    """
+                    row.append(actividad_text)
+                else:
+                    row.append("")
+            actividades_data.append(row)
+        
+        if actividades_data:
+            actividades_table = Table(actividades_data, colWidths=[3*inch, 3*inch])
+            actividades_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.white),
+                ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.lightgrey]),
+                ('PADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(actividades_table)
+        
+        # Agregar fotos de evidencia (solo para Aseo y Seguridad)
+        if seccion_nombre in ['Aseo y Limpieza', 'Seguridad y Salud']:
+            fotos_data = []
+            for zona in zonas_seccion:
+                if zona.foto_url:
+                    foto_path = os.path.join('uploads', zona.foto_url.split('/')[-1])
+                    if os.path.exists(foto_path):
+                        try:
+                            foto = Image(foto_path, 2*inch, 2*inch)
+                            fotos_data.append(foto)
+                        except:
+                            fotos_data.append(Paragraph("Error cargando imagen", styles['Normal']))
+            
+            if fotos_data:
+                elements.append(Spacer(1, 0.2*inch))
+                elements.append(Paragraph("EVIDENCIA FOTOGRÁFICA:", styles['Heading3']))
+                # Crear tabla de fotos en dos columnas
+                fotos_table_data = []
+                for i in range(0, len(fotos_data), 2):
+                    row = []
+                    for j in range(2):
+                        if i + j < len(fotos_data):
+                            row.append(fotos_data[i + j])
+                        else:
+                            row.append("")
+                    fotos_table_data.append(row)
+                
+                if fotos_table_data:
+                    fotos_table = Table(fotos_table_data, colWidths=[2.5*inch, 2.5*inch])
+                    fotos_table.setStyle(TableStyle([
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ]))
+                    elements.append(fotos_table)
 
-    # Sección Seguridad
-    elements.append(Paragraph("<b>Seguridad y salud en el trabajo</b>", ParagraphStyle('Section', parent=styles['Heading2'], background=colors.lightcoral)))
-    if visita.seguridad_obs:
-        elements.append(Paragraph(visita.seguridad_obs, styles['Normal']))
-    # Aquí agregar subcomponentes con fotos si aplica
+    # Sección Conclusiones con estilo profesional
+    if visita.conclusiones:
+        elements.append(Spacer(1, 0.4*inch))
+        
+        # Título de conclusiones con fondo
+        conclusiones_style = ParagraphStyle(
+            'Conclusiones',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.white,
+            fontName='Helvetica-Bold',
+            backColor=colors.darkblue,
+            spaceAfter=8,
+            spaceBefore=8,
+            alignment=1,
+            borderPadding=8
+        )
+        elements.append(Paragraph("CONCLUSIONES", conclusiones_style))
+        
+        # Texto de conclusiones con estilo
+        conclusiones_text_style = ParagraphStyle(
+            'ConclusionesText',
+            parent=styles['Normal'],
+            fontSize=11,
+            textColor=colors.black,
+            fontName='Helvetica',
+            spaceAfter=6,
+            leftIndent=20,
+            rightIndent=20,
+            borderWidth=1,
+            borderColor=colors.lightblue,
+            borderPadding=10,
+            backColor=colors.lightgrey
+        )
+        elements.append(Paragraph(visita.conclusiones, conclusiones_text_style))
 
-    # Sección Productividad
-    elements.append(Paragraph("<b>Productividad</b>", ParagraphStyle('Section', parent=styles['Heading2'], background=colors.lightpurple)))
-    if visita.productividad_obs:
-        elements.append(Paragraph(visita.productividad_obs, styles['Normal']))
-
-    # Sección Conclusiones
-    elements.append(Paragraph("<b>Conclusiones</b>", ParagraphStyle('Section', parent=styles['Heading2'], background=colors.lightgreen)))
-    if visita.conclusiones_obs:
-        elements.append(Paragraph(visita.conclusiones_obs, styles['Normal']))
-
-    # Footer
+    # Footer profesional
     elements.append(Spacer(1, 1*inch))
-    footer_text = f"{empresa_nombre} - {empresa_direccion} - Tel: {empresa_telefono} - Email: {empresa_correo} - Fecha: {datetime.now().strftime('%d/%m/%Y')}"
-    elements.append(Paragraph(footer_text, ParagraphStyle('Footer', alignment=1, fontSize=10)))
+    footer_style = ParagraphStyle(
+        'Footer',
+        alignment=1,
+        fontSize=9,
+        textColor=colors.darkgrey,
+        fontName='Helvetica',
+        backColor=colors.lightgrey,
+        borderWidth=1,
+        borderColor=colors.grey,
+        borderPadding=6,
+        spaceBefore=12
+    )
+    footer_text = f"{empresa_nombre} | {empresa_direccion} | Tel: {empresa_telefono} | Email: {empresa_correo} | Fecha: {datetime.now().strftime('%d/%m/%Y')}"
+    elements.append(Paragraph(footer_text, footer_style))
 
     doc.build(elements)
     return filename
