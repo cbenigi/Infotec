@@ -16,16 +16,16 @@ def handle_exception(e):
     print(f"TRACEBACK: {traceback.format_exc()}")
     return jsonify({'message': f'Error interno: {str(e)}'}), 500
 
-@routes.before_request
-def log_request_info():
-    print(f"REQUEST: {request.method} {request.path}")
-    print(f"HEADERS: {dict(request.headers)}")
-    print(f"CONTENT_TYPE: {request.content_type}")
-    if request.is_json:
-        print(f"JSON_DATA: {request.get_json()}")
-    else:
-        print(f"FORM_DATA: {request.form}")
-        print(f"RAW_DATA: {request.get_data()}")
+# @routes.before_request
+# def log_request_info():
+#     print(f"REQUEST: {request.method} {request.path}")
+#     print(f"HEADERS: {dict(request.headers)}")
+#     print(f"CONTENT_TYPE: {request.content_type}")
+#     if request.is_json:
+#         print(f"JSON_DATA: {request.get_json()}")
+#     else:
+#         print(f"FORM_DATA: {request.form}")
+#         print(f"RAW_DATA: {request.get_data()}")
 
 # Autenticación básica
 @routes.route('/login', methods=['POST'])
@@ -60,36 +60,20 @@ def test_endpoint():
 @routes.route('/usuarios', methods=['POST'])
 def create_usuario():
     try:
-        print("=== DEBUG: Starting create_usuario ===")
-        print(f"DEBUG: Method: {request.method}")
-        print(f"DEBUG: Headers: {dict(request.headers)}")
-        print(f"DEBUG: Content-Type: {request.content_type}")
-        print(f"DEBUG: Is JSON: {request.is_json}")
-        
-        # Intentar obtener datos de diferentes formas
-        if request.is_json:
-            data = request.get_json()
-            print(f"DEBUG: JSON data: {data}")
-        else:
-            print("DEBUG: Not JSON, trying form data")
-            data = request.form.to_dict()
-            print(f"DEBUG: Form data: {data}")
-        
-        if not data:
-            print("DEBUG: No data received")
+        if not request.json:
             return jsonify({'message': 'No se recibieron datos'}), 400
+        
+        data = request.json
         
         # Validar campos requeridos
         required_fields = ['nombre', 'email', 'password']
         for field in required_fields:
             if field not in data or not data[field]:
-                print(f"DEBUG: Missing field: {field}")
                 return jsonify({'message': f'El campo {field} es requerido'}), 400
         
         # Verificar si el email ya existe
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
-            print(f"DEBUG: Email exists: {data['email']}")
             return jsonify({'message': 'El email ya está registrado'}), 400
         
         # Crear usuario
@@ -97,8 +81,6 @@ def create_usuario():
         user.set_password(data['password'])
         db.session.add(user)
         db.session.commit()
-        
-        print(f"DEBUG: User created: {user.id}")
         
         # Iniciar sesión
         session['user_id'] = user.id
@@ -111,10 +93,8 @@ def create_usuario():
         }), 201
         
     except Exception as e:
-        print(f"DEBUG: Exception: {str(e)}")
-        print(f"DEBUG: Traceback: {traceback.format_exc()}")
         db.session.rollback()
-        return jsonify({'message': f'Error: {str(e)}'}), 500
+        return jsonify({'message': f'Error interno: {str(e)}'}), 500
 
 @routes.route('/usuarios/<int:id>', methods=['PUT', 'DELETE'])
 def manage_usuario(id):

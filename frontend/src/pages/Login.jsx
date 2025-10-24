@@ -37,7 +37,15 @@ const Login = () => {
         navigate('/empresa');
       }
     } catch (err) {
-      alert('Credenciales inválidas');
+      console.error('Error al iniciar sesión:', err);
+      
+      if (err.response?.status === 401) {
+        alert('Credenciales inválidas. Verifica tu email y contraseña.');
+      } else if (err.response?.status === 500) {
+        alert('Error interno del servidor. Por favor, intenta nuevamente.');
+      } else {
+        alert('Error de conexión. Verifica tu conexión a internet.');
+      }
     }
   };
 

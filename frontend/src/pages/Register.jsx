@@ -34,7 +34,21 @@ const Register = () => {
         navigate('/empresa');
       }
     } catch (err) {
-      alert('Error al registrar usuario');
+      console.error('Error al registrar usuario:', err);
+      
+      // Manejar diferentes tipos de errores
+      if (err.response?.status === 400) {
+        const errorMessage = err.response?.data?.message || 'Error en los datos enviados';
+        if (errorMessage.includes('email ya está registrado')) {
+          alert('Este correo electrónico ya está siendo usado. Por favor, usa otro correo.');
+        } else {
+          alert(`Error: ${errorMessage}`);
+        }
+      } else if (err.response?.status === 500) {
+        alert('Error interno del servidor. Por favor, intenta nuevamente.');
+      } else {
+        alert('Error de conexión. Verifica tu conexión a internet.');
+      }
     }
   };
 
