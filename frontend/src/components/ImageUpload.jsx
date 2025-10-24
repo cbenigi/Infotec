@@ -24,16 +24,41 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
         <input {...getInputProps()} />
         {isDragActive ? <Typography>Arrastra las imágenes aquí...</Typography> : <Typography>Arrastra y suelta imágenes aquí, o haz clic para seleccionar</Typography>}
       </Box>
-      <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap' }}>
-        {images.map((img, index) => (
-          <Box key={index} sx={{ position: 'relative', mr: 1, mb: 1 }}>
-            <img src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${img}`} alt="preview" style={{ width: 100, height: 100, objectFit: 'cover' }} />
-            <IconButton size="small" onClick={() => onRemove(index)} sx={{ position: 'absolute', top: 0, right: 0 }}>
-              <span style={{ fontSize: '18px', color: 'red' }}>×</span>
-            </IconButton>
-          </Box>
-        ))}
-      </Box>
+      {images.length > 0 && (
+        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap' }}>
+          {images.map((img, index) => (
+            <Box key={index} sx={{ position: 'relative', mr: 1, mb: 1 }}>
+              <img 
+                src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${img}`} 
+                alt="preview" 
+                style={{ 
+                  width: 100, 
+                  height: 100, 
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  border: '2px solid #1976d2'
+                }} 
+              />
+              <IconButton 
+                size="small" 
+                onClick={() => onRemove(index)} 
+                sx={{ 
+                  position: 'absolute', 
+                  top: -8, 
+                  right: -8,
+                  backgroundColor: 'red',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'darkred'
+                  }
+                }}
+              >
+                ×
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };

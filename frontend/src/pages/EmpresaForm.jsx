@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TextField, Button, Container, Typography, Box, Paper, Avatar } from '@mui/material';
 import axios from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +15,33 @@ const EmpresaForm = () => {
     logo_url: ''
   });
   const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
+
+  // Cargar datos existentes de la empresa
+  useEffect(() => {
+    const loadEmpresaData = async () => {
+      try {
+        const response = await axios.get('/empresa');
+        if (response.data.exists) {
+          const empresaData = response.data;
+          setForm({
+            nombre: empresaData.nombre || '',
+            nit: empresaData.nit || '',
+            telefono: empresaData.telefono || '',
+            correo: empresaData.correo || '',
+            direccion: empresaData.direccion || '',
+            logo_url: empresaData.logo_url || ''
+          });
+          setIsEditing(true);
+        }
+      } catch (err) {
+        console.log('No hay empresa registrada aún');
+      }
+    };
+    
+    loadEmpresaData();
+  }, []);
 
   const handleSubmit = async () => {
     if (!form.nombre || !form.nit || !form.telefono || !form.correo) {
@@ -25,11 +51,16 @@ const EmpresaForm = () => {
 
     setLoading(true);
     try {
-      await axios.post('/empresa', form);
-      alert('Empresa registrada exitosamente. Ahora puedes crear clientes y visitas técnicas.');
+      if (isEditing) {
+        await axios.put('/empresa', form);
+        alert('Empresa actualizada exitosamente.');
+      } else {
+        await axios.post('/empresa', form);
+        alert('Empresa registrada exitosamente. Ahora puedes crear clientes y visitas técnicas.');
+      }
       navigate('/dashboard');
     } catch (err) {
-      alert('Error al registrar empresa: ' + (err.response?.data?.message || err.message));
+      alert('Error al guardar empresa: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -46,10 +77,13 @@ const EmpresaForm = () => {
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <BusinessIcon sx={{ fontSize: 60, color: '#1976d2', mb: 2 }} />
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: '#1976d2' }}>
-              Registra tu Empresa
+              {isEditing ? 'Configurar Empresa' : 'Registra tu Empresa'}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Esta es la empresa que emitirá los informes de visitas técnicas. Solo puedes registrar una empresa.
+              {isEditing 
+                ? 'Actualiza la información de tu empresa. Los cambios se reflejarán en los informes.'
+                : 'Esta es la empresa que emitirá los informes de visitas técnicas. Solo puedes registrar una empresa.'
+              }
             </Typography>
           </Box>
 
@@ -139,7 +173,7 @@ const EmpresaForm = () => {
             disabled={loading}
             sx={{ mt: 3 }}
           >
-            {loading ? 'Guardando...' : 'Registrar Empresa'}
+            {loading ? 'Guardando...' : (isEditing ? 'Actualizar Empresa' : 'Registrar Empresa')}
           </Button>
         </Paper>
       </Box>
