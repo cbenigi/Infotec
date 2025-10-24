@@ -39,6 +39,7 @@ class Cliente(db.Model):
     administrador = db.Column(db.String(100), nullable=False)
     correo = db.Column(db.String(120), nullable=False)
     tipo_codigo = db.Column(db.String(10), nullable=False)  # e.g., 'AL'
+    logo_url = db.Column(db.String(200))  # URL relativa al logo del cliente
 
 class Visita(db.Model):
     __tablename__ = 'visitas'

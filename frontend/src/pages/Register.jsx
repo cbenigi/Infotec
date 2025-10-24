@@ -16,7 +16,7 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      const response = await axios.post('/usuarios', { ...form, rol: 'user' });
+      await axios.post('/usuarios', { ...form, rol: 'user' });
       
       // Guardar nombre del usuario
       localStorage.setItem('userName', form.nombre);

@@ -7,6 +7,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import VisitaForm from './pages/VisitaForm';
 import EmpresaForm from './pages/EmpresaForm';
+import ClienteForm from './pages/ClienteForm';
+import SupervisorForm from './pages/SupervisorForm';
 
 const theme = createTheme({
   palette: {
@@ -26,8 +28,8 @@ function App() {
           <Route path="/empresa" element={<EmpresaForm />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/visita/:id?" element={<VisitaForm />} />
-          <Route path="/clientes/new" element={<div>Crear Cliente - Página en desarrollo</div>} />
-          <Route path="/usuarios/new" element={<div>Crear Usuario - Página en desarrollo</div>} />
+          <Route path="/clientes/new" element={<ClienteForm />} />
+          <Route path="/supervisores/new" element={<SupervisorForm />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </Router>

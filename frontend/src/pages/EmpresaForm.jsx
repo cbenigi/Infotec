@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { TextField, Button, Container, Typography, Box, Paper } from '@mui/material';
+import { TextField, Button, Container, Typography, Box, Paper, Avatar } from '@mui/material';
 import axios from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import ImageUpload from '../components/ImageUpload';
+import BusinessIcon from '@mui/icons-material/Business';
 
 const EmpresaForm = () => {
   const [form, setForm] = useState({
@@ -42,12 +43,15 @@ const EmpresaForm = () => {
     <Container maxWidth="md">
       <Box sx={{ mt: 4, mb: 4 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            Registra tu Empresa
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Esta es la empresa que emitirá los informes de visitas técnicas. Solo puedes registrar una empresa.
-          </Typography>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <BusinessIcon sx={{ fontSize: 60, color: '#1976d2', mb: 2 }} />
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: '#1976d2' }}>
+              Registra tu Empresa
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Esta es la empresa que emitirá los informes de visitas técnicas. Solo puedes registrar una empresa.
+            </Typography>
+          </Box>
 
           <TextField
             label="Nombre de la Empresa *"
@@ -99,6 +103,27 @@ const EmpresaForm = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Este logo aparecerá en los PDFs de los informes
             </Typography>
+            
+            {/* Vista previa del logo */}
+            {form.logo_url && (
+              <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                  Vista previa del logo:
+                </Typography>
+                <Avatar
+                  src={`${axios.defaults.baseURL}${form.logo_url}`}
+                  alt="Logo de la empresa"
+                  sx={{ 
+                    width: 120, 
+                    height: 120, 
+                    mx: 'auto',
+                    border: '3px solid #1976d2',
+                    boxShadow: 3
+                  }}
+                />
+              </Box>
+            )}
+            
             <ImageUpload
               onUpload={handleLogoUpload}
               images={form.logo_url ? [form.logo_url] : []}

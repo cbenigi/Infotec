@@ -35,26 +35,45 @@ def generate_pdf(visita_id):
     elements = []
     styles = getSampleStyleSheet()
 
-    # Header con logo
+    # Header con logos (empresa y cliente)
+    header_elements = []
+    
+    # Logo de la empresa
     if empresa and empresa.logo_url:
         # Usar el logo de la empresa si existe
         logo_path = os.path.join('uploads', empresa.logo_url.split('/')[-1])
         if os.path.exists(logo_path):
-            logo = Image(logo_path, 1*inch, 1*inch)
-            elements.append(logo)
+            empresa_logo = Image(logo_path, 1*inch, 1*inch)
+            header_elements.append(empresa_logo)
     else:
-        # Placeholder logo: círculo verde con texto
+        # Placeholder logo de empresa: círculo verde con texto
         from reportlab.lib.colors import Color
         from reportlab.pdfgen import canvas
-        c = canvas.Canvas("temp_logo.pdf")
+        c = canvas.Canvas("temp_empresa_logo.pdf")
         c.setFillColor(Color(0, 128/255, 0))  # Verde
         c.circle(50, 50, 40, fill=1)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 12)
         c.drawCentredString(50, 45, empresa_nombre[:3].upper())
         c.save()
-        logo = Image("temp_logo.pdf", 1*inch, 1*inch)
-        elements.append(logo)
+        empresa_logo = Image("temp_empresa_logo.pdf", 1*inch, 1*inch)
+        header_elements.append(empresa_logo)
+    
+    # Logo del cliente
+    if visita.cliente.logo_url:
+        cliente_logo_path = os.path.join('uploads', visita.cliente.logo_url.split('/')[-1])
+        if os.path.exists(cliente_logo_path):
+            cliente_logo = Image(cliente_logo_path, 1*inch, 1*inch)
+            header_elements.append(cliente_logo)
+    
+    # Agregar logos al documento
+    if header_elements:
+        # Crear tabla para alinear logos horizontalmente
+        logo_table = Table([header_elements], colWidths=[len(header_elements) * 1*inch])
+        logo_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ]))
+        elements.append(logo_table)
 
     title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=14, textColor=colors.lightblue, alignment=1)
     elements.append(Paragraph("INFORME PRESTACIÓN DEL SERVICIO", title_style))
