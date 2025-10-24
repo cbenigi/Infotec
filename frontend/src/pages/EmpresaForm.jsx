@@ -16,6 +16,7 @@ const EmpresaForm = () => {
   });
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState([]);
   const navigate = useNavigate();
 
   // Cargar datos existentes de la empresa
@@ -33,6 +34,7 @@ const EmpresaForm = () => {
             direccion: empresaData.direccion || '',
             logo_url: empresaData.logo_url || ''
           });
+          setUploadedImages(empresaData.logo_url ? [empresaData.logo_url] : []);
           setIsEditing(true);
         }
       } catch (err) {
@@ -54,9 +56,13 @@ const EmpresaForm = () => {
       if (isEditing) {
         await axios.put('/empresa', form);
         alert('Empresa actualizada exitosamente.');
+        // Notificar que la empresa se actualizó
+        window.dispatchEvent(new CustomEvent('empresaUpdated'));
       } else {
         await axios.post('/empresa', form);
         alert('Empresa registrada exitosamente. Ahora puedes crear clientes y visitas técnicas.');
+        // Notificar que la empresa se creó
+        window.dispatchEvent(new CustomEvent('empresaUpdated'));
       }
       navigate('/dashboard');
     } catch (err) {
@@ -68,6 +74,12 @@ const EmpresaForm = () => {
 
   const handleLogoUpload = (url) => {
     setForm({ ...form, logo_url: url });
+    setUploadedImages([url]);
+  };
+
+  const handleLogoRemove = () => {
+    setForm({ ...form, logo_url: '' });
+    setUploadedImages([]);
   };
 
   return (
@@ -160,8 +172,8 @@ const EmpresaForm = () => {
             
             <ImageUpload
               onUpload={handleLogoUpload}
-              images={form.logo_url ? [form.logo_url] : []}
-              onRemove={() => setForm({ ...form, logo_url: '' })}
+              images={uploadedImages}
+              onRemove={handleLogoRemove}
             />
           </Box>
 

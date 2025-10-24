@@ -30,6 +30,16 @@ const Navbar = () => {
     };
     fetchEmpresa();
 
+    // Escuchar cambios en la empresa
+    const handleEmpresaUpdate = () => {
+      fetchEmpresa();
+    };
+    
+    window.addEventListener('empresaUpdated', handleEmpresaUpdate);
+    return () => {
+      window.removeEventListener('empresaUpdated', handleEmpresaUpdate);
+    };
+
     // Obtener nombre del usuario del localStorage o session
     const storedName = localStorage.getItem('userName');
     if (storedName) {
