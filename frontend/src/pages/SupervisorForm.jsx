@@ -96,7 +96,7 @@ const SupervisorForm = () => {
         </Box>
 
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               label="Nombre Completo"
               value={form.nombre}
@@ -113,7 +113,7 @@ const SupervisorForm = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               label="Correo Electrónico"
               type="email"
@@ -131,7 +131,7 @@ const SupervisorForm = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               label="Contraseña"
               type={showPassword ? 'text' : 'password'}
@@ -160,7 +160,7 @@ const SupervisorForm = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <FormControl fullWidth>
               <InputLabel>Rol</InputLabel>
               <Select

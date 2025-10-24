@@ -12,17 +12,13 @@ def generate_pdf(visita_id):
     if not visita:
         return None
 
-    # Validar al menos una foto
+    # Obtener zonas de la visita
     zonas = Zona.query.filter_by(visita_id=visita_id).all()
-    has_photo = any(z.foto_url for z in zonas)
-    if not has_photo:
+    if not zonas:
         return None
 
     # Obtener datos de la empresa del usuario
     empresa = Empresa.query.filter_by(user_id=visita.supervisor_id).first()
-    if not empresa:
-        # Intentar con el técnico si el supervisor no tiene empresa
-        empresa = Empresa.query.filter_by(user_id=visita.tecnico_id).first()
     
     # Usar datos de la empresa o valores por defecto
     empresa_nombre = empresa.nombre if empresa else "Empresa"
@@ -43,28 +39,38 @@ def generate_pdf(visita_id):
         # Usar el logo de la empresa si existe
         logo_path = os.path.join('uploads', empresa.logo_url.split('/')[-1])
         if os.path.exists(logo_path):
-            empresa_logo = Image(logo_path, 1*inch, 1*inch)
-            header_elements.append(empresa_logo)
+            try:
+                # Verificar que el archivo sea una imagen válida
+                from PIL import Image as PILImage
+                with PILImage.open(logo_path) as img:
+                    img.verify()  # Verificar que sea una imagen válida
+                
+                empresa_logo = Image(logo_path, 1*inch, 1*inch)
+                header_elements.append(empresa_logo)
+            except Exception as e:
+                print(f"Error cargando logo de empresa {logo_path}: {str(e)}")
+                empresa_texto = Paragraph(f"<b>{empresa_nombre[:3].upper()}</b>", styles['Heading3'])
+                header_elements.append(empresa_texto)
     else:
-        # Placeholder logo de empresa: círculo verde con texto
-        from reportlab.lib.colors import Color
-        from reportlab.pdfgen import canvas
-        c = canvas.Canvas("temp_empresa_logo.pdf")
-        c.setFillColor(Color(0, 128/255, 0))  # Verde
-        c.circle(50, 50, 40, fill=1)
-        c.setFillColor(colors.white)
-        c.setFont("Helvetica-Bold", 12)
-        c.drawCentredString(50, 45, empresa_nombre[:3].upper())
-        c.save()
-        empresa_logo = Image("temp_empresa_logo.pdf", 1*inch, 1*inch)
-        header_elements.append(empresa_logo)
+        # Placeholder logo de empresa: texto simple
+        empresa_texto = Paragraph(f"<b>{empresa_nombre[:3].upper()}</b>", styles['Heading3'])
+        header_elements.append(empresa_texto)
     
     # Logo del cliente
     if visita.cliente.logo_url:
         cliente_logo_path = os.path.join('uploads', visita.cliente.logo_url.split('/')[-1])
         if os.path.exists(cliente_logo_path):
-            cliente_logo = Image(cliente_logo_path, 1*inch, 1*inch)
-            header_elements.append(cliente_logo)
+            try:
+                # Verificar que el archivo sea una imagen válida
+                from PIL import Image as PILImage
+                with PILImage.open(cliente_logo_path) as img:
+                    img.verify()  # Verificar que sea una imagen válida
+                
+                cliente_logo = Image(cliente_logo_path, 1*inch, 1*inch)
+                header_elements.append(cliente_logo)
+            except Exception as e:
+                print(f"Error cargando logo de cliente {cliente_logo_path}: {str(e)}")
+                # No agregar nada si falla el logo del cliente
     
     # Agregar logos al documento
     if header_elements:
@@ -177,10 +183,16 @@ def generate_pdf(visita_id):
                     foto_path = os.path.join('uploads', zona.foto_url.split('/')[-1])
                     if os.path.exists(foto_path):
                         try:
+                            # Verificar que el archivo sea una imagen válida
+                            from PIL import Image as PILImage
+                            with PILImage.open(foto_path) as img:
+                                img.verify()  # Verificar que sea una imagen válida
+                            
                             foto = Image(foto_path, 2*inch, 2*inch)
                             fotos_data.append(foto)
-                        except:
-                            fotos_data.append(Paragraph("Error cargando imagen", styles['Normal']))
+                        except Exception as e:
+                            print(f"Error cargando imagen {foto_path}: {str(e)}")
+                            fotos_data.append(Paragraph(f"Error cargando imagen: {os.path.basename(foto_path)}", styles['Normal']))
             
             if fotos_data:
                 elements.append(Spacer(1, 0.2*inch))

@@ -79,7 +79,7 @@ const ClienteForm = () => {
         </Box>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               label="NIT"
               value={form.nit}
@@ -96,7 +96,7 @@ const ClienteForm = () => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               label="Tipo de Código"
               value={form.tipo_codigo}
@@ -108,7 +108,7 @@ const ClienteForm = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               label="Nombre de la Empresa"
               value={form.nombre}
@@ -125,7 +125,7 @@ const ClienteForm = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               label="Nombre del Administrador"
               value={form.administrador}
@@ -142,7 +142,7 @@ const ClienteForm = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               label="Correo Electrónico"
               type="email"

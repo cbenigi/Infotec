@@ -1,6 +1,6 @@
 from pdf_generator import generate_pdf
 from flask_mail import Mail, Message
-from flask import Blueprint, request, jsonify, session, send_from_directory, current_app
+from flask import Blueprint, request, jsonify, session, send_from_directory, current_app, send_file
 import os
 from werkzeug.utils import secure_filename
 from models import db, User, Empresa, Cliente, Visita, Zona
@@ -215,58 +215,8 @@ def manage_cliente(id):
         return jsonify({'message': 'Cliente eliminado'}), 200
 
 # CRUD Visitas
-@routes.route('/visitas', methods=['GET'])
-def get_visitas():
-    user_id = session.get('user_id')
-    rol = session.get('rol')
-    if rol == 'admin':
-        visitas = Visita.query.all()
-    else:
-        visitas = Visita.query.filter((Visita.supervisor_id == user_id) | (Visita.tecnico_id == user_id)).all()
-    return jsonify([{
-        'id': v.id, 'fecha': v.fecha.isoformat(), 'supervisor': v.supervisor.nombre, 'tecnico': v.tecnico.nombre,
-        'cliente': v.cliente.nombre, 'goal': v.goal, 'calificacion': v.calificacion
-    } for v in visitas]), 200
 
-@routes.route('/visitas', methods=['POST'])
-def create_visita():
-    data = request.json
-    # Generar ID: contador por tipo + tipo + fecha
-    tipo = data['tipo_codigo']
-    fecha_str = data['fecha'].replace('-', '')
-    count = Visita.query.filter(Visita.id.like(f'%-{tipo}-{fecha_str}')).count() + 1
-    visita_id = f"{count}-{tipo}-{fecha_str}"
-    visita = Visita(
-        id=visita_id, fecha=datetime.fromisoformat(data['fecha']), supervisor_id=data['supervisor_id'],
-        tecnico_id=data['tecnico_id'], cliente_id=data['cliente_id'], goal=data['goal'], calificacion=data['calificacion'],
-        notas=data.get('notas'), seguridad_obs=data.get('seguridad_obs'), productividad_obs=data.get('productividad_obs'),
-        conclusiones_obs=data.get('conclusiones_obs')
-    )
-    db.session.add(visita)
-    db.session.commit()
-    return jsonify({'message': 'Visita creada', 'id': visita_id}), 201
 
-@routes.route('/visitas/<string:id>', methods=['PUT', 'DELETE'])
-def manage_visita(id):
-    visita = Visita.query.get_or_404(id)
-    if request.method == 'PUT':
-        data = request.json
-        visita.fecha = datetime.fromisoformat(data['fecha'])
-        visita.supervisor_id = data['supervisor_id']
-        visita.tecnico_id = data['tecnico_id']
-        visita.cliente_id = data['cliente_id']
-        visita.goal = data['goal']
-        visita.calificacion = data['calificacion']
-        visita.notas = data.get('notas')
-        visita.seguridad_obs = data.get('seguridad_obs')
-        visita.productividad_obs = data.get('productividad_obs')
-        visita.conclusiones_obs = data.get('conclusiones_obs')
-        db.session.commit()
-        return jsonify({'message': 'Visita actualizada'}), 200
-    elif request.method == 'DELETE':
-        db.session.delete(visita)
-        db.session.commit()
-        return jsonify({'message': 'Visita eliminada'}), 200
 
 # Upload de imágenes
 @routes.route('/upload', methods=['POST'])
@@ -381,22 +331,74 @@ def update_visita(visita_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': f'Error al actualizar visita: {str(e)}'}), 500
+
+@routes.route('/visita/<string:visita_id>', methods=['DELETE'])
+def delete_visita(visita_id):
+    try:
+        visita = Visita.query.get_or_404(visita_id)
+        
+        # Eliminar zonas asociadas primero
+        Zona.query.filter_by(visita_id=visita_id).delete()
+        
+        # Eliminar la visita
+        db.session.delete(visita)
+        db.session.commit()
+        
+        return jsonify({'message': 'Visita eliminada exitosamente'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error al eliminar visita: {str(e)}'}), 500
+
+@routes.route('/visitas', methods=['GET'])
+def get_visitas():
+    try:
+        visitas = Visita.query.all()
+        return jsonify([{
+            'id': v.id,
+            'fecha': v.fecha.strftime('%Y-%m-%d'),
+            'cliente': v.cliente.nombre,
+            'supervisor': v.supervisor.nombre,
+            'conclusiones': v.conclusiones or ''
+        } for v in visitas]), 200
+    except Exception as e:
+        return jsonify({'message': f'Error al obtener visitas: {str(e)}'}), 500
+
 # CRUD Zonas
 # Generar PDF
 @routes.route('/generar-pdf/<string:visita_id>', methods=['POST'])
 def generar_pdf(visita_id):
-    pdf_path = generate_pdf(visita_id)
-    if not pdf_path:
-        return jsonify({'message': 'No se puede generar PDF: falta al menos una foto'}), 400
-    data = request.json or {}
-    if data.get('enviar_email'):
+    try:
+        print(f"DEBUG: Generando PDF para visita {visita_id}")
+        
+        # Verificar que la visita existe
         visita = Visita.query.get(visita_id)
-        msg = Message('Informe de Visita Técnica', recipients=[visita.cliente.correo])
-        msg.body = 'Adjunto el informe de la visita técnica.'
-        with open(pdf_path, 'rb') as f:
-            msg.attach(pdf_path, 'application/pdf', f.read())
-        current_app.extensions['mail'].send(msg)
-    return jsonify({'url': f'/static/{pdf_path}'}), 200
+        if not visita:
+            print(f"DEBUG: Visita {visita_id} no encontrada")
+            return jsonify({'message': f'Visita {visita_id} no encontrada'}), 404
+        
+        print(f"DEBUG: Visita encontrada: {visita.id}")
+        
+        pdf_path = generate_pdf(visita_id)
+        print(f"DEBUG: PDF generado en: {pdf_path}")
+        
+        if not pdf_path:
+            print("DEBUG: No se pudo generar PDF - falta al menos una foto")
+            return jsonify({'message': 'No se puede generar PDF: falta al menos una foto'}), 400
+        
+        # Verificar que el archivo existe
+        if not os.path.exists(pdf_path):
+            print(f"DEBUG: Archivo PDF no existe en {pdf_path}")
+            return jsonify({'message': 'Archivo PDF no encontrado'}), 500
+        
+        print(f"DEBUG: Enviando archivo PDF: {pdf_path}")
+        # Enviar el archivo PDF como respuesta
+        return send_file(pdf_path, as_attachment=True, download_name=f'visita-{visita_id}.pdf')
+    except Exception as e:
+        print(f"DEBUG: Error al generar PDF: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'message': f'Error al generar PDF: {str(e)}'}), 500
 @routes.route('/zonas/<string:visita_id>', methods=['GET'])
 def get_zonas(visita_id):
     zonas = Zona.query.filter_by(visita_id=visita_id).all()

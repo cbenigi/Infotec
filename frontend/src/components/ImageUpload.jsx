@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
+import axios from '../api/axiosConfig';
 
 const ImageUpload = ({ onUpload, images, onRemove }) => {
   const [uploading, setUploading] = useState(false);
@@ -21,13 +22,14 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
       const formData = new FormData();
       formData.append('file', file);
       
-      fetch('/upload', {
-        method: 'POST',
-        body: formData,
+      axios.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       })
-        .then((res) => res.json())
-        .then((data) => {
-          onUpload(data.url);
+        .then((response) => {
+          console.log('Imagen subida exitosamente:', response.data.url);
+          onUpload(response.data.url);
           setUploading(false);
           setPreviewUrl(null);
         })
@@ -86,18 +88,23 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
       
       {/* Imágenes ya subidas */}
       {images.length > 0 && (
-        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap' }}>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: '#4caf50', fontWeight: 'bold' }}>
+            ✅ Imagen subida exitosamente:
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
           {images.map((img, index) => (
             <Box key={index} sx={{ position: 'relative', mr: 1, mb: 1 }}>
               <img 
-                src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${img}`} 
+                src={`${axios.defaults.baseURL}${img}`} 
                 alt="preview" 
                 style={{ 
-                  width: 100, 
-                  height: 100, 
+                  width: 120, 
+                  height: 120, 
                   objectFit: 'cover',
                   borderRadius: '8px',
-                  border: '2px solid #1976d2'
+                  border: '3px solid #4caf50',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }} 
               />
               <IconButton 
@@ -118,6 +125,7 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
               </IconButton>
             </Box>
           ))}
+          </Box>
         </Box>
       )}
     </Box>
