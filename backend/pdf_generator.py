@@ -40,8 +40,8 @@ def generate_pdf(visita_id):
         # Usar el logo de la empresa si existe
         logo_path = os.path.join('uploads', empresa.logo_url.split('/')[-1])
         if os.path.exists(logo_path):
-        logo = Image(logo_path, 1*inch, 1*inch)
-        elements.append(logo)
+            logo = Image(logo_path, 1*inch, 1*inch)
+            elements.append(logo)
     else:
         # Placeholder logo: círculo verde con texto
         from reportlab.lib.colors import Color

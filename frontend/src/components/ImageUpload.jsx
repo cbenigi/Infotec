@@ -7,7 +7,7 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
     acceptedFiles.forEach((file) => {
       const formData = new FormData();
       formData.append('file', file);
-      fetch('http://localhost:5000/upload', {
+      fetch('/upload', {
         method: 'POST',
         body: formData,
       })
@@ -27,7 +27,7 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
       <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap' }}>
         {images.map((img, index) => (
           <Box key={index} sx={{ position: 'relative', mr: 1, mb: 1 }}>
-            <img src={`http://localhost:5000${img}`} alt="preview" style={{ width: 100, height: 100, objectFit: 'cover' }} />
+            <img src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${img}`} alt="preview" style={{ width: 100, height: 100, objectFit: 'cover' }} />
             <IconButton size="small" onClick={() => onRemove(index)} sx={{ position: 'absolute', top: 0, right: 0 }}>
               <span style={{ fontSize: '18px', color: 'red' }}>×</span>
             </IconButton>

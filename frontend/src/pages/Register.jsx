@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Box, Paper, Grid, InputAdornment, IconButton, Link } from '@mui/material';
-import axios from 'axios';
+import axios from '../api/axiosConfig';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
@@ -16,13 +16,13 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/usuarios', { ...form, rol: 'user' });
+      const response = await axios.post('/usuarios', { ...form, rol: 'user' });
       
       // Guardar nombre del usuario
       localStorage.setItem('userName', form.nombre);
       
       // Verificar si el usuario tiene empresa registrada
-      const empresaRes = await axios.get('http://localhost:5000/empresa');
+      const empresaRes = await axios.get('/empresa');
       
       if (empresaRes.data.exists) {
         // Ya tiene empresa, ir al dashboard

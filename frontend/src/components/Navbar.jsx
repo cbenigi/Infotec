@@ -8,7 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PeopleIcon from '@mui/icons-material/People';
-import axios from 'axios';
+import axios from '../api/axiosConfig';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const Navbar = () => {
     // Obtener datos de la empresa
     const fetchEmpresa = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/empresa');
+        const res = await axios.get('/empresa');
         if (res.data.exists) {
           setEmpresa(res.data);
         }
@@ -47,7 +47,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:5000/logout');
+      await axios.post('/logout');
       localStorage.clear();
       navigate('/login');
     } catch (err) {
@@ -64,7 +64,7 @@ const Navbar = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
           {empresa && empresa.logo_url ? (
             <Avatar
-              src={`http://localhost:5000${empresa.logo_url}`}
+              src={`${axios.defaults.baseURL}${empresa.logo_url}`}
               alt={empresa.nombre}
               sx={{ width: 45, height: 45, mr: 1.5, border: '2px solid #1976d2' }}
             />

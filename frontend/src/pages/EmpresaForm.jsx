@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, Button, Container, Typography, Box, Paper } from '@mui/material';
-import axios from 'axios';
+import axios from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import ImageUpload from '../components/ImageUpload';
 
@@ -24,7 +24,7 @@ const EmpresaForm = () => {
 
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/empresa', form);
+      await axios.post('/empresa', form);
       alert('Empresa registrada exitosamente. Ahora puedes crear clientes y visitas técnicas.');
       navigate('/dashboard');
     } catch (err) {

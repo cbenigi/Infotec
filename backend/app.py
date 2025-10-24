@@ -8,7 +8,7 @@ from config import Config
 app = Flask(__name__)
 app.register_blueprint(routes)
 app.config.from_object(Config)
-CORS(app)
+CORS(app, supports_credentials=True)
 db.init_app(app)
 mail = Mail()
 mail.init_app(app)

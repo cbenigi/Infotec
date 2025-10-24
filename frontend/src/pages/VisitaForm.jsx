@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Container, Typography, Box, Select, MenuItem, FormControl, InputLabel, IconButton, InputAdornment } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import axios from 'axios';
+import axios from '../api/axiosConfig';
 import { useParams, useNavigate } from 'react-router-dom';
 import ImageUpload from '../components/ImageUpload';
 import Navbar from '../components/Navbar';
@@ -20,8 +20,8 @@ const VisitaForm = () => {
     const fetchData = async () => {
       try {
         const [clientesRes, usuariosRes] = await Promise.all([
-          axios.get('http://localhost:5000/clientes'),
-          axios.get('http://localhost:5000/usuarios')
+          axios.get('/clientes'),
+          axios.get('/usuarios')
         ]);
         setClientes(clientesRes.data);
         setUsuarios(usuariosRes.data);
@@ -32,16 +32,16 @@ const VisitaForm = () => {
     fetchData();
     if (id) {
       // Cargar visita existente
-      axios.get(`http://localhost:5000/visitas/${id}`).then((res) => setForm(res.data));
-      axios.get(`http://localhost:5000/zonas/${id}`).then((res) => setForm((prev) => ({ ...prev, zonas: res.data })));
+      axios.get(`/visitas/${id}`).then((res) => setForm(res.data));
+      axios.get(`/zonas/${id}`).then((res) => setForm((prev) => ({ ...prev, zonas: res.data })));
     }
   }, [id]);
 
   const handleSubmit = async () => {
     const data = { ...form, tipo_codigo: clientes.find(c => c.id === form.cliente_id)?.tipo_codigo };
-    const visitaRes = id ? await axios.put(`http://localhost:5000/visitas/${id}`, data) : await axios.post('http://localhost:5000/visitas', data);
+    const visitaRes = id ? await axios.put(`/visitas/${id}`, data) : await axios.post('/visitas', data);
     const visitaId = id || visitaRes.data.id;
-    await Promise.all(form.zonas.map(z => axios.post('http://localhost:5000/zonas', { ...z, visita_id: visitaId })));
+    await Promise.all(form.zonas.map(z => axios.post('/zonas', { ...z, visita_id: visitaId })));
     navigate('/dashboard');
   };
 
@@ -134,7 +134,7 @@ const VisitaForm = () => {
         <TextField label="Productividad Observaciones" value={form.productividad_obs} onChange={(e) => setForm({ ...form, productividad_obs: e.target.value })} fullWidth margin="normal" multiline />
         <TextField label="Conclusiones Observaciones" value={form.conclusiones_obs} onChange={(e) => setForm({ ...form, conclusiones_obs: e.target.value })} fullWidth margin="normal" multiline />
         <Button variant="contained" onClick={handleSubmit} fullWidth sx={{ mt: 2 }}>Guardar</Button>
-        {hasPhoto && <Button variant="outlined" onClick={() => axios.post(`http://localhost:5000/generar-pdf/${id || 'new'}`, { enviar_email: false })} sx={{ mt: 1 }}>Generar PDF</Button>}
+        {hasPhoto && <Button variant="outlined" onClick={() => axios.post(`/generar-pdf/${id || 'new'}`, { enviar_email: false })} sx={{ mt: 1 }}>Generar PDF</Button>}
       </Box>
     </Container>
     </>

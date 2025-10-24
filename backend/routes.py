@@ -6,8 +6,26 @@ from werkzeug.utils import secure_filename
 from models import db, User, Empresa, Cliente, Visita, Zona
 from werkzeug.security import check_password_hash
 from datetime import datetime
+import traceback
 
 routes = Blueprint('routes', __name__)
+
+@routes.errorhandler(Exception)
+def handle_exception(e):
+    print(f"ERROR: {str(e)}")
+    print(f"TRACEBACK: {traceback.format_exc()}")
+    return jsonify({'message': f'Error interno: {str(e)}'}), 500
+
+@routes.before_request
+def log_request_info():
+    print(f"REQUEST: {request.method} {request.path}")
+    print(f"HEADERS: {dict(request.headers)}")
+    print(f"CONTENT_TYPE: {request.content_type}")
+    if request.is_json:
+        print(f"JSON_DATA: {request.get_json()}")
+    else:
+        print(f"FORM_DATA: {request.form}")
+        print(f"RAW_DATA: {request.get_data()}")
 
 # Autenticación básica
 @routes.route('/login', methods=['POST'])
@@ -34,37 +52,69 @@ def get_usuarios():
     usuarios = User.query.all()
     return jsonify([{'id': u.id, 'nombre': u.nombre, 'email': u.email, 'rol': u.rol} for u in usuarios]), 200
 
+@routes.route('/test', methods=['GET', 'POST'])
+def test_endpoint():
+    print("=== TEST ENDPOINT CALLED ===")
+    return jsonify({'message': 'Test endpoint working', 'method': request.method}), 200
+
 @routes.route('/usuarios', methods=['POST'])
 def create_usuario():
-    # Temporalmente permitir creación sin autenticación para desarrollo
-    # if session.get('rol') != 'admin':
-    #     return jsonify({'message': 'Acceso denegado'}), 403
-    data = request.json
-    
-    # Verificar si el email ya existe
-    existing_user = User.query.filter_by(email=data['email']).first()
-    if existing_user:
-        return jsonify({'message': 'El email ya está registrado'}), 400
-    
-    user = User(nombre=data['nombre'], email=data['email'], rol=data.get('rol', 'user'))
-    user.set_password(data['password'])
-    db.session.add(user)
-    
     try:
+        print("=== DEBUG: Starting create_usuario ===")
+        print(f"DEBUG: Method: {request.method}")
+        print(f"DEBUG: Headers: {dict(request.headers)}")
+        print(f"DEBUG: Content-Type: {request.content_type}")
+        print(f"DEBUG: Is JSON: {request.is_json}")
+        
+        # Intentar obtener datos de diferentes formas
+        if request.is_json:
+            data = request.get_json()
+            print(f"DEBUG: JSON data: {data}")
+        else:
+            print("DEBUG: Not JSON, trying form data")
+            data = request.form.to_dict()
+            print(f"DEBUG: Form data: {data}")
+        
+        if not data:
+            print("DEBUG: No data received")
+            return jsonify({'message': 'No se recibieron datos'}), 400
+        
+        # Validar campos requeridos
+        required_fields = ['nombre', 'email', 'password']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                print(f"DEBUG: Missing field: {field}")
+                return jsonify({'message': f'El campo {field} es requerido'}), 400
+        
+        # Verificar si el email ya existe
+        existing_user = User.query.filter_by(email=data['email']).first()
+        if existing_user:
+            print(f"DEBUG: Email exists: {data['email']}")
+            return jsonify({'message': 'El email ya está registrado'}), 400
+        
+        # Crear usuario
+        user = User(nombre=data['nombre'], email=data['email'], rol=data.get('rol', 'user'))
+        user.set_password(data['password'])
+        db.session.add(user)
         db.session.commit()
+        
+        print(f"DEBUG: User created: {user.id}")
+        
+        # Iniciar sesión
+        session['user_id'] = user.id
+        session['rol'] = user.rol
+        
+        return jsonify({
+            'message': 'Usuario creado y sesión iniciada',
+            'rol': user.rol,
+            'nombre': user.nombre
+        }), 201
+        
     except Exception as e:
+        print(f"DEBUG: Exception: {str(e)}")
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
         db.session.rollback()
-        return jsonify({'message': 'Error al crear usuario'}), 500
-    
-    # Iniciar sesión automáticamente después del registro
-    session['user_id'] = user.id
-    session['rol'] = user.rol
-    
-    return jsonify({
-        'message': 'Usuario creado y sesión iniciada',
-        'rol': user.rol,
-        'nombre': user.nombre
-    }), 201
+        return jsonify({'message': f'Error: {str(e)}'}), 500
 
 @routes.route('/usuarios/<int:id>', methods=['PUT', 'DELETE'])
 def manage_usuario(id):

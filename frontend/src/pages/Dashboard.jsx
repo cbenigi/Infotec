@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Typography, List, ListItem, ListItemText, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../api/axiosConfig';
 import Navbar from '../components/Navbar';
 
 const Dashboard = () => {
@@ -11,7 +11,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchVisitas = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/visitas');
+        const res = await axios.get('/visitas');
         setVisitas(res.data);
       } catch (err) {
         console.error('Error fetching visitas:', err);

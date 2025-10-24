@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Box, Link, Paper, Grid, InputAdornment, IconButton } from '@mui/material';
-import axios from 'axios';
+import axios from '../api/axiosConfig';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
@@ -16,19 +16,19 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post('http://localhost:5000/login', { email, password });
+      const res = await axios.post('/login', { email, password });
       localStorage.setItem('token', 'basic'); // Simular token
       localStorage.setItem('rol', res.data.rol);
       
       // Obtener información del usuario
-      const usersRes = await axios.get('http://localhost:5000/usuarios');
+      const usersRes = await axios.get('/usuarios');
       const currentUser = usersRes.data.find(u => u.email === email);
       if (currentUser) {
         localStorage.setItem('userName', currentUser.nombre);
       }
       
       // Verificar si el usuario tiene empresa registrada
-      const empresaRes = await axios.get('http://localhost:5000/empresa');
+      const empresaRes = await axios.get('/empresa');
       
       if (empresaRes.data.exists) {
         navigate('/dashboard');
