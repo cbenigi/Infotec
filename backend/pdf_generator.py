@@ -12,13 +12,17 @@ from datetime import datetime
 import os
 
 def generate_pdf(visita_id):
+    print(f"=== INICIANDO GENERACIÓN DE PDF PARA VISITA {visita_id} ===")
     visita = Visita.query.get(visita_id)
     if not visita:
+        print(f"ERROR: No se encontró visita con ID {visita_id}")
         return None
 
     # Obtener zonas de la visita
     zonas = Zona.query.filter_by(visita_id=visita_id).all()
+    print(f"DEBUG: Se encontraron {len(zonas)} zonas para la visita {visita_id}")
     if not zonas:
+        print("ERROR: No se encontraron zonas para la visita")
         return None
 
     # Obtener datos de la empresa del usuario
