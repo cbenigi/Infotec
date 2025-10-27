@@ -198,52 +198,71 @@ def generate_pdf(visita_id):
     # Header con logos mejorado
     header_elements = []
     
-    # Logo de la empresa
+    # Logo de la empresa - mejorado
+    empresa_logo_cargado = False
     if empresa and empresa.logo_url:
-        logo_path = os.path.join('uploads', empresa.logo_url.split('/')[-1])
-        if os.path.exists(logo_path):
-            try:
-                from PIL import Image as PILImage
-                with PILImage.open(logo_path) as img:
-                    img.verify()
-                empresa_logo = Image(logo_path, 1.2*inch, 1.2*inch)
-                header_elements.append(empresa_logo)
-            except Exception as e:
-                print(f"Error cargando logo de empresa: {str(e)}")
-                # Crear logo circular como fallback con texto más descriptivo
-                logo_texto = empresa_nombre[:2].upper() if len(empresa_nombre) >= 2 else "E"
-                logo_circular = crear_logo_circular(logo_texto, azul_principal, blanco)
-                header_elements.append(logo_circular)
-        else:
-            logo_texto = empresa_nombre[:2].upper() if len(empresa_nombre) >= 2 else "E"
-            logo_circular = crear_logo_circular(logo_texto, azul_principal, blanco)
-            header_elements.append(logo_circular)
-    else:
+        # Intentar diferentes rutas posibles para el logo
+        posibles_rutas = [
+            empresa.logo_url,  # Ruta completa
+            os.path.join('uploads', empresa.logo_url.split('/')[-1]),  # Solo nombre del archivo
+            os.path.join('backend/uploads', empresa.logo_url.split('/')[-1]),  # Con backend/
+            os.path.join('static/uploads', empresa.logo_url.split('/')[-1]),  # Con static/
+        ]
+        
+        for logo_path in posibles_rutas:
+            if os.path.exists(logo_path):
+                try:
+                    from PIL import Image as PILImage
+                    with PILImage.open(logo_path) as img:
+                        img.verify()
+                    empresa_logo = Image(logo_path, 1.2*inch, 1.2*inch)
+                    header_elements.append(empresa_logo)
+                    empresa_logo_cargado = True
+                    print(f"Logo de empresa cargado desde: {logo_path}")
+                    break
+                except Exception as e:
+                    print(f"Error cargando logo de empresa desde {logo_path}: {str(e)}")
+                    continue
+    
+    if not empresa_logo_cargado:
+        # Crear logo circular como fallback
         logo_texto = empresa_nombre[:2].upper() if len(empresa_nombre) >= 2 else "E"
         logo_circular = crear_logo_circular(logo_texto, azul_principal, blanco)
         header_elements.append(logo_circular)
+        print(f"Usando logo circular para empresa: {logo_texto}")
     
-    # Logo del cliente
+    # Logo del cliente - mejorado
+    cliente_logo_cargado = False
     if visita.cliente.logo_url:
-        cliente_logo_path = os.path.join('uploads', visita.cliente.logo_url.split('/')[-1])
-        if os.path.exists(cliente_logo_path):
-            try:
-                from PIL import Image as PILImage
-                with PILImage.open(cliente_logo_path) as img:
-                    img.verify()
-                cliente_logo = Image(cliente_logo_path, 1.2*inch, 1.2*inch)
-                header_elements.append(cliente_logo)
-            except Exception as e:
-                print(f"Error cargando logo de cliente: {str(e)}")
-                # Crear logo circular como fallback
-                logo_cliente = crear_logo_circular(visita.cliente.nombre[:3].upper(), verde_secundario, blanco)
-                header_elements.append(logo_cliente)
-        else:
-            logo_cliente = crear_logo_circular(visita.cliente.nombre[:3].upper(), verde_secundario, blanco)
-            header_elements.append(logo_cliente)
-    else:
-        logo_cliente = crear_logo_circular(visita.cliente.nombre[:3].upper(), verde_secundario, blanco)
-        header_elements.append(logo_cliente)
+        # Intentar diferentes rutas posibles para el logo del cliente
+        posibles_rutas_cliente = [
+            visita.cliente.logo_url,  # Ruta completa
+            os.path.join('uploads', visita.cliente.logo_url.split('/')[-1]),  # Solo nombre del archivo
+            os.path.join('backend/uploads', visita.cliente.logo_url.split('/')[-1]),  # Con backend/
+            os.path.join('static/uploads', visita.cliente.logo_url.split('/')[-1]),  # Con static/
+        ]
+        
+        for logo_path in posibles_rutas_cliente:
+            if os.path.exists(logo_path):
+                try:
+                    from PIL import Image as PILImage
+                    with PILImage.open(logo_path) as img:
+                        img.verify()
+                    cliente_logo = Image(logo_path, 1.2*inch, 1.2*inch)
+                    header_elements.append(cliente_logo)
+                    cliente_logo_cargado = True
+                    print(f"Logo de cliente cargado desde: {logo_path}")
+                    break
+                except Exception as e:
+                    print(f"Error cargando logo de cliente desde {logo_path}: {str(e)}")
+                    continue
+    
+    if not cliente_logo_cargado:
+        # Crear logo circular como fallback
+        logo_texto = visita.cliente.nombre[:2].upper() if len(visita.cliente.nombre) >= 2 else "C"
+        logo_circular = crear_logo_circular(logo_texto, verde_secundario, blanco)
+        header_elements.append(logo_circular)
+        print(f"Usando logo circular para cliente: {logo_texto}")
 
     # Header principal con logos
     if header_elements:
@@ -293,32 +312,27 @@ def generate_pdf(visita_id):
     elements.append(info_table)
     elements.append(Spacer(1, 0.4*inch))
 
-    # Información del cliente en tarjeta moderna - diseño con 3 columnas
+    # Información del cliente en tarjeta moderna - diseño con 4 columnas
     cliente_data = [
-        ['INFORMACIÓN CLIENTE', '', 'INFORMACIÓN VISITA'],
-        ['Cliente:', visita.cliente.nombre[:18] + ('...' if len(visita.cliente.nombre) > 18 else ''), 'Supervisor:', visita.supervisor.nombre[:15] + ('...' if len(visita.supervisor.nombre) > 15 else '')],
-        ['NIT:', visita.cliente.nit[:12] + ('...' if len(visita.cliente.nit) > 12 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Admin:', visita.cliente.administrador[:15] + ('...' if len(visita.cliente.administrador) > 15 else ''), 'Código:', visita.cliente.tipo_codigo[:8] + ('...' if len(visita.cliente.tipo_codigo) > 8 else '')],
-        ['Email:', visita.cliente.correo[:18] + ('...' if len(visita.cliente.correo) > 18 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['INFORMACIÓN CLIENTE', '', 'INFORMACIÓN VISITA', ''],
+        ['Cliente:', visita.cliente.nombre[:20] + ('...' if len(visita.cliente.nombre) > 20 else ''), 'Supervisor:', visita.supervisor.nombre[:18] + ('...' if len(visita.supervisor.nombre) > 18 else '')],
+        ['NIT:', visita.cliente.nit[:15] + ('...' if len(visita.cliente.nit) > 15 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
+        ['Admin:', visita.cliente.administrador[:18] + ('...' if len(visita.cliente.administrador) > 18 else ''), 'Código:', visita.cliente.tipo_codigo[:10] + ('...' if len(visita.cliente.tipo_codigo) > 10 else '')],
+        ['Email:', visita.cliente.correo[:20] + ('...' if len(visita.cliente.correo) > 20 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[1.8*inch, 0.4*inch, 1.8*inch])
+    cliente_table = Table(cliente_data, colWidths=[1.0*inch, 1.0*inch, 1.0*inch, 1.0*inch])
     cliente_table.setStyle(TableStyle([
-        # Header styling - columnas 1 y 3 con fondo verde
-        ('BACKGROUND', (0, 0), (0, 0), verde_secundario),  # Columna 1
-        ('BACKGROUND', (2, 0), (2, 0), verde_secundario),  # Columna 3
-        ('TEXTCOLOR', (0, 0), (0, 0), blanco),
-        ('TEXTCOLOR', (2, 0), (2, 0), blanco),
-        ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (2, 0), 10),
-        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-        ('ALIGN', (2, 0), (2, 0), 'CENTER'),
-        ('VALIGN', (0, 0), (2, 0), 'MIDDLE'),
-        
-        # Columna 2 (separador) - fondo blanco
-        ('BACKGROUND', (1, 0), (1, 0), blanco),
-        ('TEXTCOLOR', (1, 0), (1, 0), blanco),
+        # Header styling - combinar columnas 1-2 y 3-4
+        ('SPAN', (0, 0), (1, 0)),  # Combinar columnas 0-1 para "INFORMACIÓN CLIENTE"
+        ('SPAN', (2, 0), (3, 0)),  # Combinar columnas 2-3 para "INFORMACIÓN VISITA"
+        ('BACKGROUND', (0, 0), (1, 0), verde_secundario),
+        ('BACKGROUND', (2, 0), (3, 0), verde_secundario),
+        ('TEXTCOLOR', (0, 0), (3, 0), blanco),
+        ('FONTNAME', (0, 0), (3, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (3, 0), 10),
+        ('ALIGN', (0, 0), (3, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (3, 0), 'MIDDLE'),
         
         # Content styling
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
@@ -332,8 +346,8 @@ def generate_pdf(visita_id):
         
         # Beautiful borders
         ('GRID', (0, 0), (-1, -1), 2, verde_secundario),
-        ('LINEBELOW', (0, 0), (2, 0), 3, verde_secundario),
-        ('LINEABOVE', (0, 0), (2, 0), 3, verde_secundario),
+        ('LINEBELOW', (0, 0), (3, 0), 3, verde_secundario),
+        ('LINEABOVE', (0, 0), (3, 0), 3, verde_secundario),
         ('LINEBEFORE', (2, 0), (2, -1), 2, verde_secundario),
         
         # Padding
