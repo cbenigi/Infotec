@@ -274,26 +274,28 @@ def generate_pdf(visita_id):
     # Información del cliente en tarjeta moderna
     cliente_data = [
         ['INFORMACIÓN DEL CLIENTE', 'INFORMACIÓN DE LA VISITA'],
-        ['Cliente:', visita.cliente.nombre, 'Supervisor:', visita.supervisor.nombre],
-        ['NIT:', visita.cliente.nit, 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Administrador:', visita.cliente.administrador, 'Código:', visita.cliente.tipo_codigo],
-        ['Correo:', visita.cliente.correo, 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['Cliente:', visita.cliente.nombre[:25] + ('...' if len(visita.cliente.nombre) > 25 else ''), 'Supervisor:', visita.supervisor.nombre[:20] + ('...' if len(visita.supervisor.nombre) > 20 else '')],
+        ['NIT:', visita.cliente.nit[:15] + ('...' if len(visita.cliente.nit) > 15 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
+        ['Administrador:', visita.cliente.administrador[:20] + ('...' if len(visita.cliente.administrador) > 20 else ''), 'Código:', visita.cliente.tipo_codigo[:10] + ('...' if len(visita.cliente.tipo_codigo) > 10 else '')],
+        ['Correo:', visita.cliente.correo[:25] + ('...' if len(visita.cliente.correo) > 25 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[2.5*inch, 2.5*inch])
+    cliente_table = Table(cliente_data, colWidths=[2.2*inch, 2.2*inch])
     cliente_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (1, 0), verde_secundario),
         ('TEXTCOLOR', (0, 0), (1, 0), blanco),
         ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (1, 0), 12),
+        ('FONTSIZE', (0, 0), (1, 0), 11),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
         ('GRID', (0, 0), (-1, -1), 1, gris_claro),
         ('BACKGROUND', (0, 1), (-1, -1), blanco),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [blanco, gris_claro]),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('PADDING', (0, 0), (-1, -1), 10),
+        ('PADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 1), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 1), (-1, -1), 6),
     ]))
     elements.append(cliente_table)
     elements.append(Spacer(1, 0.4*inch))
