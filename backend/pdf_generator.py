@@ -296,13 +296,13 @@ def generate_pdf(visita_id):
     # Información del cliente en tarjeta moderna - diseño con 3 columnas
     cliente_data = [
         ['INFORMACIÓN CLIENTE', '', 'INFORMACIÓN VISITA'],
-        ['Cliente:', visita.cliente.nombre[:15] + ('...' if len(visita.cliente.nombre) > 15 else ''), 'Supervisor:', visita.supervisor.nombre[:12] + ('...' if len(visita.supervisor.nombre) > 12 else '')],
-        ['NIT:', visita.cliente.nit[:10] + ('...' if len(visita.cliente.nit) > 10 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Admin:', visita.cliente.administrador[:12] + ('...' if len(visita.cliente.administrador) > 12 else ''), 'Código:', visita.cliente.tipo_codigo[:6] + ('...' if len(visita.cliente.tipo_codigo) > 6 else '')],
-        ['Email:', visita.cliente.correo[:15] + ('...' if len(visita.cliente.correo) > 15 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['Cliente:', visita.cliente.nombre[:18] + ('...' if len(visita.cliente.nombre) > 18 else ''), 'Supervisor:', visita.supervisor.nombre[:15] + ('...' if len(visita.supervisor.nombre) > 15 else '')],
+        ['NIT:', visita.cliente.nit[:12] + ('...' if len(visita.cliente.nit) > 12 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
+        ['Admin:', visita.cliente.administrador[:15] + ('...' if len(visita.cliente.administrador) > 15 else ''), 'Código:', visita.cliente.tipo_codigo[:8] + ('...' if len(visita.cliente.tipo_codigo) > 8 else '')],
+        ['Email:', visita.cliente.correo[:18] + ('...' if len(visita.cliente.correo) > 18 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[1.5*inch, 0.5*inch, 1.5*inch])
+    cliente_table = Table(cliente_data, colWidths=[1.8*inch, 0.4*inch, 1.8*inch])
     cliente_table.setStyle(TableStyle([
         # Header styling - columnas 1 y 3 con fondo verde
         ('BACKGROUND', (0, 0), (0, 0), verde_secundario),  # Columna 1
