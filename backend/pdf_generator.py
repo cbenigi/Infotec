@@ -12,7 +12,7 @@ from datetime import datetime
 import os
 
 def generate_pdf(visita_id):
-    print(f"=== INICIANDO GENERACIÓN DE PDF PARA VISITA {visita_id} ===")
+    print(f"=== INICIANDO GENERACIÓN DE PDF PARA VISITA {visita_id} ===", flush=True)
     visita = Visita.query.get(visita_id)
     if not visita:
         print(f"ERROR: No se encontró visita con ID {visita_id}")

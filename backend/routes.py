@@ -369,7 +369,7 @@ def get_visitas():
 @routes.route('/generar-pdf/<string:visita_id>', methods=['POST'])
 def generar_pdf(visita_id):
     try:
-        print(f"DEBUG: Generando PDF para visita {visita_id}")
+        print(f"DEBUG: Generando PDF para visita {visita_id}", flush=True)
         
         # Verificar que la visita existe
         visita = Visita.query.get(visita_id)
