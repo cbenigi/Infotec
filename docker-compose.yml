@@ -1,0 +1,53 @@
+services:
+  solamy_db:
+    image: postgres:13
+    container_name: solamy_db
+    environment:
+      POSTGRES_DB: informes_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - solamy_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d informes_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: ["postgres", "-c", "password_encryption=md5"]
+
+  solamy_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: solamy_backend
+    environment:
+      DATABASE_URL: postgresql://user:password@solamy_db/informes_db
+      SECRET_KEY: your-secret-key
+      MAIL_SERVER: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USE_TLS: True
+      MAIL_USERNAME: your-email@gmail.com
+      MAIL_PASSWORD: your-email-password
+      MAIL_DEFAULT_SENDER: noreply@empresa.com
+    depends_on:
+      solamy_db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend:/app
+    networks:
+      - solamy_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  solamy_network:
+    driver: bridge
