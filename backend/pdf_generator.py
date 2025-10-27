@@ -293,22 +293,26 @@ def generate_pdf(visita_id):
     elements.append(info_table)
     elements.append(Spacer(1, 0.4*inch))
 
-    # Información del cliente en tarjeta moderna - diseño súper compacto
+    # Información del cliente en tarjeta moderna - diseño con 4 columnas
     cliente_data = [
-        ['INFORMACIÓN CLIENTE', 'INFORMACIÓN VISITA'],
+        ['INFORMACIÓN CLIENTE', '', 'INFORMACIÓN VISITA', ''],
         ['Cliente:', visita.cliente.nombre[:12] + ('...' if len(visita.cliente.nombre) > 12 else ''), 'Supervisor:', visita.supervisor.nombre[:10] + ('...' if len(visita.supervisor.nombre) > 10 else '')],
         ['NIT:', visita.cliente.nit[:8] + ('...' if len(visita.cliente.nit) > 8 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
         ['Admin:', visita.cliente.administrador[:10] + ('...' if len(visita.cliente.administrador) > 10 else ''), 'Código:', visita.cliente.tipo_codigo[:5] + ('...' if len(visita.cliente.tipo_codigo) > 5 else '')],
         ['Email:', visita.cliente.correo[:12] + ('...' if len(visita.cliente.correo) > 12 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[1.3*inch, 1.3*inch])
+    cliente_table = Table(cliente_data, colWidths=[0.8*inch, 1.2*inch, 0.8*inch, 1.2*inch])
     cliente_table.setStyle(TableStyle([
-        # Header styling
-        ('BACKGROUND', (0, 0), (1, 0), verde_secundario),
-        ('TEXTCOLOR', (0, 0), (1, 0), blanco),
-        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (1, 0), 9),
+        # Header styling - combinar columnas y centrar texto
+        ('BACKGROUND', (0, 0), (1, 0), verde_secundario),  # Columnas 1-2 combinadas
+        ('BACKGROUND', (2, 0), (3, 0), verde_secundario),  # Columnas 3-4 combinadas
+        ('TEXTCOLOR', (0, 0), (3, 0), blanco),
+        ('FONTNAME', (0, 0), (3, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (3, 0), 9),
+        ('ALIGN', (0, 0), (1, 0), 'CENTER'),  # Centrar texto en columnas 1-2
+        ('ALIGN', (2, 0), (3, 0), 'CENTER'),  # Centrar texto en columnas 3-4
+        ('VALIGN', (0, 0), (3, 0), 'MIDDLE'),
         
         # Content styling
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
@@ -316,9 +320,9 @@ def generate_pdf(visita_id):
         ('BACKGROUND', (0, 1), (-1, -1), blanco),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [blanco, gris_claro]),
         
-        # Alignment
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        # Alignment para contenido
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
         
         # Beautiful rounded borders with matching colors
         *crear_bordes_redondos(verde_secundario, gris_medio),
