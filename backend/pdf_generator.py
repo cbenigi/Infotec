@@ -31,10 +31,22 @@ def generate_pdf(visita_id):
         return None
 
     # Obtener zonas de la visita
+    print("DEBUG: Obteniendo zonas de la visita...", flush=True)
+    sys.stdout.flush()
     zonas = Zona.query.filter_by(visita_id=visita_id).all()
-    print(f"DEBUG: Se encontraron {len(zonas)} zonas para la visita {visita_id}")
+    print(f"DEBUG: Se encontraron {len(zonas)} zonas para la visita {visita_id}", flush=True)
+    sys.stdout.flush()
+    
+    with open('/tmp/debug_pdf.txt', 'a') as f:
+        f.write(f"DEBUG: Se encontraron {len(zonas)} zonas para la visita {visita_id}\n")
+        f.flush()
+    
     if not zonas:
-        print("ERROR: No se encontraron zonas para la visita")
+        print("ERROR: No se encontraron zonas para la visita", flush=True)
+        sys.stdout.flush()
+        with open('/tmp/debug_pdf.txt', 'a') as f:
+            f.write("ERROR: No se encontraron zonas para la visita\n")
+            f.flush()
         return None
 
     # Obtener datos de la empresa del usuario
