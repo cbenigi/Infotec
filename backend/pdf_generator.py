@@ -117,6 +117,17 @@ def generate_pdf(visita_id):
                     fillColor=color_texto, fontName='Helvetica-Bold'))
         return d
 
+    # Función para limpiar HTML de los textos
+    def limpiar_html(texto):
+        if not texto:
+            return texto
+        import re
+        # Remover etiquetas HTML comunes
+        texto = re.sub(r'<[^>]+>', '', str(texto))
+        # Limpiar espacios extra
+        texto = ' '.join(texto.split())
+        return texto
+
     # Header con logos mejorado
     header_elements = []
     
@@ -132,14 +143,17 @@ def generate_pdf(visita_id):
                 header_elements.append(empresa_logo)
             except Exception as e:
                 print(f"Error cargando logo de empresa: {str(e)}")
-                # Crear logo circular como fallback
-                logo_circular = crear_logo_circular(empresa_nombre[:3].upper(), azul_principal, blanco)
+                # Crear logo circular como fallback con texto más descriptivo
+                logo_texto = empresa_nombre[:2].upper() if len(empresa_nombre) >= 2 else "E"
+                logo_circular = crear_logo_circular(logo_texto, azul_principal, blanco)
                 header_elements.append(logo_circular)
         else:
-            logo_circular = crear_logo_circular(empresa_nombre[:3].upper(), azul_principal, blanco)
+            logo_texto = empresa_nombre[:2].upper() if len(empresa_nombre) >= 2 else "E"
+            logo_circular = crear_logo_circular(logo_texto, azul_principal, blanco)
             header_elements.append(logo_circular)
     else:
-        logo_circular = crear_logo_circular(empresa_nombre[:3].upper(), azul_principal, blanco)
+        logo_texto = empresa_nombre[:2].upper() if len(empresa_nombre) >= 2 else "E"
+        logo_circular = crear_logo_circular(logo_texto, azul_principal, blanco)
         header_elements.append(logo_circular)
     
     # Logo del cliente
@@ -178,13 +192,13 @@ def generate_pdf(visita_id):
     titulo_principal = Paragraph("INFORME DE PRESTACIÓN DEL SERVICIO", estilos['titulo_principal'])
     elements.append(titulo_principal)
     
-    # Información del informe
+    # Información del informe - diseño más compacto
     info_data = [
-        ['ID de Visita:', str(visita.id), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Supervisor:', visita.supervisor.nombre, 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['ID:', str(visita.id), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
+        ['Supervisor:', visita.supervisor.nombre[:20] + ('...' if len(visita.supervisor.nombre) > 20 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    info_table = Table(info_data, colWidths=[1.5*inch, 2*inch, 1*inch, 2*inch])
+    info_table = Table(info_data, colWidths=[0.8*inch, 1.8*inch, 0.8*inch, 1.8*inch])
     info_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (0, 0), azul_principal),
         ('BACKGROUND', (2, 0), (2, 0), azul_principal),
@@ -192,10 +206,10 @@ def generate_pdf(visita_id):
         ('TEXTCOLOR', (2, 0), (2, 0), blanco),
         ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
         ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('PADDING', (0, 0), (-1, -1), 8),
+        ('PADDING', (0, 0), (-1, -1), 6),
         ('GRID', (0, 0), (-1, -1), 1, gris_claro),
         ('BACKGROUND', (1, 0), (1, 0), blanco),
         ('BACKGROUND', (3, 0), (3, 0), blanco),
@@ -262,11 +276,16 @@ def generate_pdf(visita_id):
         
         # Crear tarjeta para cada actividad
         for zona in zonas_seccion:
+            # Limpiar HTML de los datos
+            concepto_limpio = limpiar_html(zona.concepto_actividad)
+            calificacion_limpia = limpiar_html(zona.calificacion)
+            observaciones_limpias = limpiar_html(zona.observaciones) or 'Sin observaciones'
+            
             # Crear tarjeta moderna con sombra
             actividad_data = [
-                [zona.concepto_actividad, ""],
-                ["Calificación:", zona.calificacion],
-                ["Observaciones:", zona.observaciones or 'Sin observaciones']
+                [concepto_limpio, ""],
+                ["Calificación:", calificacion_limpia],
+                ["Observaciones:", observaciones_limpias]
             ]
             
             actividad_table = Table(actividad_data, colWidths=[4.5*inch, 1.5*inch])
@@ -356,10 +375,13 @@ def generate_pdf(visita_id):
     if visita.conclusiones:
         elements.append(Spacer(1, 0.5*inch))
         
+        # Limpiar HTML de las conclusiones
+        conclusiones_limpias = limpiar_html(visita.conclusiones)
+        
         # Crear tarjeta de conclusiones moderna
         conclusiones_data = [
             ['CONCLUSIONES', ''],
-            [visita.conclusiones, '']
+            [conclusiones_limpias, '']
         ]
         
         conclusiones_table = Table(conclusiones_data, colWidths=[5*inch, 1*inch])
