@@ -271,31 +271,31 @@ def generate_pdf(visita_id):
     elements.append(info_table)
     elements.append(Spacer(1, 0.4*inch))
 
-    # Información del cliente en tarjeta moderna
+    # Información del cliente en tarjeta moderna - diseño más compacto
     cliente_data = [
         ['INFORMACIÓN DEL CLIENTE', 'INFORMACIÓN DE LA VISITA'],
-        ['Cliente:', visita.cliente.nombre[:25] + ('...' if len(visita.cliente.nombre) > 25 else ''), 'Supervisor:', visita.supervisor.nombre[:20] + ('...' if len(visita.supervisor.nombre) > 20 else '')],
-        ['NIT:', visita.cliente.nit[:15] + ('...' if len(visita.cliente.nit) > 15 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Administrador:', visita.cliente.administrador[:20] + ('...' if len(visita.cliente.administrador) > 20 else ''), 'Código:', visita.cliente.tipo_codigo[:10] + ('...' if len(visita.cliente.tipo_codigo) > 10 else '')],
-        ['Correo:', visita.cliente.correo[:25] + ('...' if len(visita.cliente.correo) > 25 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['Cliente:', visita.cliente.nombre[:18] + ('...' if len(visita.cliente.nombre) > 18 else ''), 'Supervisor:', visita.supervisor.nombre[:15] + ('...' if len(visita.supervisor.nombre) > 15 else '')],
+        ['NIT:', visita.cliente.nit[:12] + ('...' if len(visita.cliente.nit) > 12 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
+        ['Admin:', visita.cliente.administrador[:15] + ('...' if len(visita.cliente.administrador) > 15 else ''), 'Código:', visita.cliente.tipo_codigo[:8] + ('...' if len(visita.cliente.tipo_codigo) > 8 else '')],
+        ['Email:', visita.cliente.correo[:18] + ('...' if len(visita.cliente.correo) > 18 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[2.2*inch, 2.2*inch])
+    cliente_table = Table(cliente_data, colWidths=[1.8*inch, 1.8*inch])
     cliente_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (1, 0), verde_secundario),
         ('TEXTCOLOR', (0, 0), (1, 0), blanco),
         ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (1, 0), 11),
+        ('FONTSIZE', (0, 0), (1, 0), 10),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
         ('GRID', (0, 0), (-1, -1), 1, gris_claro),
         ('BACKGROUND', (0, 1), (-1, -1), blanco),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [blanco, gris_claro]),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('PADDING', (0, 0), (-1, -1), 8),
-        ('LEFTPADDING', (0, 1), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 1), (-1, -1), 6),
+        ('PADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 1), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 1), (-1, -1), 4),
     ]))
     elements.append(cliente_table)
     elements.append(Spacer(1, 0.4*inch))
