@@ -124,6 +124,10 @@ def generate_pdf(visita_id):
         import re
         # Convertir a string si no lo es
         texto = str(texto)
+        
+        # TEST: Imprimir el texto original
+        print(f"ANTES de limpiar: '{texto}'")
+        
         # Remover etiquetas HTML específicas más comunes
         texto = re.sub(r'<b[^>]*>', '', texto)  # <b> y <b atributos>
         texto = re.sub(r'</b>', '', texto)      # </b>
@@ -144,6 +148,10 @@ def generate_pdf(visita_id):
         texto = texto.replace('&amp;', '&')
         texto = texto.replace('&lt;', '<')
         texto = texto.replace('&gt;', '>')
+        
+        # TEST: Imprimir el texto después de limpiar
+        print(f"DESPUÉS de limpiar: '{texto}'")
+        
         return texto
 
     # Header con logos mejorado
