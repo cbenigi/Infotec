@@ -12,10 +12,22 @@ from datetime import datetime
 import os
 
 def generate_pdf(visita_id):
+    import sys
     print(f"=== INICIANDO GENERACIÓN DE PDF PARA VISITA {visita_id} ===", flush=True)
+    sys.stdout.flush()
+    
+    # Escribir a archivo para debug
+    with open('/tmp/debug_pdf.txt', 'a') as f:
+        f.write(f"=== INICIANDO GENERACIÓN DE PDF PARA VISITA {visita_id} ===\n")
+        f.flush()
+    
     visita = Visita.query.get(visita_id)
     if not visita:
-        print(f"ERROR: No se encontró visita con ID {visita_id}")
+        print(f"ERROR: No se encontró visita con ID {visita_id}", flush=True)
+        sys.stdout.flush()
+        with open('/tmp/debug_pdf.txt', 'a') as f:
+            f.write(f"ERROR: No se encontró visita con ID {visita_id}\n")
+            f.flush()
         return None
 
     # Obtener zonas de la visita

@@ -370,6 +370,13 @@ def get_visitas():
 def generar_pdf(visita_id):
     try:
         print(f"DEBUG: Generando PDF para visita {visita_id}", flush=True)
+        import sys
+        sys.stdout.flush()
+        
+        # Escribir a archivo para debug
+        with open('/tmp/debug_routes.txt', 'a') as f:
+            f.write(f"DEBUG: Generando PDF para visita {visita_id}\n")
+            f.flush()
         
         # Verificar que la visita existe
         visita = Visita.query.get(visita_id)
