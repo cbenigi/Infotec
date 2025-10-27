@@ -145,6 +145,19 @@ def generate_pdf(visita_id):
                     fillColor=color_texto, fontName='Helvetica-Bold'))
         return d
 
+    # Función para crear bordes redondos elegantes
+    def crear_bordes_redondos(color_principal, color_secundario):
+        return [
+            # Bordes principales más gruesos para efecto redondeado
+            ('GRID', (0, 0), (-1, -1), 2.5, color_principal),
+            # Bordes internos más suaves
+            ('LINEBELOW', (0, 0), (-1, 0), 3, color_principal),
+            ('LINEABOVE', (0, 0), (-1, 0), 3, color_principal),
+            ('LINEBEFORE', (1, 0), (1, -1), 2, color_secundario),
+            ('LINEAFTER', (0, 0), (0, -1), 2, color_secundario),
+            ('LINEBEFORE', (0, 0), (0, -1), 2, color_secundario),
+        ]
+
     # Función para limpiar HTML de los textos
     def limpiar_html(texto):
         if not texto:
@@ -271,11 +284,8 @@ def generate_pdf(visita_id):
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         
-        # Beautiful borders
-        ('GRID', (0, 0), (-1, -1), 1.5, azul_principal),  # Outer border
-        ('LINEBELOW', (0, 0), (-1, 0), 2, azul_principal),  # Header bottom border
-        ('LINEABOVE', (0, 0), (-1, 0), 2, azul_principal),  # Header top border
-        ('LINEBEFORE', (2, 0), (2, -1), 1, gris_medio),     # Vertical separator
+        # Beautiful borders with matching colors
+        *crear_bordes_redondos(azul_principal, gris_medio),
         
         # Padding
         ('PADDING', (0, 0), (-1, -1), 6),
@@ -285,7 +295,7 @@ def generate_pdf(visita_id):
 
     # Información del cliente en tarjeta moderna - diseño súper compacto
     cliente_data = [
-        ['INFORMACIÓN DEL CLIENTE', 'INFORMACIÓN DE LA VISITA'],
+        ['INFORMACIÓN CLIENTE', 'INFORMACIÓN VISITA'],
         ['Cliente:', visita.cliente.nombre[:12] + ('...' if len(visita.cliente.nombre) > 12 else ''), 'Supervisor:', visita.supervisor.nombre[:10] + ('...' if len(visita.supervisor.nombre) > 10 else '')],
         ['NIT:', visita.cliente.nit[:8] + ('...' if len(visita.cliente.nit) > 8 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
         ['Admin:', visita.cliente.administrador[:10] + ('...' if len(visita.cliente.administrador) > 10 else ''), 'Código:', visita.cliente.tipo_codigo[:5] + ('...' if len(visita.cliente.tipo_codigo) > 5 else '')],
@@ -310,13 +320,8 @@ def generate_pdf(visita_id):
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         
-        # Beautiful borders
-        ('GRID', (0, 0), (-1, -1), 1.5, azul_principal),  # Outer border
-        ('LINEBELOW', (0, 0), (1, 0), 2, azul_principal),  # Header bottom border
-        ('LINEABOVE', (0, 0), (1, 0), 2, azul_principal),  # Header top border
-        ('LINEBEFORE', (1, 0), (1, -1), 1, gris_medio),    # Vertical separator
-        ('LINEAFTER', (0, 0), (0, -1), 1, gris_medio),     # Left border
-        ('LINEBEFORE', (0, 0), (0, -1), 1, gris_medio),    # Right border
+        # Beautiful rounded borders with matching colors
+        *crear_bordes_redondos(verde_secundario, gris_medio),
         
         # Padding
         ('PADDING', (0, 0), (-1, -1), 4),
