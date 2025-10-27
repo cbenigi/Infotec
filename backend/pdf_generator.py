@@ -293,24 +293,32 @@ def generate_pdf(visita_id):
     elements.append(info_table)
     elements.append(Spacer(1, 0.4*inch))
 
-    # Información del cliente en tarjeta moderna - diseño simple y elegante
+    # Información del cliente en tarjeta moderna - diseño con 3 columnas
     cliente_data = [
-        ['INFORMACIÓN CLIENTE', 'INFORMACIÓN VISITA'],
+        ['INFORMACIÓN CLIENTE', '', 'INFORMACIÓN VISITA'],
         ['Cliente:', visita.cliente.nombre[:15] + ('...' if len(visita.cliente.nombre) > 15 else ''), 'Supervisor:', visita.supervisor.nombre[:12] + ('...' if len(visita.supervisor.nombre) > 12 else '')],
         ['NIT:', visita.cliente.nit[:10] + ('...' if len(visita.cliente.nit) > 10 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
         ['Admin:', visita.cliente.administrador[:12] + ('...' if len(visita.cliente.administrador) > 12 else ''), 'Código:', visita.cliente.tipo_codigo[:6] + ('...' if len(visita.cliente.tipo_codigo) > 6 else '')],
         ['Email:', visita.cliente.correo[:15] + ('...' if len(visita.cliente.correo) > 15 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[2.0*inch, 2.0*inch])
+    cliente_table = Table(cliente_data, colWidths=[1.5*inch, 0.5*inch, 1.5*inch])
     cliente_table.setStyle(TableStyle([
-        # Header styling - simple y elegante
-        ('BACKGROUND', (0, 0), (1, 0), verde_secundario),
-        ('TEXTCOLOR', (0, 0), (1, 0), blanco),
-        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (1, 0), 10),
-        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
-        ('VALIGN', (0, 0), (1, 0), 'MIDDLE'),
+        # Header styling - columnas 1 y 3 con fondo verde
+        ('BACKGROUND', (0, 0), (0, 0), verde_secundario),  # Columna 1
+        ('BACKGROUND', (2, 0), (2, 0), verde_secundario),  # Columna 3
+        ('TEXTCOLOR', (0, 0), (0, 0), blanco),
+        ('TEXTCOLOR', (2, 0), (2, 0), blanco),
+        ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (2, 0), 10),
+        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (2, 0), 'MIDDLE'),
+        
+        # Columna 2 (separador) - fondo blanco
+        ('BACKGROUND', (1, 0), (1, 0), blanco),
+        ('TEXTCOLOR', (1, 0), (1, 0), blanco),
         
         # Content styling
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
@@ -324,9 +332,9 @@ def generate_pdf(visita_id):
         
         # Beautiful borders
         ('GRID', (0, 0), (-1, -1), 2, verde_secundario),
-        ('LINEBELOW', (0, 0), (1, 0), 3, verde_secundario),
-        ('LINEABOVE', (0, 0), (1, 0), 3, verde_secundario),
-        ('LINEBEFORE', (1, 0), (1, -1), 2, verde_secundario),
+        ('LINEBELOW', (0, 0), (2, 0), 3, verde_secundario),
+        ('LINEABOVE', (0, 0), (2, 0), 3, verde_secundario),
+        ('LINEBEFORE', (2, 0), (2, -1), 2, verde_secundario),
         
         # Padding
         ('PADDING', (0, 0), (-1, -1), 6),
