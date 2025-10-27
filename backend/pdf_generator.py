@@ -254,6 +254,7 @@ def generate_pdf(visita_id):
     
     info_table = Table(info_data, colWidths=[0.8*inch, 1.8*inch, 0.8*inch, 1.8*inch])
     info_table.setStyle(TableStyle([
+        # Header styling
         ('BACKGROUND', (0, 0), (0, 0), azul_principal),
         ('BACKGROUND', (2, 0), (2, 0), azul_principal),
         ('TEXTCOLOR', (0, 0), (0, 0), blanco),
@@ -261,38 +262,63 @@ def generate_pdf(visita_id):
         ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
         ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('PADDING', (0, 0), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 1, gris_claro),
+        
+        # Content styling
         ('BACKGROUND', (1, 0), (1, 0), blanco),
         ('BACKGROUND', (3, 0), (3, 0), blanco),
+        
+        # Alignment
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        
+        # Beautiful borders
+        ('GRID', (0, 0), (-1, -1), 1.5, azul_principal),  # Outer border
+        ('LINEBELOW', (0, 0), (-1, 0), 2, azul_principal),  # Header bottom border
+        ('LINEABOVE', (0, 0), (-1, 0), 2, azul_principal),  # Header top border
+        ('LINEBEFORE', (2, 0), (2, -1), 1, gris_medio),     # Vertical separator
+        
+        # Padding
+        ('PADDING', (0, 0), (-1, -1), 6),
     ]))
     elements.append(info_table)
     elements.append(Spacer(1, 0.4*inch))
 
-    # Información del cliente en tarjeta moderna - diseño ultra compacto
+    # Información del cliente en tarjeta moderna - diseño súper compacto
     cliente_data = [
         ['INFORMACIÓN DEL CLIENTE', 'INFORMACIÓN DE LA VISITA'],
-        ['Cliente:', visita.cliente.nombre[:15] + ('...' if len(visita.cliente.nombre) > 15 else ''), 'Supervisor:', visita.supervisor.nombre[:12] + ('...' if len(visita.supervisor.nombre) > 12 else '')],
-        ['NIT:', visita.cliente.nit[:10] + ('...' if len(visita.cliente.nit) > 10 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Admin:', visita.cliente.administrador[:12] + ('...' if len(visita.cliente.administrador) > 12 else ''), 'Código:', visita.cliente.tipo_codigo[:6] + ('...' if len(visita.cliente.tipo_codigo) > 6 else '')],
-        ['Email:', visita.cliente.correo[:15] + ('...' if len(visita.cliente.correo) > 15 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['Cliente:', visita.cliente.nombre[:12] + ('...' if len(visita.cliente.nombre) > 12 else ''), 'Supervisor:', visita.supervisor.nombre[:10] + ('...' if len(visita.supervisor.nombre) > 10 else '')],
+        ['NIT:', visita.cliente.nit[:8] + ('...' if len(visita.cliente.nit) > 8 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
+        ['Admin:', visita.cliente.administrador[:10] + ('...' if len(visita.cliente.administrador) > 10 else ''), 'Código:', visita.cliente.tipo_codigo[:5] + ('...' if len(visita.cliente.tipo_codigo) > 5 else '')],
+        ['Email:', visita.cliente.correo[:12] + ('...' if len(visita.cliente.correo) > 12 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[1.5*inch, 1.5*inch])
+    cliente_table = Table(cliente_data, colWidths=[1.3*inch, 1.3*inch])
     cliente_table.setStyle(TableStyle([
+        # Header styling
         ('BACKGROUND', (0, 0), (1, 0), verde_secundario),
         ('TEXTCOLOR', (0, 0), (1, 0), blanco),
         ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (1, 0), 9),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        
+        # Content styling
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 1), (-1, -1), 7),
-        ('GRID', (0, 0), (-1, -1), 1, gris_claro),
         ('BACKGROUND', (0, 1), (-1, -1), blanco),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [blanco, gris_claro]),
+        
+        # Alignment
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        
+        # Beautiful borders
+        ('GRID', (0, 0), (-1, -1), 1.5, azul_principal),  # Outer border
+        ('LINEBELOW', (0, 0), (1, 0), 2, azul_principal),  # Header bottom border
+        ('LINEABOVE', (0, 0), (1, 0), 2, azul_principal),  # Header top border
+        ('LINEBEFORE', (1, 0), (1, -1), 1, gris_medio),    # Vertical separator
+        ('LINEAFTER', (0, 0), (0, -1), 1, gris_medio),     # Left border
+        ('LINEBEFORE', (0, 0), (0, -1), 1, gris_medio),    # Right border
+        
+        # Padding
         ('PADDING', (0, 0), (-1, -1), 4),
         ('LEFTPADDING', (0, 1), (-1, -1), 3),
         ('RIGHTPADDING', (0, 1), (-1, -1), 3),
