@@ -122,10 +122,28 @@ def generate_pdf(visita_id):
         if not texto:
             return texto
         import re
-        # Remover etiquetas HTML comunes
-        texto = re.sub(r'<[^>]+>', '', str(texto))
-        # Limpiar espacios extra
+        # Convertir a string si no lo es
+        texto = str(texto)
+        # Remover etiquetas HTML específicas más comunes
+        texto = re.sub(r'<b[^>]*>', '', texto)  # <b> y <b atributos>
+        texto = re.sub(r'</b>', '', texto)      # </b>
+        texto = re.sub(r'<i[^>]*>', '', texto)  # <i> y <i atributos>
+        texto = re.sub(r'</i>', '', texto)      # </i>
+        texto = re.sub(r'<u[^>]*>', '', texto)  # <u> y <u atributos>
+        texto = re.sub(r'</u>', '', texto)      # </u>
+        texto = re.sub(r'<strong[^>]*>', '', texto)  # <strong>
+        texto = re.sub(r'</strong>', '', texto)      # </strong>
+        texto = re.sub(r'<em[^>]*>', '', texto)      # <em>
+        texto = re.sub(r'</em>', '', texto)          # </em>
+        # Remover cualquier etiqueta HTML restante
+        texto = re.sub(r'<[^>]+>', '', texto)
+        # Limpiar espacios extra y caracteres especiales
         texto = ' '.join(texto.split())
+        # Limpiar caracteres de escape
+        texto = texto.replace('&nbsp;', ' ')
+        texto = texto.replace('&amp;', '&')
+        texto = texto.replace('&lt;', '<')
+        texto = texto.replace('&gt;', '>')
         return texto
 
     # Header con logos mejorado
@@ -276,16 +294,27 @@ def generate_pdf(visita_id):
         
         # Crear tarjeta para cada actividad
         for zona in zonas_seccion:
+            # Debug: imprimir datos originales
+            print(f"DEBUG - Concepto original: '{zona.concepto_actividad}'")
+            print(f"DEBUG - Calificación original: '{zona.calificacion}'")
+            print(f"DEBUG - Observaciones originales: '{zona.observaciones}'")
+            
             # Limpiar HTML de los datos
             concepto_limpio = limpiar_html(zona.concepto_actividad)
             calificacion_limpia = limpiar_html(zona.calificacion)
             observaciones_limpias = limpiar_html(zona.observaciones) or 'Sin observaciones'
             
-            # Crear tarjeta moderna con sombra
+            # Debug: imprimir datos limpios
+            print(f"DEBUG - Concepto limpio: '{concepto_limpio}'")
+            print(f"DEBUG - Calificación limpia: '{calificacion_limpia}'")
+            print(f"DEBUG - Observaciones limpias: '{observaciones_limpias}'")
+            print("---")
+            
+            # Crear tarjeta moderna con sombra usando Paragraph para evitar HTML
             actividad_data = [
-                [concepto_limpio, ""],
-                ["Calificación:", calificacion_limpia],
-                ["Observaciones:", observaciones_limpias]
+                [Paragraph(concepto_limpio, estilos['texto_negrita']), ""],
+                [Paragraph("Calificación:", estilos['texto_negrita']), Paragraph(calificacion_limpia, estilos['texto_normal'])],
+                [Paragraph("Observaciones:", estilos['texto_negrita']), Paragraph(observaciones_limpias, estilos['texto_normal'])]
             ]
             
             actividad_table = Table(actividad_data, colWidths=[4.5*inch, 1.5*inch])
@@ -380,8 +409,8 @@ def generate_pdf(visita_id):
         
         # Crear tarjeta de conclusiones moderna
         conclusiones_data = [
-            ['CONCLUSIONES', ''],
-            [conclusiones_limpias, '']
+            [Paragraph('CONCLUSIONES', estilos['texto_negrita']), ''],
+            [Paragraph(conclusiones_limpias, estilos['texto_normal']), '']
         ]
         
         conclusiones_table = Table(conclusiones_data, colWidths=[5*inch, 1*inch])
