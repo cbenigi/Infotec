@@ -186,6 +186,20 @@ def generate_pdf(visita_id):
                     fillColor=color_texto, fontName='Helvetica-Bold'))
         return d
 
+    # Función para crear bloques rectangulares con bordes redondeados
+    def crear_bloque_redondeado(color_fondo, color_borde, grosor_borde=1):
+        return [
+            # Fondo del bloque
+            ('BACKGROUND', (0, 0), (-1, -1), color_fondo),
+            # Bordes redondeados simulados con líneas
+            ('BOX', (0, 0), (-1, -1), grosor_borde, color_borde),
+            # Padding interno
+            ('PADDING', (0, 0), (-1, -1), 12),
+            # Alineación
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]
+    
     # Función para crear bordes minimalistas y modernos
     def crear_bordes_modernos(color_principal, color_secundario):
         return [
@@ -209,6 +223,50 @@ def generate_pdf(visita_id):
             ('LINEBEFORE', (1, 0), (1, -1), 0.3, color_principal),
             ('LINEAFTER', (0, 0), (0, -1), 0.3, color_principal),
         ]
+    
+    # Función para crear tarjetas de actividad con diseño moderno
+    def crear_tarjeta_actividad(titulo, descripcion, calificacion, color_tema, icono="📋"):
+        # Crear datos para la tarjeta
+        tarjeta_data = [
+            [f"{icono} {titulo.upper()}", f"Calificación: {calificacion}"],
+            [descripcion, ""]
+        ]
+        
+        # Crear tabla con diseño de tarjeta
+        tarjeta_table = Table(tarjeta_data, colWidths=[4*inch, 2*inch])
+        tarjeta_table.setStyle(TableStyle([
+            # Header styling
+            ('BACKGROUND', (0, 0), (0, 0), color_tema),
+            ('TEXTCOLOR', (0, 0), (0, 0), blanco),
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 9),
+            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+            ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
+            
+            # Calificación styling
+            ('BACKGROUND', (1, 0), (1, 0), gris_claro),
+            ('TEXTCOLOR', (1, 0), (1, 0), color_tema),
+            ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (1, 0), (1, 0), 8),
+            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+            ('VALIGN', (1, 0), (1, 0), 'MIDDLE'),
+            
+            # Descripción styling
+            ('BACKGROUND', (0, 1), (-1, -1), blanco),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('TEXTCOLOR', (0, 1), (-1, -1), negro),
+            ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 1), (-1, -1), 'TOP'),
+            
+            # Bordes redondeados
+            *crear_bloque_redondeado(blanco, color_tema, 1),
+            
+            # Padding
+            ('PADDING', (0, 0), (-1, -1), 8),
+        ]))
+        
+        return tarjeta_table
 
     # Función para limpiar HTML de los textos
     def limpiar_html(texto):
@@ -381,51 +439,83 @@ def generate_pdf(visita_id):
     elements.append(info_table)
     elements.append(Spacer(1, 0.01*inch))  # Espaciado aún más mínimo
 
-    # Información del cliente en tarjeta moderna - diseño con 4 columnas
-    cliente_data = [
-        ['INFORMACIÓN CLIENTE', '', 'INFORMACIÓN VISITA', ''],
-        ['Cliente:', visita.cliente.nombre[:15] + ('...' if len(visita.cliente.nombre) > 15 else ''), 'Supervisor:', visita.supervisor.nombre[:15] + ('...' if len(visita.supervisor.nombre) > 15 else '')],
-        ['NIT:', visita.cliente.nit[:12] + ('...' if len(visita.cliente.nit) > 12 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Admin:', visita.cliente.administrador[:15] + ('...' if len(visita.cliente.administrador) > 15 else ''), 'Código:', visita.cliente.tipo_codigo[:8] + ('...' if len(visita.cliente.tipo_codigo) > 8 else '')],
-        ['Email:', visita.cliente.correo[:25] + ('...' if len(visita.cliente.correo) > 25 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+    # Información del cliente en tarjeta moderna con diseño de bloques redondeados
+    # Bloque de información del cliente
+    cliente_info_data = [
+        ['INFORMACIÓN CLIENTE'],
+        ['Cliente:', visita.cliente.nombre[:20] + ('...' if len(visita.cliente.nombre) > 20 else '')],
+        ['NIT:', visita.cliente.nit[:15] + ('...' if len(visita.cliente.nit) > 15 else '')],
+        ['Admin:', visita.cliente.administrador[:18] + ('...' if len(visita.cliente.administrador) > 18 else '')],
+        ['Email:', visita.cliente.correo[:30] + ('...' if len(visita.cliente.correo) > 30 else '')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[0.7*inch, 1.3*inch, 0.7*inch, 1.3*inch])  # Columnas más equilibradas
-    cliente_table.setStyle(TableStyle([
-        # Header styling - combinar columnas 1-2 y 3-4
-        ('SPAN', (0, 0), (1, 0)),  # Combinar columnas 0-1 para "INFORMACIÓN CLIENTE"
-        ('SPAN', (2, 0), (3, 0)),  # Combinar columnas 2-3 para "INFORMACIÓN VISITA"
+    cliente_info_table = Table(cliente_info_data, colWidths=[1.2*inch, 2.8*inch])
+    cliente_info_table.setStyle(TableStyle([
+        # Header styling
+        ('SPAN', (0, 0), (1, 0)),  # Combinar columnas para el título
         ('BACKGROUND', (0, 0), (1, 0), verde_secundario),
-        ('BACKGROUND', (2, 0), (3, 0), verde_secundario),
-        ('TEXTCOLOR', (0, 0), (3, 0), blanco),
-        ('FONTNAME', (0, 0), (3, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (3, 0), 10),
-        ('ALIGN', (0, 0), (3, 0), 'CENTER'),
-        ('VALIGN', (0, 0), (3, 0), 'MIDDLE'),
+        ('TEXTCOLOR', (0, 0), (1, 0), blanco),
+        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (1, 0), 10),
+        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (1, 0), 'MIDDLE'),
         
         # Content styling
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 7),  # Fuente más pequeña para evitar desbordamiento
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
         ('BACKGROUND', (0, 1), (-1, -1), blanco),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [blanco, gris_claro]),
-        
-        # Alignment
         ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
         
-        # Text wrapping para evitar desbordamiento
-        ('WORDWRAP', (0, 1), (-1, -1), 'CJK'),
-        
-        # Bordes minimalistas modernos
-        *crear_bordes_minimalistas(verde_secundario),
-        
-        # Padding reducido
-        ('PADDING', (0, 0), (-1, -1), 3),  # Reducido de 6 a 3
-        ('LEFTPADDING', (0, 1), (-1, -1), 2),  # Reducido de 4 a 2
-        ('RIGHTPADDING', (0, 1), (-1, -1), 2),  # Reducido de 4 a 2
+        # Bordes redondeados
+        *crear_bloque_redondeado(blanco, verde_secundario, 2),
+        ('PADDING', (0, 0), (-1, -1), 8),
     ]))
-    elements.append(cliente_table)
-    elements.append(Spacer(1, 0.01*inch))  # Espaciado aún más mínimo
+    
+    # Bloque de información de la visita
+    visita_info_data = [
+        ['INFORMACIÓN VISITA'],
+        ['Supervisor:', visita.supervisor.nombre[:18] + ('...' if len(visita.supervisor.nombre) > 18 else '')],
+        ['Fecha:', visita.fecha.strftime('%d/%m/%Y')],
+        ['Código:', visita.cliente.tipo_codigo[:10] + ('...' if len(visita.cliente.tipo_codigo) > 10 else '')],
+        ['Hora:', visita.fecha.strftime('%H:%M')]
+    ]
+    
+    visita_info_table = Table(visita_info_data, colWidths=[1.2*inch, 2.8*inch])
+    visita_info_table.setStyle(TableStyle([
+        # Header styling
+        ('SPAN', (0, 0), (1, 0)),  # Combinar columnas para el título
+        ('BACKGROUND', (0, 0), (1, 0), azul_principal),
+        ('TEXTCOLOR', (0, 0), (1, 0), blanco),
+        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (1, 0), 10),
+        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (1, 0), 'MIDDLE'),
+        
+        # Content styling
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('BACKGROUND', (0, 1), (-1, -1), blanco),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [blanco, gris_claro]),
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
+        
+        # Bordes redondeados
+        *crear_bloque_redondeado(blanco, azul_principal, 2),
+        ('PADDING', (0, 0), (-1, -1), 8),
+    ]))
+    
+    # Crear tabla contenedora para los dos bloques lado a lado
+    bloques_info = Table([[cliente_info_table, visita_info_table]], colWidths=[4*inch, 4*inch])
+    bloques_info.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('PADDING', (0, 0), (-1, -1), 0),
+    ]))
+    
+    elements.append(bloques_info)
+    elements.append(Spacer(1, 0.02*inch))  # Espaciado entre secciones
 
     # Agrupar zonas por sección
     secciones = {}
@@ -449,25 +539,23 @@ def generate_pdf(visita_id):
         elements.append(seccion_titulo)
         elements.append(Spacer(1, 0.01*inch))  # Espaciado aún más reducido
         
-        # Crear layout compacto para cada zona
+        # Crear tarjetas de actividad para cada zona
         for zona in zonas_seccion:
             # Limpiar HTML de los datos
             concepto_limpio = limpiar_html(zona.concepto_actividad)
             calificacion_limpia = limpiar_html(zona.calificacion)
             observaciones_limpias = limpiar_html(zona.observaciones) or 'Sin observaciones'
             
-            # Layout compacto: concepto arriba, descripción abajo, evidencia al lado
-            zona_data = []
+            # Crear tarjeta de actividad con diseño moderno
+            tarjeta_actividad = crear_tarjeta_actividad(
+                titulo=concepto_limpio,
+                descripcion=observaciones_limpias,
+                calificacion=calificacion_limpia,
+                color_tema=color,
+                icono=icono
+            )
             
-            # Fila 1: Concepto (izquierda) + Calificación (derecha)
-            concepto_texto = Paragraph(concepto_limpio, estilos['concepto'])
-            calificacion_texto = Paragraph(f"Calificación: {calificacion_limpia}", estilos['calificacion'])
-            zona_data.append([concepto_texto, calificacion_texto])
-            
-            # Fila 2: Descripción (izquierda) + Evidencia (derecha)
-            descripcion_texto = Paragraph(observaciones_limpias, estilos['descripcion'])
-            
-            # Evidencia (foto si existe)
+            # Crear contenedor para la tarjeta y evidencia
             if zona.foto_url and seccion_nombre in ['Aseo y Limpieza', 'Seguridad y Salud']:
                 foto_path = os.path.join('uploads', zona.foto_url.split('/')[-1])
                 if os.path.exists(foto_path):
@@ -475,63 +563,64 @@ def generate_pdf(visita_id):
                         from PIL import Image as PILImage
                         with PILImage.open(foto_path) as img:
                             img.verify()
-                        # Foto más pequeña: 0.8x0.8 inch
-                        foto = Image(foto_path, 0.8*inch, 0.8*inch)
-                        zona_data.append([descripcion_texto, foto])
+                        # Foto más pequeña: 1.2x1.2 inch
+                        foto = Image(foto_path, 1.2*inch, 1.2*inch)
+                        
+                        # Crear tabla con tarjeta y foto lado a lado
+                        actividad_con_evidencia = Table([[tarjeta_actividad, foto]], colWidths=[4.8*inch, 1.2*inch])
+                        actividad_con_evidencia.setStyle(TableStyle([
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                            ('PADDING', (0, 0), (-1, -1), 0),
+                        ]))
+                        elements.append(actividad_con_evidencia)
                     except Exception as e:
                         print(f"Error cargando imagen: {str(e)}")
-                        error_texto = Paragraph("Imagen no disponible", estilos['descripcion'])
-                        zona_data.append([descripcion_texto, error_texto])
+                        elements.append(tarjeta_actividad)
                 else:
-                    zona_data.append([descripcion_texto, ""])
+                    elements.append(tarjeta_actividad)
             else:
-                zona_data.append([descripcion_texto, ""])
+                elements.append(tarjeta_actividad)
             
-            # Crear tabla compacta
-            zona_table = Table(zona_data, colWidths=[3.5*inch, 2.0*inch])
-            zona_table.setStyle(TableStyle([
-                # Bordes sutiles
-                ('GRID', (0, 0), (-1, -1), 0.5, gris_claro),
-                ('BACKGROUND', (0, 0), (0, 0), color),  # Header con color de sección
-                ('TEXTCOLOR', (0, 0), (0, 0), blanco),
-                ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (0, 0), 7),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('PADDING', (0, 0), (-1, -1), 4),  # Padding reducido
-                ('BACKGROUND', (0, 1), (-1, -1), blanco),
-            ]))
-            elements.append(zona_table)
-            elements.append(Spacer(1, 0.02*inch))  # Espaciado aún más mínimo entre zonas
+            elements.append(Spacer(1, 0.03*inch))  # Espaciado entre tarjetas
         
         elements.append(Spacer(1, 0.02*inch))  # Espaciado entre secciones aún más reducido
 
-    # Sección Conclusiones con diseño mejorado
+    # Sección Conclusiones con diseño de bloque redondeado
     if visita.conclusiones:
         elements.append(Spacer(1, 0.05*inch))  # Espaciado aún más reducido
         
         # Limpiar HTML de las conclusiones
         conclusiones_limpias = limpiar_html(visita.conclusiones)
         
-        # Crear tarjeta de conclusiones moderna
+        # Crear bloque de conclusiones con diseño moderno
         conclusiones_data = [
-            [Paragraph('CONCLUSIONES', estilos['texto_negrita']), ''],
-            [Paragraph(conclusiones_limpias, estilos['texto_normal']), '']
+            ['CONCLUSIONES'],
+            [conclusiones_limpias]
         ]
         
-        conclusiones_table = Table(conclusiones_data, colWidths=[5*inch, 1*inch])
+        conclusiones_table = Table(conclusiones_data, colWidths=[6*inch])
         conclusiones_table.setStyle(TableStyle([
+            # Header styling
+            ('SPAN', (0, 0), (0, 0)),  # Combinar columnas para el título
             ('BACKGROUND', (0, 0), (0, 0), azul_principal),
             ('TEXTCOLOR', (0, 0), (0, 0), blanco),
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 14),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 11),
-            ('GRID', (0, 0), (-1, -1), 1, gris_claro),
-            ('BACKGROUND', (0, 1), (-1, -1), blanco),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('PADDING', (0, 0), (-1, -1), 15),
+            ('FONTSIZE', (0, 0), (0, 0), 12),
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
+            
+            # Content styling
+            ('BACKGROUND', (0, 1), (0, 1), blanco),
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (0, 1), 9),
+            ('TEXTCOLOR', (0, 1), (0, 1), negro),
+            ('ALIGN', (0, 1), (0, 1), 'LEFT'),
+            ('VALIGN', (0, 1), (0, 1), 'TOP'),
+            
+            # Bordes redondeados
+            *crear_bloque_redondeado(blanco, azul_principal, 2),
+            ('PADDING', (0, 0), (-1, -1), 12),
         ]))
         elements.append(conclusiones_table)
     
