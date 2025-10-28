@@ -379,10 +379,10 @@ def generate_pdf(visita_id):
         ['Cliente:', visita.cliente.nombre[:20] + ('...' if len(visita.cliente.nombre) > 20 else ''), 'Supervisor:', visita.supervisor.nombre[:18] + ('...' if len(visita.supervisor.nombre) > 18 else '')],
         ['NIT:', visita.cliente.nit[:15] + ('...' if len(visita.cliente.nit) > 15 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
         ['Admin:', visita.cliente.administrador[:18] + ('...' if len(visita.cliente.administrador) > 18 else ''), 'Código:', visita.cliente.tipo_codigo[:10] + ('...' if len(visita.cliente.tipo_codigo) > 10 else '')],
-        ['Email:', visita.cliente.correo[:20] + ('...' if len(visita.cliente.correo) > 20 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['Email:', visita.cliente.correo[:30] + ('...' if len(visita.cliente.correo) > 30 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[1.0*inch, 1.0*inch, 1.0*inch, 1.0*inch])
+    cliente_table = Table(cliente_data, colWidths=[0.8*inch, 1.2*inch, 0.8*inch, 1.2*inch])  # Columnas más anchas para valores
     cliente_table.setStyle(TableStyle([
         # Header styling - combinar columnas 1-2 y 3-4
         ('SPAN', (0, 0), (1, 0)),  # Combinar columnas 0-1 para "INFORMACIÓN CLIENTE"
@@ -433,10 +433,10 @@ def generate_pdf(visita_id):
         }
         color, icono = seccion_colors.get(seccion_nombre, (azul_principal, '📋'))
         
-        # Título de sección compacto
+        # Título de sección ultra compacto
         seccion_titulo = Paragraph(f"{icono} {seccion_nombre.upper()}", estilos['subtitulo'])
         elements.append(seccion_titulo)
-        elements.append(Spacer(1, 0.05*inch))  # Espaciado aún más reducido
+        elements.append(Spacer(1, 0.02*inch))  # Espaciado ultra reducido
         
         # Crear layout compacto para cada zona
         for zona in zonas_seccion:
@@ -491,13 +491,13 @@ def generate_pdf(visita_id):
                 ('BACKGROUND', (0, 1), (-1, -1), blanco),
             ]))
             elements.append(zona_table)
-            elements.append(Spacer(1, 0.1*inch))  # Espaciado mínimo entre zonas
+            elements.append(Spacer(1, 0.05*inch))  # Espaciado ultra mínimo entre zonas
         
-        elements.append(Spacer(1, 0.1*inch))  # Espaciado entre secciones reducido
+        elements.append(Spacer(1, 0.05*inch))  # Espaciado entre secciones ultra reducido
 
     # Sección Conclusiones con diseño mejorado
     if visita.conclusiones:
-        elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
+        elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
         
         # Limpiar HTML de las conclusiones
         conclusiones_limpias = limpiar_html(visita.conclusiones)
@@ -525,7 +525,7 @@ def generate_pdf(visita_id):
         elements.append(conclusiones_table)
     
     # Footer moderno
-    elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
+    elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
     
     # Línea separadora del footer
     footer_separator = Table([['']], colWidths=[6*inch])
