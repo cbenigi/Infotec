@@ -305,15 +305,15 @@ def generate_pdf(visita_id):
         for logo_path in posibles_rutas_cliente:
             if os.path.exists(logo_path):
                 try:
-                from PIL import Image as PILImage
+                    from PIL import Image as PILImage
                     with PILImage.open(logo_path) as img:
                         img.verify()
                     cliente_logo = Image(logo_path, 0.6*inch, 0.6*inch)  # Mucho más pequeño
-                header_elements.append(cliente_logo)
+                    header_elements.append(cliente_logo)
                     cliente_logo_cargado = True
                     print(f"Logo de cliente cargado desde: {logo_path}")
                     break
-            except Exception as e:
+                except Exception as e:
                     print(f"Error cargando logo de cliente desde {logo_path}: {str(e)}")
                     continue
     
