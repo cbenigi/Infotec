@@ -6,6 +6,7 @@ import axios from '../api/axiosConfig';
 const ImageUpload = ({ onUpload, images, onRemove }) => {
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const onDrop = useCallback((acceptedFiles) => {
     const file = acceptedFiles[0]; // Solo tomar el primer archivo
@@ -18,6 +19,7 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
       reader.readAsDataURL(file);
 
       setUploading(true);
+      setUploadSuccess(false);
       
       const formData = new FormData();
       formData.append('file', file);
@@ -31,12 +33,19 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
           console.log('Imagen subida exitosamente:', response.data.url);
           onUpload(response.data.url);
           setUploading(false);
-          setPreviewUrl(null);
+          setUploadSuccess(true);
+          // Mantener la vista previa por un momento para confirmar
+          setTimeout(() => {
+            setPreviewUrl(null);
+            setUploadSuccess(false);
+          }, 2000);
         })
         .catch((error) => {
           console.error('Error uploading:', error);
           setUploading(false);
           setPreviewUrl(null);
+          setUploadSuccess(false);
+          alert('Error al subir la imagen. Por favor, intenta nuevamente.');
         });
     }
   }, [onUpload]);
@@ -69,42 +78,48 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
       {/* Vista previa mientras se sube */}
       {previewUrl && (
         <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Vista previa:
+          <Typography variant="subtitle2" sx={{ mb: 1, color: uploadSuccess ? '#4caf50' : '#1976d2', fontWeight: 'bold' }}>
+            {uploadSuccess ? '✅ Imagen subida exitosamente!' : 'Vista previa:'}
           </Typography>
           <img 
             src={previewUrl} 
             alt="preview" 
             style={{ 
-              width: 100, 
-              height: 100, 
+              width: 120, 
+              height: 120, 
               objectFit: 'cover',
               borderRadius: '8px',
-              border: '2px solid #1976d2'
+              border: uploadSuccess ? '3px solid #4caf50' : '2px solid #1976d2',
+              boxShadow: uploadSuccess ? '0 4px 12px rgba(76, 175, 80, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'
             }} 
           />
+          {uploadSuccess && (
+            <Typography variant="body2" sx={{ mt: 1, color: '#4caf50', fontWeight: 'bold' }}>
+              La imagen se guardará al registrar
+            </Typography>
+          )}
         </Box>
       )}
       
       {/* Imágenes ya subidas */}
-      {images.length > 0 && (
+      {images.length > 0 && !previewUrl && (
         <Box sx={{ mt: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, color: '#4caf50', fontWeight: 'bold' }}>
-            ✅ Imagen subida exitosamente:
+            ✅ Logo seleccionado:
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
           {images.map((img, index) => (
             <Box key={index} sx={{ position: 'relative', mr: 1, mb: 1 }}>
               <img 
                 src={`${axios.defaults.baseURL}${img}`} 
-                alt="preview" 
+                alt="Logo seleccionado" 
                 style={{ 
                   width: 120, 
                   height: 120, 
                   objectFit: 'cover',
                   borderRadius: '8px',
                   border: '3px solid #4caf50',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
                 }} 
               />
               <IconButton 
@@ -126,6 +141,9 @@ const ImageUpload = ({ onUpload, images, onRemove }) => {
             </Box>
           ))}
           </Box>
+          <Typography variant="body2" sx={{ mt: 1, color: '#666', fontStyle: 'italic' }}>
+            Este logo aparecerá en los PDFs generados
+          </Typography>
         </Box>
       )}
     </Box>
