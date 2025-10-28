@@ -384,13 +384,13 @@ def generate_pdf(visita_id):
     # Información del cliente en tarjeta moderna - diseño con 4 columnas
     cliente_data = [
         ['INFORMACIÓN CLIENTE', '', 'INFORMACIÓN VISITA', ''],
-        ['Cliente:', visita.cliente.nombre[:20] + ('...' if len(visita.cliente.nombre) > 20 else ''), 'Supervisor:', visita.supervisor.nombre[:18] + ('...' if len(visita.supervisor.nombre) > 18 else '')],
-        ['NIT:', visita.cliente.nit[:15] + ('...' if len(visita.cliente.nit) > 15 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Admin:', visita.cliente.administrador[:18] + ('...' if len(visita.cliente.administrador) > 18 else ''), 'Código:', visita.cliente.tipo_codigo[:10] + ('...' if len(visita.cliente.tipo_codigo) > 10 else '')],
-        ['Email:', visita.cliente.correo[:40] + ('...' if len(visita.cliente.correo) > 40 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['Cliente:', visita.cliente.nombre[:15] + ('...' if len(visita.cliente.nombre) > 15 else ''), 'Supervisor:', visita.supervisor.nombre[:15] + ('...' if len(visita.supervisor.nombre) > 15 else '')],
+        ['NIT:', visita.cliente.nit[:12] + ('...' if len(visita.cliente.nit) > 12 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
+        ['Admin:', visita.cliente.administrador[:15] + ('...' if len(visita.cliente.administrador) > 15 else ''), 'Código:', visita.cliente.tipo_codigo[:8] + ('...' if len(visita.cliente.tipo_codigo) > 8 else '')],
+        ['Email:', visita.cliente.correo[:25] + ('...' if len(visita.cliente.correo) > 25 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
-    cliente_table = Table(cliente_data, colWidths=[0.8*inch, 1.2*inch, 0.8*inch, 1.2*inch])  # Columnas más anchas para valores
+    cliente_table = Table(cliente_data, colWidths=[0.7*inch, 1.3*inch, 0.7*inch, 1.3*inch])  # Columnas más equilibradas
     cliente_table.setStyle(TableStyle([
         # Header styling - combinar columnas 1-2 y 3-4
         ('SPAN', (0, 0), (1, 0)),  # Combinar columnas 0-1 para "INFORMACIÓN CLIENTE"
@@ -405,13 +405,16 @@ def generate_pdf(visita_id):
         
         # Content styling
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('FONTSIZE', (0, 1), (-1, -1), 7),  # Fuente más pequeña para evitar desbordamiento
         ('BACKGROUND', (0, 1), (-1, -1), blanco),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [blanco, gris_claro]),
         
         # Alignment
         ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
+        
+        # Text wrapping para evitar desbordamiento
+        ('WORDWRAP', (0, 1), (-1, -1), 'CJK'),
         
         # Bordes minimalistas modernos
         *crear_bordes_minimalistas(verde_secundario),
