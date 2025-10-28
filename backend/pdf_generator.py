@@ -70,7 +70,7 @@ def generate_pdf(visita_id):
     filename = f"informe_{visita_id}.pdf"
     doc = SimpleDocTemplate(filename, pagesize=letter, 
                            rightMargin=72, leftMargin=72, 
-                           topMargin=72, bottomMargin=72)
+                           topMargin=36, bottomMargin=72)  # Reducido margen superior de 72 a 36
     elements = []
     styles = getSampleStyleSheet()
 
@@ -340,12 +340,12 @@ def generate_pdf(visita_id):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         elements.append(logo_table)
-        elements.append(Spacer(1, 0.01*inch))  # Espaciado ultra mínimo
+        elements.append(Spacer(1, 0.005*inch))  # Espaciado aún más mínimo
 
     # Título principal del informe - ultra pegado al techo
     titulo_principal = Paragraph("INFORME DE PRESTACIÓN DEL SERVICIO", estilos['titulo_principal'])
     elements.append(titulo_principal)
-    elements.append(Spacer(1, 0.02*inch))  # Espaciado ultra mínimo
+    elements.append(Spacer(1, 0.01*inch))  # Espaciado aún más mínimo
     
     # Información del informe - diseño más compacto
     info_data = [
@@ -379,7 +379,7 @@ def generate_pdf(visita_id):
         ('PADDING', (0, 0), (-1, -1), 3),  # Reducido de 6 a 3
     ]))
     elements.append(info_table)
-    elements.append(Spacer(1, 0.02*inch))  # Espaciado ultra mínimo
+    elements.append(Spacer(1, 0.01*inch))  # Espaciado aún más mínimo
 
     # Información del cliente en tarjeta moderna - diseño con 4 columnas
     cliente_data = [
@@ -422,7 +422,7 @@ def generate_pdf(visita_id):
         ('RIGHTPADDING', (0, 1), (-1, -1), 2),  # Reducido de 4 a 2
     ]))
     elements.append(cliente_table)
-    elements.append(Spacer(1, 0.02*inch))  # Espaciado ultra mínimo
+    elements.append(Spacer(1, 0.01*inch))  # Espaciado aún más mínimo
 
     # Agrupar zonas por sección
     secciones = {}
@@ -444,7 +444,7 @@ def generate_pdf(visita_id):
         # Título de sección ultra compacto
         seccion_titulo = Paragraph(f"{icono} {seccion_nombre.upper()}", estilos['subtitulo'])
         elements.append(seccion_titulo)
-        elements.append(Spacer(1, 0.02*inch))  # Espaciado ultra reducido
+        elements.append(Spacer(1, 0.01*inch))  # Espaciado aún más reducido
         
         # Crear layout compacto para cada zona
         for zona in zonas_seccion:
@@ -499,13 +499,13 @@ def generate_pdf(visita_id):
                 ('BACKGROUND', (0, 1), (-1, -1), blanco),
             ]))
             elements.append(zona_table)
-            elements.append(Spacer(1, 0.05*inch))  # Espaciado ultra mínimo entre zonas
+            elements.append(Spacer(1, 0.02*inch))  # Espaciado aún más mínimo entre zonas
         
-        elements.append(Spacer(1, 0.05*inch))  # Espaciado entre secciones ultra reducido
+        elements.append(Spacer(1, 0.02*inch))  # Espaciado entre secciones aún más reducido
 
     # Sección Conclusiones con diseño mejorado
     if visita.conclusiones:
-        elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
+        elements.append(Spacer(1, 0.05*inch))  # Espaciado aún más reducido
         
         # Limpiar HTML de las conclusiones
         conclusiones_limpias = limpiar_html(visita.conclusiones)
@@ -533,7 +533,7 @@ def generate_pdf(visita_id):
         elements.append(conclusiones_table)
     
     # Footer moderno
-    elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
+    elements.append(Spacer(1, 0.05*inch))  # Espaciado aún más reducido
     
     # Línea separadora del footer
     footer_separator = Table([['']], colWidths=[6*inch])
