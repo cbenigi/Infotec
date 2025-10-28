@@ -178,25 +178,36 @@ def generate_pdf(visita_id):
 
     estilos = crear_estilos()
 
-    # Función para crear logo circular
+    # Función para crear logo circular - más pequeño
     def crear_logo_circular(texto, color_fondo, color_texto):
-        d = Drawing(80, 80)
-        d.add(Circle(40, 40, 35, fillColor=color_fondo, strokeColor=color_fondo))
-        d.add(String(40, 35, texto, textAnchor='middle', fontSize=14, 
+        d = Drawing(60, 60)  # Reducido de 80x80 a 60x60
+        d.add(Circle(30, 30, 25, fillColor=color_fondo, strokeColor=color_fondo))  # Reducido de 35 a 25
+        d.add(String(30, 26, texto, textAnchor='middle', fontSize=10,  # Reducido de 14 a 10
                     fillColor=color_texto, fontName='Helvetica-Bold'))
         return d
 
-    # Función para crear bordes redondos elegantes
-    def crear_bordes_redondos(color_principal, color_secundario):
+    # Función para crear bordes minimalistas y modernos
+    def crear_bordes_modernos(color_principal, color_secundario):
         return [
-            # Bordes principales más gruesos para efecto redondeado
-            ('GRID', (0, 0), (-1, -1), 2.5, color_principal),
-            # Bordes internos más suaves
-            ('LINEBELOW', (0, 0), (-1, 0), 3, color_principal),
-            ('LINEABOVE', (0, 0), (-1, 0), 3, color_principal),
-            ('LINEBEFORE', (1, 0), (1, -1), 2, color_secundario),
-            ('LINEAFTER', (0, 0), (0, -1), 2, color_secundario),
-            ('LINEBEFORE', (0, 0), (0, -1), 2, color_secundario),
+            # Bordes sutiles y delgados
+            ('GRID', (0, 0), (-1, -1), 0.5, color_principal),  # Muy delgado
+            # Bordes superiores e inferiores más prominentes
+            ('LINEBELOW', (0, 0), (-1, 0), 1, color_principal),
+            ('LINEABOVE', (0, 0), (-1, 0), 1, color_principal),
+            # Bordes laterales sutiles
+            ('LINEBEFORE', (1, 0), (1, -1), 0.5, color_secundario),
+            ('LINEAFTER', (0, 0), (0, -1), 0.5, color_secundario),
+        ]
+    
+    # Función para bordes ultra minimalistas
+    def crear_bordes_minimalistas(color_principal):
+        return [
+            # Solo bordes superiores e inferiores
+            ('LINEBELOW', (0, 0), (-1, 0), 0.5, color_principal),
+            ('LINEABOVE', (0, 0), (-1, 0), 0.5, color_principal),
+            # Bordes laterales muy sutiles
+            ('LINEBEFORE', (1, 0), (1, -1), 0.3, color_principal),
+            ('LINEAFTER', (0, 0), (0, -1), 0.3, color_principal),
         ]
 
     # Función para limpiar HTML de los textos
@@ -239,9 +250,13 @@ def generate_pdf(visita_id):
     # Header con logos mejorado
     header_elements = []
     
-    # Logo de la empresa - mejorado
+    # Logo de la empresa - debug mejorado
     empresa_logo_cargado = False
+    print(f"DEBUG: Empresa encontrada: {empresa.nombre if empresa else 'No encontrada'}")
+    print(f"DEBUG: Logo URL de empresa: {empresa.logo_url if empresa else 'No hay empresa'}")
+    
     if empresa and empresa.logo_url:
+        print(f"DEBUG: Intentando cargar logo de empresa: {empresa.logo_url}")
         # Intentar diferentes rutas posibles para el logo
         posibles_rutas = [
             empresa.logo_url,  # Ruta completa
@@ -251,26 +266,30 @@ def generate_pdf(visita_id):
         ]
         
         for logo_path in posibles_rutas:
-            if os.path.exists(logo_path):
-                try:
-                    from PIL import Image as PILImage
-                    with PILImage.open(logo_path) as img:
+            print(f"DEBUG: Probando ruta: {logo_path}")
+        if os.path.exists(logo_path):
+                print(f"DEBUG: Archivo encontrado en: {logo_path}")
+            try:
+                from PIL import Image as PILImage
+                with PILImage.open(logo_path) as img:
                         img.verify()
-                    empresa_logo = Image(logo_path, 1.2*inch, 1.2*inch)
-                    header_elements.append(empresa_logo)
+                    empresa_logo = Image(logo_path, 0.6*inch, 0.6*inch)  # Mucho más pequeño
+                header_elements.append(empresa_logo)
                     empresa_logo_cargado = True
-                    print(f"Logo de empresa cargado desde: {logo_path}")
+                    print(f"✅ Logo de empresa cargado desde: {logo_path}")
                     break
-                except Exception as e:
-                    print(f"Error cargando logo de empresa desde {logo_path}: {str(e)}")
+            except Exception as e:
+                    print(f"❌ Error cargando logo de empresa desde {logo_path}: {str(e)}")
                     continue
+    else:
+                print(f"❌ Archivo no encontrado en: {logo_path}")
     
     if not empresa_logo_cargado:
         # Crear logo circular como fallback
         logo_texto = empresa_nombre[:2].upper() if len(empresa_nombre) >= 2 else "E"
         logo_circular = crear_logo_circular(logo_texto, azul_principal, blanco)
         header_elements.append(logo_circular)
-        print(f"Usando logo circular para empresa: {logo_texto}")
+        print(f"⚠️ Usando logo circular para empresa: {logo_texto}")
     
     # Logo del cliente - mejorado
     cliente_logo_cargado = False
@@ -286,15 +305,15 @@ def generate_pdf(visita_id):
         for logo_path in posibles_rutas_cliente:
             if os.path.exists(logo_path):
                 try:
-                    from PIL import Image as PILImage
+                from PIL import Image as PILImage
                     with PILImage.open(logo_path) as img:
                         img.verify()
-                    cliente_logo = Image(logo_path, 1.2*inch, 1.2*inch)
-                    header_elements.append(cliente_logo)
+                    cliente_logo = Image(logo_path, 0.6*inch, 0.6*inch)  # Mucho más pequeño
+                header_elements.append(cliente_logo)
                     cliente_logo_cargado = True
                     print(f"Logo de cliente cargado desde: {logo_path}")
                     break
-                except Exception as e:
+            except Exception as e:
                     print(f"Error cargando logo de cliente desde {logo_path}: {str(e)}")
                     continue
     
@@ -305,19 +324,20 @@ def generate_pdf(visita_id):
         header_elements.append(logo_circular)
         print(f"Usando logo circular para cliente: {logo_texto}")
 
-    # Header principal con logos
+    # Header principal con logos - más compacto
     if header_elements:
-        logo_table = Table([header_elements], colWidths=[len(header_elements) * 1.5*inch])
+        logo_table = Table([header_elements], colWidths=[len(header_elements) * 0.8*inch])  # Más pequeño
         logo_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         elements.append(logo_table)
-        elements.append(Spacer(1, 0.3*inch))
+        elements.append(Spacer(1, 0.1*inch))  # Espaciado reducido
 
-    # Título principal del informe
+    # Título principal del informe - más compacto
     titulo_principal = Paragraph("INFORME DE PRESTACIÓN DEL SERVICIO", estilos['titulo_principal'])
     elements.append(titulo_principal)
+    elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
     
     # Información del informe - diseño más compacto
     info_data = [
@@ -334,7 +354,7 @@ def generate_pdf(visita_id):
         ('TEXTCOLOR', (2, 0), (2, 0), blanco),
         ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
         ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('FONTSIZE', (0, 0), (-1, -1), 7),  # Más pequeño
         
         # Content styling
         ('BACKGROUND', (1, 0), (1, 0), blanco),
@@ -344,14 +364,14 @@ def generate_pdf(visita_id):
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         
-        # Beautiful borders with matching colors
-        *crear_bordes_redondos(azul_principal, gris_medio),
+        # Bordes minimalistas modernos
+        *crear_bordes_minimalistas(azul_principal),
         
-        # Padding
-        ('PADDING', (0, 0), (-1, -1), 6),
+        # Padding reducido
+        ('PADDING', (0, 0), (-1, -1), 3),  # Reducido de 6 a 3
     ]))
     elements.append(info_table)
-    elements.append(Spacer(1, 0.4*inch))
+    elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
 
     # Información del cliente en tarjeta moderna - diseño con 4 columnas
     cliente_data = [
@@ -385,19 +405,16 @@ def generate_pdf(visita_id):
         ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
         
-        # Beautiful borders
-        ('GRID', (0, 0), (-1, -1), 2, verde_secundario),
-        ('LINEBELOW', (0, 0), (3, 0), 3, verde_secundario),
-        ('LINEABOVE', (0, 0), (3, 0), 3, verde_secundario),
-        ('LINEBEFORE', (2, 0), (2, -1), 2, verde_secundario),
+        # Bordes minimalistas modernos
+        *crear_bordes_minimalistas(verde_secundario),
         
-        # Padding
-        ('PADDING', (0, 0), (-1, -1), 6),
-        ('LEFTPADDING', (0, 1), (-1, -1), 4),
-        ('RIGHTPADDING', (0, 1), (-1, -1), 4),
+        # Padding reducido
+        ('PADDING', (0, 0), (-1, -1), 3),  # Reducido de 6 a 3
+        ('LEFTPADDING', (0, 1), (-1, -1), 2),  # Reducido de 4 a 2
+        ('RIGHTPADDING', (0, 1), (-1, -1), 2),  # Reducido de 4 a 2
     ]))
     elements.append(cliente_table)
-    elements.append(Spacer(1, 0.4*inch))
+    elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
 
     # Agrupar zonas por sección
     secciones = {}
@@ -419,7 +436,7 @@ def generate_pdf(visita_id):
         # Título de sección compacto
         seccion_titulo = Paragraph(f"{icono} {seccion_nombre.upper()}", estilos['subtitulo'])
         elements.append(seccion_titulo)
-        elements.append(Spacer(1, 0.1*inch))  # Espaciado reducido
+        elements.append(Spacer(1, 0.05*inch))  # Espaciado aún más reducido
         
         # Crear layout compacto para cada zona
         for zona in zonas_seccion:
@@ -447,8 +464,8 @@ def generate_pdf(visita_id):
                         from PIL import Image as PILImage
                         with PILImage.open(foto_path) as img:
                             img.verify()
-                        # Foto más pequeña: 1.2x1.2 inch
-                        foto = Image(foto_path, 1.2*inch, 1.2*inch)
+                        # Foto más pequeña: 0.8x0.8 inch
+                        foto = Image(foto_path, 0.8*inch, 0.8*inch)
                         zona_data.append([descripcion_texto, foto])
                     except Exception as e:
                         print(f"Error cargando imagen: {str(e)}")
@@ -476,11 +493,11 @@ def generate_pdf(visita_id):
             elements.append(zona_table)
             elements.append(Spacer(1, 0.1*inch))  # Espaciado mínimo entre zonas
         
-        elements.append(Spacer(1, 0.2*inch))  # Espaciado entre secciones
+        elements.append(Spacer(1, 0.1*inch))  # Espaciado entre secciones reducido
 
     # Sección Conclusiones con diseño mejorado
     if visita.conclusiones:
-        elements.append(Spacer(1, 0.5*inch))
+        elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
         
         # Limpiar HTML de las conclusiones
         conclusiones_limpias = limpiar_html(visita.conclusiones)
@@ -508,7 +525,7 @@ def generate_pdf(visita_id):
         elements.append(conclusiones_table)
     
     # Footer moderno
-    elements.append(Spacer(1, 0.5*inch))
+    elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
     
     # Línea separadora del footer
     footer_separator = Table([['']], colWidths=[6*inch])
