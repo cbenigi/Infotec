@@ -544,10 +544,6 @@ def generate_pdf(visita_id):
         }
         color, icono = seccion_colors.get(seccion_nombre, (azul_principal, '📋'))
         
-        # Título de sección ultra compacto
-        seccion_titulo = Paragraph(f"{icono} {seccion_nombre.upper()}", estilos['subtitulo'])
-        elements.append(seccion_titulo)
-        elements.append(Spacer(1, 0.01*inch))  # Espaciado aún más reducido
         
         # Crear tarjetas de actividad para cada zona
         for zona in zonas_seccion:
