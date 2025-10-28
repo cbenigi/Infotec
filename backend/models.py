@@ -45,6 +45,7 @@ class Visita(db.Model):
     __tablename__ = 'visitas'
     id = db.Column(db.String(20), primary_key=True)  # Autogenerado: NUM-TIPO-FECHA
     fecha = db.Column(db.Date, nullable=False)
+    hora = db.Column(db.Time, nullable=True)  # Campo de hora opcional
     supervisor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
     conclusiones = db.Column(db.Text)

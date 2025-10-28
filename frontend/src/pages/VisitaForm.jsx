@@ -36,6 +36,7 @@ const VisitaForm = () => {
     cliente_id: '',
     supervisor_id: '',
     fecha: new Date().toISOString().split('T')[0],
+    hora: new Date().toTimeString().slice(0, 5), // Formato HH:MM
     conclusiones: ''
   });
 
@@ -80,6 +81,7 @@ const VisitaForm = () => {
         cliente_id: visita.cliente_id,
         supervisor_id: visita.supervisor_id,
         fecha: visita.fecha,
+        hora: visita.hora || new Date().toTimeString().slice(0, 5),
         conclusiones: visita.conclusiones || ''
       });
       // Cargar zonas por sección
@@ -290,6 +292,16 @@ const VisitaForm = () => {
                   type="date"
                   value={form.fecha}
                   onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  label="Hora"
+                  type="time"
+                  value={form.hora}
+                  onChange={(e) => setForm({ ...form, hora: e.target.value })}
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                 />

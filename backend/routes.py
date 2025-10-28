@@ -247,9 +247,15 @@ def create_visita():
         fecha = datetime.strptime(data['fecha'], '%Y-%m-%d')
         visita_id = f"{fecha.strftime('%d%m%Y')}-{data.get('tipo_codigo', 'AL')}-{datetime.now().strftime('%H%M')}"
         
+        # Procesar hora si se proporciona
+        hora = None
+        if data.get('hora'):
+            hora = datetime.strptime(data['hora'], '%H:%M').time()
+        
         visita = Visita(
             id=visita_id,
             fecha=fecha,
+            hora=hora,
             supervisor_id=data['supervisor_id'],
             cliente_id=data['cliente_id'],
             conclusiones=data.get('conclusiones', '')
@@ -284,6 +290,7 @@ def get_visita(visita_id):
         return jsonify({
             'id': visita.id,
             'fecha': visita.fecha.strftime('%Y-%m-%d'),
+            'hora': visita.hora.strftime('%H:%M') if visita.hora else None,
             'supervisor_id': visita.supervisor_id,
             'cliente_id': visita.cliente_id,
             'conclusiones': visita.conclusiones,
@@ -308,6 +315,11 @@ def update_visita(visita_id):
         data = request.json
         
         visita.fecha = datetime.strptime(data['fecha'], '%Y-%m-%d')
+        # Procesar hora si se proporciona
+        if data.get('hora'):
+            visita.hora = datetime.strptime(data['hora'], '%H:%M').time()
+        else:
+            visita.hora = None
         visita.supervisor_id = data['supervisor_id']
         visita.cliente_id = data['cliente_id']
         visita.conclusiones = data.get('conclusiones', '')

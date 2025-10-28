@@ -411,7 +411,7 @@ def generate_pdf(visita_id):
     # Información del informe - diseño más compacto
     info_data = [
         ['ID:', str(visita.id), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
-        ['Supervisor:', visita.supervisor.nombre[:20] + ('...' if len(visita.supervisor.nombre) > 20 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['Supervisor:', visita.supervisor.nombre[:20] + ('...' if len(visita.supervisor.nombre) > 20 else ''), 'Hora:', visita.hora.strftime('%H:%M') if visita.hora else visita.fecha.strftime('%H:%M')]
     ]
     
     info_table = Table(info_data, colWidths=[0.8*inch, 1.8*inch, 0.8*inch, 1.8*inch])
@@ -482,7 +482,7 @@ def generate_pdf(visita_id):
         ['Supervisor:', visita.supervisor.nombre[:18] + ('...' if len(visita.supervisor.nombre) > 18 else '')],
         ['Fecha:', visita.fecha.strftime('%d/%m/%Y')],
         ['Código:', visita.cliente.tipo_codigo[:10] + ('...' if len(visita.cliente.tipo_codigo) > 10 else '')],
-        ['Hora:', visita.fecha.strftime('%H:%M')]
+        ['Hora:', visita.hora.strftime('%H:%M') if visita.hora else visita.fecha.strftime('%H:%M')]
     ]
     
     visita_info_table = Table(visita_info_data, colWidths=[1.2*inch, 2.8*inch])
@@ -615,10 +615,28 @@ def generate_pdf(visita_id):
         # Limpiar HTML de las conclusiones
         conclusiones_limpias = limpiar_html(visita.conclusiones)
         
-        # Crear bloque de conclusiones con diseño moderno
+        # Crear bloque de conclusiones con diseño moderno y texto que se ajusta
+        # Crear un estilo para el texto de conclusiones que se ajuste automáticamente
+        estilo_conclusiones = ParagraphStyle(
+            'ConclusionesTexto',
+            parent=estilos['texto_normal'],
+            fontSize=9,
+            textColor=negro,
+            fontName='Helvetica',
+            alignment=TA_LEFT,
+            spaceAfter=6,
+            spaceBefore=6,
+            leftIndent=0,
+            rightIndent=0,
+            wordWrap='CJK'  # Permite que el texto se ajuste automáticamente
+        )
+        
+        # Crear el texto de conclusiones como Paragraph para que se ajuste
+        conclusiones_paragraph = Paragraph(conclusiones_limpias, estilo_conclusiones)
+        
         conclusiones_data = [
             ['CONCLUSIONES'],
-            [conclusiones_limpias]
+            [conclusiones_paragraph]
         ]
         
         conclusiones_table = Table(conclusiones_data, colWidths=[6*inch])
@@ -634,9 +652,6 @@ def generate_pdf(visita_id):
             
             # Content styling
             ('BACKGROUND', (0, 1), (0, 1), blanco),
-            ('FONTNAME', (0, 1), (0, 1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (0, 1), 9),
-            ('TEXTCOLOR', (0, 1), (0, 1), negro),
             ('ALIGN', (0, 1), (0, 1), 'LEFT'),
             ('VALIGN', (0, 1), (0, 1), 'TOP'),
             
