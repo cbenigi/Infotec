@@ -187,12 +187,12 @@ def update_empresa():
 @routes.route('/clientes', methods=['GET'])
 def get_clientes():
     clientes = Cliente.query.all()
-    return jsonify([{'id': c.id, 'nit': c.nit, 'nombre': c.nombre, 'administrador': c.administrador, 'correo': c.correo, 'tipo_codigo': c.tipo_codigo} for c in clientes]), 200
+    return jsonify([{'id': c.id, 'nit': c.nit, 'nombre': c.nombre, 'administrador': c.administrador, 'correo': c.correo, 'tipo_codigo': c.tipo_codigo, 'logo_url': c.logo_url} for c in clientes]), 200
 
 @routes.route('/clientes', methods=['POST'])
 def create_cliente():
     data = request.json
-    cliente = Cliente(nit=data['nit'], nombre=data['nombre'], administrador=data['administrador'], correo=data['correo'], tipo_codigo=data['tipo_codigo'])
+    cliente = Cliente(nit=data['nit'], nombre=data['nombre'], administrador=data['administrador'], correo=data['correo'], tipo_codigo=data['tipo_codigo'], logo_url=data.get('logo_url', ''))
     db.session.add(cliente)
     db.session.commit()
     return jsonify({'message': 'Cliente creado'}), 201
@@ -207,6 +207,8 @@ def manage_cliente(id):
         cliente.administrador = data['administrador']
         cliente.correo = data['correo']
         cliente.tipo_codigo = data['tipo_codigo']
+        if 'logo_url' in data:
+            cliente.logo_url = data['logo_url']
         db.session.commit()
         return jsonify({'message': 'Cliente actualizado'}), 200
     elif request.method == 'DELETE':
