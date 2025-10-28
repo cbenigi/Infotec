@@ -224,46 +224,49 @@ def generate_pdf(visita_id):
             ('LINEAFTER', (0, 0), (0, -1), 0.3, color_principal),
         ]
     
-    # Función para crear tarjetas de actividad con diseño moderno
+    # Función para crear tarjetas de actividad con diseño moderno tipo cuadro
     def crear_tarjeta_actividad(titulo, descripcion, calificacion, color_tema, icono="📋"):
-        # Crear datos para la tarjeta
+        # Crear datos para la tarjeta con diseño de cuadro separado
         tarjeta_data = [
-            [f"{icono} {titulo.upper()}", f"Calificación: {calificacion}"],
-            [descripcion, ""]
+            [f"{icono} {titulo.upper()}"],  # Solo título en la primera fila
+            [f"Calificación: {calificacion}"],  # Calificación en segunda fila
+            [descripcion]  # Descripción en tercera fila
         ]
         
-        # Crear tabla con diseño de tarjeta
-        tarjeta_table = Table(tarjeta_data, colWidths=[4*inch, 2*inch])
+        # Crear tabla con diseño de tarjeta tipo cuadro
+        tarjeta_table = Table(tarjeta_data, colWidths=[6*inch])
         tarjeta_table.setStyle(TableStyle([
-            # Header styling
+            # Título styling - fondo de color
             ('BACKGROUND', (0, 0), (0, 0), color_tema),
             ('TEXTCOLOR', (0, 0), (0, 0), blanco),
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 9),
+            ('FONTSIZE', (0, 0), (0, 0), 10),
             ('ALIGN', (0, 0), (0, 0), 'LEFT'),
             ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
             
-            # Calificación styling
-            ('BACKGROUND', (1, 0), (1, 0), gris_claro),
-            ('TEXTCOLOR', (1, 0), (1, 0), color_tema),
-            ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (1, 0), (1, 0), 8),
-            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
-            ('VALIGN', (1, 0), (1, 0), 'MIDDLE'),
+            # Calificación styling - fondo gris claro
+            ('BACKGROUND', (0, 1), (0, 1), gris_claro),
+            ('TEXTCOLOR', (0, 1), (0, 1), color_tema),
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (0, 1), 9),
+            ('ALIGN', (0, 1), (0, 1), 'LEFT'),
+            ('VALIGN', (0, 1), (0, 1), 'MIDDLE'),
             
-            # Descripción styling
-            ('BACKGROUND', (0, 1), (-1, -1), blanco),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 8),
-            ('TEXTCOLOR', (0, 1), (-1, -1), negro),
-            ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 1), (-1, -1), 'TOP'),
+            # Descripción styling - fondo blanco
+            ('BACKGROUND', (0, 2), (0, 2), blanco),
+            ('FONTNAME', (0, 2), (0, 2), 'Helvetica'),
+            ('FONTSIZE', (0, 2), (0, 2), 8),
+            ('TEXTCOLOR', (0, 2), (0, 2), negro),
+            ('ALIGN', (0, 2), (0, 2), 'LEFT'),
+            ('VALIGN', (0, 2), (0, 2), 'TOP'),
             
-            # Bordes redondeados
-            *crear_bloque_redondeado(blanco, color_tema, 1),
+            # Bordes del cuadro
+            ('BOX', (0, 0), (0, 2), 2, color_tema),  # Borde exterior
+            ('LINEBELOW', (0, 0), (0, 0), 1, blanco),  # Línea entre título y calificación
+            ('LINEBELOW', (0, 1), (0, 1), 1, color_tema),  # Línea entre calificación y descripción
             
             # Padding
-            ('PADDING', (0, 0), (-1, -1), 8),
+            ('PADDING', (0, 0), (0, 2), 10),
         ]))
         
         return tarjeta_table
@@ -555,29 +558,48 @@ def generate_pdf(visita_id):
                 icono=icono
             )
             
-            # Crear contenedor para la tarjeta y evidencia
-            if zona.foto_url and seccion_nombre in ['Aseo y Limpieza', 'Seguridad y Salud']:
-                foto_path = os.path.join('uploads', zona.foto_url.split('/')[-1])
-                if os.path.exists(foto_path):
-                    try:
-                        from PIL import Image as PILImage
-                        with PILImage.open(foto_path) as img:
-                            img.verify()
-                        # Foto más pequeña: 1.2x1.2 inch
-                        foto = Image(foto_path, 1.2*inch, 1.2*inch)
-                        
-                        # Crear tabla con tarjeta y foto lado a lado
-                        actividad_con_evidencia = Table([[tarjeta_actividad, foto]], colWidths=[4.8*inch, 1.2*inch])
-                        actividad_con_evidencia.setStyle(TableStyle([
-                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                            ('PADDING', (0, 0), (-1, -1), 0),
-                        ]))
-                        elements.append(actividad_con_evidencia)
-                    except Exception as e:
-                        print(f"Error cargando imagen: {str(e)}")
-                        elements.append(tarjeta_actividad)
-                else:
+            # Crear contenedor para la tarjeta y evidencia fotográfica
+            if zona.foto_url:
+                # Intentar diferentes rutas para la foto
+                posibles_rutas_foto = [
+                    zona.foto_url,  # Ruta completa
+                    os.path.join('uploads', zona.foto_url.split('/')[-1]),  # Solo nombre del archivo
+                    os.path.join('backend/uploads', zona.foto_url.split('/')[-1]),  # Con backend/
+                    os.path.join('static/uploads', zona.foto_url.split('/')[-1]),  # Con static/
+                ]
+                
+                foto_cargada = False
+                for foto_path in posibles_rutas_foto:
+                    if os.path.exists(foto_path):
+                        try:
+                            from PIL import Image as PILImage
+                            with PILImage.open(foto_path) as img:
+                                img.verify()
+                            # Foto más grande: 2x1.5 inch para mejor visibilidad
+                            foto = Image(foto_path, 2*inch, 1.5*inch)
+                            
+                            # Crear tabla con tarjeta arriba y foto abajo
+                            actividad_con_evidencia = Table([
+                                [tarjeta_actividad],
+                                [foto]
+                            ], colWidths=[6*inch])
+                            actividad_con_evidencia.setStyle(TableStyle([
+                                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                ('PADDING', (0, 0), (-1, -1), 5),
+                                # Borde alrededor de toda la evidencia
+                                ('BOX', (0, 0), (0, 1), 1, gris_medio),
+                            ]))
+                            elements.append(actividad_con_evidencia)
+                            foto_cargada = True
+                            print(f"✅ Evidencia cargada desde: {foto_path}")
+                            break
+                        except Exception as e:
+                            print(f"❌ Error cargando imagen desde {foto_path}: {str(e)}")
+                            continue
+                
+                if not foto_cargada:
+                    print(f"⚠️ No se pudo cargar evidencia para: {zona.concepto_actividad}")
                     elements.append(tarjeta_actividad)
             else:
                 elements.append(tarjeta_actividad)
