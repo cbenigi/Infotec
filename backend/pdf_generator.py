@@ -252,11 +252,16 @@ def generate_pdf(visita_id):
     
     # Logo de la empresa - debug mejorado
     empresa_logo_cargado = False
-    print(f"DEBUG: Empresa encontrada: {empresa.nombre if empresa else 'No encontrada'}")
-    print(f"DEBUG: Logo URL de empresa: {empresa.logo_url if empresa else 'No hay empresa'}")
+    print(f"DEBUG: Empresa encontrada: {empresa.nombre if empresa else 'No encontrada'}", flush=True)
+    print(f"DEBUG: Logo URL de empresa: {empresa.logo_url if empresa else 'No hay empresa'}", flush=True)
+    
+    # Escribir a archivo para debug
+    with open('/tmp/debug_logo_empresa.txt', 'w') as f:
+        f.write(f"Empresa encontrada: {empresa.nombre if empresa else 'No encontrada'}\n")
+        f.write(f"Logo URL de empresa: {empresa.logo_url if empresa else 'No hay empresa'}\n")
     
     if empresa and empresa.logo_url:
-        print(f"DEBUG: Intentando cargar logo de empresa: {empresa.logo_url}")
+        print(f"DEBUG: Intentando cargar logo de empresa: {empresa.logo_url}", flush=True)
         # Intentar diferentes rutas posibles para el logo
         posibles_rutas = [
             empresa.logo_url,  # Ruta completa
@@ -266,9 +271,9 @@ def generate_pdf(visita_id):
         ]
         
         for logo_path in posibles_rutas:
-            print(f"DEBUG: Probando ruta: {logo_path}")
+            print(f"DEBUG: Probando ruta: {logo_path}", flush=True)
             if os.path.exists(logo_path):
-                print(f"DEBUG: Archivo encontrado en: {logo_path}")
+                print(f"DEBUG: Archivo encontrado en: {logo_path}", flush=True)
                 try:
                     from PIL import Image as PILImage
                     with PILImage.open(logo_path) as img:
@@ -276,20 +281,20 @@ def generate_pdf(visita_id):
                     empresa_logo = Image(logo_path, 0.6*inch, 0.6*inch)  # Mucho más pequeño
                     header_elements.append(empresa_logo)
                     empresa_logo_cargado = True
-                    print(f"✅ Logo de empresa cargado desde: {logo_path}")
+                    print(f"✅ Logo de empresa cargado desde: {logo_path}", flush=True)
                     break
                 except Exception as e:
-                    print(f"❌ Error cargando logo de empresa desde {logo_path}: {str(e)}")
+                    print(f"❌ Error cargando logo de empresa desde {logo_path}: {str(e)}", flush=True)
                     continue
             else:
-                print(f"❌ Archivo no encontrado en: {logo_path}")
+                print(f"❌ Archivo no encontrado en: {logo_path}", flush=True)
     
     if not empresa_logo_cargado:
         # Crear logo circular como fallback
         logo_texto = empresa_nombre[:2].upper() if len(empresa_nombre) >= 2 else "E"
         logo_circular = crear_logo_circular(logo_texto, azul_principal, blanco)
         header_elements.append(logo_circular)
-        print(f"⚠️ Usando logo circular para empresa: {logo_texto}")
+        print(f"⚠️ Usando logo circular para empresa: {logo_texto}", flush=True)
     
     # Logo del cliente - mejorado
     cliente_logo_cargado = False
@@ -324,7 +329,7 @@ def generate_pdf(visita_id):
         header_elements.append(logo_circular)
         print(f"Usando logo circular para cliente: {logo_texto}")
 
-    # Header principal con logos - ultra compacto
+    # Header principal con logos - súper pegado al techo
     if header_elements:
         logo_table = Table([header_elements], colWidths=[len(header_elements) * 0.8*inch])  # Más pequeño
         logo_table.setStyle(TableStyle([
@@ -332,12 +337,12 @@ def generate_pdf(visita_id):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         elements.append(logo_table)
-        elements.append(Spacer(1, 0.05*inch))  # Espaciado ultra reducido
+        elements.append(Spacer(1, 0.02*inch))  # Espaciado súper reducido
 
-    # Título principal del informe - ultra compacto
+    # Título principal del informe - súper pegado al techo
     titulo_principal = Paragraph("INFORME DE PRESTACIÓN DEL SERVICIO", estilos['titulo_principal'])
     elements.append(titulo_principal)
-    elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
+    elements.append(Spacer(1, 0.05*inch))  # Espaciado súper reducido
     
     # Información del informe - diseño más compacto
     info_data = [
@@ -371,7 +376,7 @@ def generate_pdf(visita_id):
         ('PADDING', (0, 0), (-1, -1), 3),  # Reducido de 6 a 3
     ]))
     elements.append(info_table)
-    elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
+    elements.append(Spacer(1, 0.05*inch))  # Espaciado súper reducido
 
     # Información del cliente en tarjeta moderna - diseño con 4 columnas
     cliente_data = [
@@ -414,7 +419,7 @@ def generate_pdf(visita_id):
         ('RIGHTPADDING', (0, 1), (-1, -1), 2),  # Reducido de 4 a 2
     ]))
     elements.append(cliente_table)
-    elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
+    elements.append(Spacer(1, 0.05*inch))  # Espaciado súper reducido
 
     # Agrupar zonas por sección
     secciones = {}
