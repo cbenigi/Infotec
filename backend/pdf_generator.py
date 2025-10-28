@@ -53,9 +53,16 @@ def generate_pdf(visita_id):
     supervisor = User.query.get(visita.supervisor_id)
     empresa = None
     if supervisor:
+        # Buscar empresa del supervisor primero
         empresa = Empresa.query.filter_by(user_id=supervisor.id).first()
         print(f"DEBUG: Supervisor encontrado: {supervisor.email}")
-        print(f"DEBUG: Empresa encontrada: {empresa.nombre if empresa else 'No encontrada'}")
+        print(f"DEBUG: Empresa del supervisor: {empresa.nombre if empresa else 'No encontrada'}")
+        
+        # Si no tiene empresa, buscar cualquier empresa disponible
+        if not empresa:
+            empresa = Empresa.query.first()
+            print(f"DEBUG: Usando empresa disponible: {empresa.nombre if empresa else 'No hay empresas'}")
+        
         if empresa:
             print(f"DEBUG: Logo URL de empresa: {empresa.logo_url}")
     else:
