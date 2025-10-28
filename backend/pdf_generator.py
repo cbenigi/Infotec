@@ -267,21 +267,21 @@ def generate_pdf(visita_id):
         
         for logo_path in posibles_rutas:
             print(f"DEBUG: Probando ruta: {logo_path}")
-        if os.path.exists(logo_path):
+            if os.path.exists(logo_path):
                 print(f"DEBUG: Archivo encontrado en: {logo_path}")
-            try:
-                from PIL import Image as PILImage
-                with PILImage.open(logo_path) as img:
+                try:
+                    from PIL import Image as PILImage
+                    with PILImage.open(logo_path) as img:
                         img.verify()
                     empresa_logo = Image(logo_path, 0.6*inch, 0.6*inch)  # Mucho más pequeño
-                header_elements.append(empresa_logo)
+                    header_elements.append(empresa_logo)
                     empresa_logo_cargado = True
                     print(f"✅ Logo de empresa cargado desde: {logo_path}")
                     break
-            except Exception as e:
+                except Exception as e:
                     print(f"❌ Error cargando logo de empresa desde {logo_path}: {str(e)}")
                     continue
-    else:
+            else:
                 print(f"❌ Archivo no encontrado en: {logo_path}")
     
     if not empresa_logo_cargado:
