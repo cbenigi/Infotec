@@ -49,8 +49,17 @@ def generate_pdf(visita_id):
             f.flush()
         return None
 
-    # Obtener datos de la empresa del usuario
-    empresa = Empresa.query.filter_by(user_id=visita.supervisor_id).first()
+    # Obtener datos de la empresa del supervisor
+    supervisor = User.query.get(visita.supervisor_id)
+    empresa = None
+    if supervisor:
+        empresa = Empresa.query.filter_by(user_id=supervisor.id).first()
+        print(f"DEBUG: Supervisor encontrado: {supervisor.email}")
+        print(f"DEBUG: Empresa encontrada: {empresa.nombre if empresa else 'No encontrada'}")
+        if empresa:
+            print(f"DEBUG: Logo URL de empresa: {empresa.logo_url}")
+    else:
+        print("DEBUG: No se encontró supervisor")
     
     # Usar datos de la empresa o valores por defecto
     empresa_nombre = empresa.nombre if empresa else "Empresa"
@@ -73,64 +82,96 @@ def generate_pdf(visita_id):
     blanco = HexColor('#ffffff')              # Blanco puro
     negro = HexColor('#1f2937')              # Negro suave
 
-    # Crear estilos personalizados
+    # Crear estilos personalizados con fuentes elegantes similares a Archivo
+    # Nota: ReportLab no puede usar Google Fonts directamente, pero Helvetica es muy similar a Archivo
     def crear_estilos():
         estilos = {}
         
-        # Estilo para títulos principales
+        # Estilo para títulos principales - más compacto con fuente elegante
         estilos['titulo_principal'] = ParagraphStyle(
             'TituloPrincipal',
             parent=styles['Heading1'],
-            fontSize=24,
+            fontSize=18,  # Reducido de 24 a 18
             textColor=azul_principal,
-            fontName='Helvetica-Bold',
+            fontName='Helvetica-Bold',  # Similar a Archivo Bold
             alignment=TA_CENTER,
-            spaceAfter=20,
-            spaceBefore=10
+            spaceAfter=12,  # Reducido de 20 a 12
+            spaceBefore=6   # Reducido de 10 a 6
         )
         
-        # Estilo para subtítulos
+        # Estilo para subtítulos - más compacto con fuente elegante
         estilos['subtitulo'] = ParagraphStyle(
             'Subtitulo',
             parent=styles['Heading2'],
-            fontSize=16,
+            fontSize=11,  # Reducido de 16 a 11
             textColor=verde_secundario,
-            fontName='Helvetica-Bold',
-            spaceAfter=12,
-            spaceBefore=8
+            fontName='Helvetica-Bold',  # Similar a Archivo Bold
+            spaceAfter=6,   # Reducido de 12 a 6
+            spaceBefore=4   # Reducido de 8 a 4
         )
         
-        # Estilo para texto normal
+        # Estilo para texto normal - más compacto con fuente elegante
         estilos['texto_normal'] = ParagraphStyle(
             'TextoNormal',
             parent=styles['Normal'],
-            fontSize=11,
+            fontSize=8,  # Reducido de 11 a 8
             textColor=negro,
-            fontName='Helvetica',
+            fontName='Helvetica',  # Similar a Archivo Regular
             alignment=TA_LEFT,
-            spaceAfter=6
+            spaceAfter=3  # Reducido de 6 a 3
         )
         
-        # Estilo para texto en negrita
+        # Estilo para texto en negrita - más compacto con fuente elegante
         estilos['texto_negrita'] = ParagraphStyle(
             'TextoNegrita',
             parent=styles['Normal'],
-            fontSize=11,
+            fontSize=8,  # Reducido de 11 a 8
             textColor=negro,
-            fontName='Helvetica-Bold',
+            fontName='Helvetica-Bold',  # Similar a Archivo Bold
             alignment=TA_LEFT,
-            spaceAfter=6
+            spaceAfter=3  # Reducido de 6 a 3
         )
         
-        # Estilo para etiquetas
+        # Estilo para etiquetas - más compacto
         estilos['etiqueta'] = ParagraphStyle(
             'Etiqueta',
             parent=styles['Normal'],
-            fontSize=10,
+            fontSize=7,  # Reducido de 10 a 7
             textColor=gris_medio,
             fontName='Helvetica',
             alignment=TA_LEFT,
-            spaceAfter=2
+            spaceAfter=1  # Reducido de 2 a 1
+        )
+        
+        # Nuevos estilos para layout compacto con fuentes elegantes
+        estilos['concepto'] = ParagraphStyle(
+            'Concepto',
+            parent=styles['Normal'],
+            fontSize=7,
+            textColor=negro,
+            fontName='Helvetica-Bold',  # Similar a Archivo Bold
+            alignment=TA_LEFT,
+            spaceAfter=1
+        )
+        
+        estilos['descripcion'] = ParagraphStyle(
+            'Descripcion',
+            parent=styles['Normal'],
+            fontSize=7,
+            textColor=negro,
+            fontName='Helvetica',  # Similar a Archivo Regular
+            alignment=TA_LEFT,
+            spaceAfter=1
+        )
+        
+        estilos['calificacion'] = ParagraphStyle(
+            'Calificacion',
+            parent=styles['Normal'],
+            fontSize=6,
+            textColor=verde_secundario,
+            fontName='Helvetica-Bold',  # Similar a Archivo Bold
+            alignment=TA_CENTER,
+            spaceAfter=1
         )
         
         return estilos
@@ -365,9 +406,9 @@ def generate_pdf(visita_id):
             secciones[zona.seccion] = []
         secciones[zona.seccion].append(zona)
 
-    # Renderizar cada sección con diseño mejorado
+    # Renderizar cada sección con diseño compacto
     for seccion_nombre, zonas_seccion in secciones.items():
-        # Título de sección con icono
+        # Título de sección compacto
         seccion_colors = {
             'Aseo y Limpieza': (verde_secundario, '🧹'),
             'Seguridad y Salud': (HexColor('#dc2626'), '🛡️'),
@@ -375,126 +416,67 @@ def generate_pdf(visita_id):
         }
         color, icono = seccion_colors.get(seccion_nombre, (azul_principal, '📋'))
         
-        # Crear título de sección con fondo de color
-        seccion_header = Table([['']], colWidths=[6*inch])
-        seccion_header.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, 0), color),
-            ('HEIGHT', (0, 0), (0, 0), 0.4*inch),
-        ]))
-        elements.append(seccion_header)
-        
-        # Título de sección
-        seccion_titulo = Paragraph(f"{icono} SECCIÓN: {seccion_nombre.upper()}", estilos['subtitulo'])
+        # Título de sección compacto
+        seccion_titulo = Paragraph(f"{icono} {seccion_nombre.upper()}", estilos['subtitulo'])
         elements.append(seccion_titulo)
-        elements.append(Spacer(1, 0.2*inch))
+        elements.append(Spacer(1, 0.1*inch))  # Espaciado reducido
         
-        # Crear tarjeta para cada actividad
+        # Crear layout compacto para cada zona
         for zona in zonas_seccion:
-            # Debug: imprimir datos originales
-            print(f"DEBUG - Concepto original: '{zona.concepto_actividad}'")
-            print(f"DEBUG - Calificación original: '{zona.calificacion}'")
-            print(f"DEBUG - Observaciones originales: '{zona.observaciones}'")
-            
             # Limpiar HTML de los datos
             concepto_limpio = limpiar_html(zona.concepto_actividad)
             calificacion_limpia = limpiar_html(zona.calificacion)
             observaciones_limpias = limpiar_html(zona.observaciones) or 'Sin observaciones'
             
-            # Debug: imprimir datos limpios
-            print(f"DEBUG - Concepto limpio: '{concepto_limpio}'")
-            print(f"DEBUG - Calificación limpia: '{calificacion_limpia}'")
-            print(f"DEBUG - Observaciones limpias: '{observaciones_limpias}'")
-            print("---")
+            # Layout compacto: concepto arriba, descripción abajo, evidencia al lado
+            zona_data = []
             
-            # Crear tarjeta moderna con sombra usando Paragraph para evitar HTML
-            actividad_data = [
-                [Paragraph(concepto_limpio, estilos['texto_negrita']), ""],
-                [Paragraph("Calificación:", estilos['texto_negrita']), Paragraph(calificacion_limpia, estilos['texto_normal'])],
-                [Paragraph("Observaciones:", estilos['texto_negrita']), Paragraph(observaciones_limpias, estilos['texto_normal'])]
-            ]
+            # Fila 1: Concepto (izquierda) + Calificación (derecha)
+            concepto_texto = Paragraph(concepto_limpio, estilos['concepto'])
+            calificacion_texto = Paragraph(f"Calificación: {calificacion_limpia}", estilos['calificacion'])
+            zona_data.append([concepto_texto, calificacion_texto])
             
-            actividad_table = Table(actividad_data, colWidths=[4.5*inch, 1.5*inch])
-            actividad_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, 0), color),
+            # Fila 2: Descripción (izquierda) + Evidencia (derecha)
+            descripcion_texto = Paragraph(observaciones_limpias, estilos['descripcion'])
+            
+            # Evidencia (foto si existe)
+            if zona.foto_url and seccion_nombre in ['Aseo y Limpieza', 'Seguridad y Salud']:
+                foto_path = os.path.join('uploads', zona.foto_url.split('/')[-1])
+                if os.path.exists(foto_path):
+                    try:
+                        from PIL import Image as PILImage
+                        with PILImage.open(foto_path) as img:
+                            img.verify()
+                        # Foto más pequeña: 1.2x1.2 inch
+                        foto = Image(foto_path, 1.2*inch, 1.2*inch)
+                        zona_data.append([descripcion_texto, foto])
+                    except Exception as e:
+                        print(f"Error cargando imagen: {str(e)}")
+                        error_texto = Paragraph("Imagen no disponible", estilos['descripcion'])
+                        zona_data.append([descripcion_texto, error_texto])
+                else:
+                    zona_data.append([descripcion_texto, ""])
+            else:
+                zona_data.append([descripcion_texto, ""])
+            
+            # Crear tabla compacta
+            zona_table = Table(zona_data, colWidths=[3.5*inch, 2.0*inch])
+            zona_table.setStyle(TableStyle([
+                # Bordes sutiles
+                ('GRID', (0, 0), (-1, -1), 0.5, gris_claro),
+                ('BACKGROUND', (0, 0), (0, 0), color),  # Header con color de sección
                 ('TEXTCOLOR', (0, 0), (0, 0), blanco),
                 ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (0, 0), 12),
+                ('FONTSIZE', (0, 0), (0, 0), 7),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 10),
-                ('GRID', (0, 0), (-1, -1), 1, gris_claro),
-                ('BACKGROUND', (0, 1), (-1, -1), blanco),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('PADDING', (0, 0), (-1, -1), 12),
-                ('LEFTPADDING', (0, 1), (0, 1), 20),  # Indentación para etiquetas
+                ('PADDING', (0, 0), (-1, -1), 4),  # Padding reducido
+                ('BACKGROUND', (0, 1), (-1, -1), blanco),
             ]))
-            elements.append(actividad_table)
-            elements.append(Spacer(1, 0.3*inch))
+            elements.append(zona_table)
+            elements.append(Spacer(1, 0.1*inch))  # Espaciado mínimo entre zonas
         
-        # Agregar fotos de evidencia (solo para Aseo y Seguridad)
-        if seccion_nombre in ['Aseo y Limpieza', 'Seguridad y Salud']:
-            fotos_data = []
-            for zona in zonas_seccion:
-                if zona.foto_url:
-                    foto_path = os.path.join('uploads', zona.foto_url.split('/')[-1])
-                    if os.path.exists(foto_path):
-                        try:
-                            from PIL import Image as PILImage
-                            with PILImage.open(foto_path) as img:
-                                img.verify()
-                            foto = Image(foto_path, 2.5*inch, 2.5*inch)
-                            fotos_data.append(foto)
-                        except Exception as e:
-                            print(f"Error cargando imagen: {str(e)}")
-                            # Crear placeholder para imagen con error
-                            error_placeholder = Table([['Imagen no disponible']], colWidths=[2.5*inch])
-                            error_placeholder.setStyle(TableStyle([
-                                ('BACKGROUND', (0, 0), (0, 0), gris_claro),
-                                ('TEXTCOLOR', (0, 0), (0, 0), gris_medio),
-                                ('FONTNAME', (0, 0), (0, 0), 'Helvetica'),
-                                ('FONTSIZE', (0, 0), (0, 0), 10),
-                                ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-                                ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
-                                ('HEIGHT', (0, 0), (0, 0), 2.5*inch),
-                            ]))
-                            fotos_data.append(error_placeholder)
-            
-            if fotos_data:
-                elements.append(Spacer(1, 0.3*inch))
-                
-                # Título de evidencia
-                evidencia_titulo = Paragraph("📸 EVIDENCIA FOTOGRÁFICA", estilos['subtitulo'])
-                elements.append(evidencia_titulo)
-                elements.append(Spacer(1, 0.2*inch))
-                
-                # Crear tabla de fotos con diseño mejorado
-                fotos_table_data = []
-                for i in range(0, len(fotos_data), 2):
-                    row = []
-                    for j in range(2):
-                        if i + j < len(fotos_data):
-                            # Crear celda con borde redondeado para cada foto
-                            foto_cell = Table([[fotos_data[i + j]]], colWidths=[2.8*inch])
-                            foto_cell.setStyle(TableStyle([
-                                ('GRID', (0, 0), (0, 0), 2, color),
-                                ('BACKGROUND', (0, 0), (0, 0), blanco),
-                                ('PADDING', (0, 0), (0, 0), 6),
-                                ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-                                ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
-                            ]))
-                            row.append(foto_cell)
-                        else:
-                            row.append("")
-                    fotos_table_data.append(row)
-                
-                if fotos_table_data:
-                    fotos_table = Table(fotos_table_data, colWidths=[2.9*inch, 2.9*inch])
-                    fotos_table.setStyle(TableStyle([
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                        ('PADDING', (0, 0), (-1, -1), 6),
-                    ]))
-                    elements.append(fotos_table)
+        elements.append(Spacer(1, 0.2*inch))  # Espaciado entre secciones
 
     # Sección Conclusiones con diseño mejorado
     if visita.conclusiones:
