@@ -252,8 +252,11 @@ def generate_pdf(visita_id):
     
     # Logo de la empresa - debug mejorado
     empresa_logo_cargado = False
+    print(f"DEBUG: === INICIO DEBUG LOGO EMPRESA ===", flush=True)
     print(f"DEBUG: Empresa encontrada: {empresa.nombre if empresa else 'No encontrada'}", flush=True)
     print(f"DEBUG: Logo URL de empresa: {empresa.logo_url if empresa else 'No hay empresa'}", flush=True)
+    print(f"DEBUG: Tipo de empresa: {type(empresa)}", flush=True)
+    print(f"DEBUG: Empresa es None: {empresa is None}", flush=True)
     
     # Escribir a archivo para debug
     with open('/tmp/debug_logo_empresa.txt', 'w') as f:
@@ -329,7 +332,7 @@ def generate_pdf(visita_id):
         header_elements.append(logo_circular)
         print(f"Usando logo circular para cliente: {logo_texto}")
 
-    # Header principal con logos - súper pegado al techo
+    # Header principal con logos - ultra pegado al techo
     if header_elements:
         logo_table = Table([header_elements], colWidths=[len(header_elements) * 0.8*inch])  # Más pequeño
         logo_table.setStyle(TableStyle([
@@ -337,12 +340,12 @@ def generate_pdf(visita_id):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         elements.append(logo_table)
-        elements.append(Spacer(1, 0.02*inch))  # Espaciado súper reducido
+        elements.append(Spacer(1, 0.01*inch))  # Espaciado ultra mínimo
 
-    # Título principal del informe - súper pegado al techo
+    # Título principal del informe - ultra pegado al techo
     titulo_principal = Paragraph("INFORME DE PRESTACIÓN DEL SERVICIO", estilos['titulo_principal'])
     elements.append(titulo_principal)
-    elements.append(Spacer(1, 0.05*inch))  # Espaciado súper reducido
+    elements.append(Spacer(1, 0.02*inch))  # Espaciado ultra mínimo
     
     # Información del informe - diseño más compacto
     info_data = [
@@ -376,7 +379,7 @@ def generate_pdf(visita_id):
         ('PADDING', (0, 0), (-1, -1), 3),  # Reducido de 6 a 3
     ]))
     elements.append(info_table)
-    elements.append(Spacer(1, 0.05*inch))  # Espaciado súper reducido
+    elements.append(Spacer(1, 0.02*inch))  # Espaciado ultra mínimo
 
     # Información del cliente en tarjeta moderna - diseño con 4 columnas
     cliente_data = [
@@ -419,7 +422,7 @@ def generate_pdf(visita_id):
         ('RIGHTPADDING', (0, 1), (-1, -1), 2),  # Reducido de 4 a 2
     ]))
     elements.append(cliente_table)
-    elements.append(Spacer(1, 0.05*inch))  # Espaciado súper reducido
+    elements.append(Spacer(1, 0.02*inch))  # Espaciado ultra mínimo
 
     # Agrupar zonas por sección
     secciones = {}
