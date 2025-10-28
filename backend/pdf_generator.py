@@ -324,7 +324,7 @@ def generate_pdf(visita_id):
         header_elements.append(logo_circular)
         print(f"Usando logo circular para cliente: {logo_texto}")
 
-    # Header principal con logos - más compacto
+    # Header principal con logos - ultra compacto
     if header_elements:
         logo_table = Table([header_elements], colWidths=[len(header_elements) * 0.8*inch])  # Más pequeño
         logo_table.setStyle(TableStyle([
@@ -332,12 +332,12 @@ def generate_pdf(visita_id):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         elements.append(logo_table)
-        elements.append(Spacer(1, 0.1*inch))  # Espaciado reducido
+        elements.append(Spacer(1, 0.05*inch))  # Espaciado ultra reducido
 
-    # Título principal del informe - más compacto
+    # Título principal del informe - ultra compacto
     titulo_principal = Paragraph("INFORME DE PRESTACIÓN DEL SERVICIO", estilos['titulo_principal'])
     elements.append(titulo_principal)
-    elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
+    elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
     
     # Información del informe - diseño más compacto
     info_data = [
@@ -371,7 +371,7 @@ def generate_pdf(visita_id):
         ('PADDING', (0, 0), (-1, -1), 3),  # Reducido de 6 a 3
     ]))
     elements.append(info_table)
-    elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
+    elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
 
     # Información del cliente en tarjeta moderna - diseño con 4 columnas
     cliente_data = [
@@ -379,7 +379,7 @@ def generate_pdf(visita_id):
         ['Cliente:', visita.cliente.nombre[:20] + ('...' if len(visita.cliente.nombre) > 20 else ''), 'Supervisor:', visita.supervisor.nombre[:18] + ('...' if len(visita.supervisor.nombre) > 18 else '')],
         ['NIT:', visita.cliente.nit[:15] + ('...' if len(visita.cliente.nit) > 15 else ''), 'Fecha:', visita.fecha.strftime('%d/%m/%Y')],
         ['Admin:', visita.cliente.administrador[:18] + ('...' if len(visita.cliente.administrador) > 18 else ''), 'Código:', visita.cliente.tipo_codigo[:10] + ('...' if len(visita.cliente.tipo_codigo) > 10 else '')],
-        ['Email:', visita.cliente.correo[:30] + ('...' if len(visita.cliente.correo) > 30 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
+        ['Email:', visita.cliente.correo[:40] + ('...' if len(visita.cliente.correo) > 40 else ''), 'Hora:', visita.fecha.strftime('%H:%M')]
     ]
     
     cliente_table = Table(cliente_data, colWidths=[0.8*inch, 1.2*inch, 0.8*inch, 1.2*inch])  # Columnas más anchas para valores
@@ -414,7 +414,7 @@ def generate_pdf(visita_id):
         ('RIGHTPADDING', (0, 1), (-1, -1), 2),  # Reducido de 4 a 2
     ]))
     elements.append(cliente_table)
-    elements.append(Spacer(1, 0.2*inch))  # Espaciado reducido
+    elements.append(Spacer(1, 0.1*inch))  # Espaciado ultra reducido
 
     # Agrupar zonas por sección
     secciones = {}
