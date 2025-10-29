@@ -184,7 +184,7 @@ class HTMLPDFGenerator:
                 
                 # Actividades por sección
                 'actividades_aseo': self.obtener_actividades_por_seccion(zonas, 'Aseo y Limpieza'),
-                'actividades_seguridad': self.obtener_actividades_por_seccion(zonas, 'Seguridad y salud en el trabajo'),
+                'actividades_seguridad': self.obtener_actividades_por_seccion(zonas, 'Seguridad y Salud'),
                 'actividades_colaborador': self.obtener_actividades_por_seccion(zonas, 'Colaborador'),
                 
                 # Conclusiones

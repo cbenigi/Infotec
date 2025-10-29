@@ -459,29 +459,6 @@
     </div>
     {% endif %}
     
-    <!-- Sección: Seguridad y salud en el trabajo -->
-    {% if actividades_seguridad %}
-    <div class="section">
-      <div class="section-header seguridad">SEGURIDAD Y SALUD EN EL TRABAJO</div>
-      <div class="activities-grid">
-        {% for actividad in actividades_seguridad %}
-        <div class="activity-card">
-          <div class="activity-header seguridad">
-            <span>{{ actividad.concepto_actividad }}</span>
-            <span class="activity-rating">{{ actividad.calificacion }}</span>
-          </div>
-          <div class="activity-content">
-            <div class="activity-text">{{ actividad.observaciones }}</div>
-            <div class="activity-photo">
-              {{ actividad.foto_url|safe if actividad.foto_url else '<div class="activity-photo-placeholder">Sin evidencia</div>' }}
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-    
     <!-- Sección: Colaborador -->
     {% if actividades_colaborador %}
     <div class="section">
