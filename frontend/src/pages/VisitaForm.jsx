@@ -44,6 +44,28 @@ const VisitaForm = () => {
     colaborador: []
   });
 
+  const loadVisita = useCallback(async () => {
+    try {
+      const response = await axios.get(`/visita/${id}`);
+      const visita = response.data;
+      setForm({
+        cliente_id: visita.cliente_id,
+        supervisor_id: visita.supervisor_id,
+        fecha: visita.fecha,
+        hora: visita.hora || new Date().toTimeString().slice(0, 5),
+        conclusiones: visita.conclusiones || ''
+      });
+      // Cargar zonas por sección
+      const zonasData = { aseo: [], seguridad: [], colaborador: [] };
+      visita.zonas.forEach(zona => {
+        zonasData[zona.seccion.toLowerCase().replace(' ', '_')].push(zona);
+      });
+      setZonas(zonasData);
+    } catch (err) {
+      console.error('Error cargando visita:', err);
+    }
+  }, [id]);
+
   useEffect(() => {
     loadClientes();
     loadSupervisores();
@@ -71,27 +93,6 @@ const VisitaForm = () => {
     }
   };
 
-  const loadVisita = useCallback(async () => {
-    try {
-      const response = await axios.get(`/visita/${id}`);
-      const visita = response.data;
-      setForm({
-        cliente_id: visita.cliente_id,
-        supervisor_id: visita.supervisor_id,
-        fecha: visita.fecha,
-        hora: visita.hora || new Date().toTimeString().slice(0, 5),
-        conclusiones: visita.conclusiones || ''
-      });
-      // Cargar zonas por sección
-      const zonasData = { aseo: [], seguridad: [], colaborador: [] };
-      visita.zonas.forEach(zona => {
-        zonasData[zona.seccion.toLowerCase().replace(' ', '_')].push(zona);
-      });
-      setZonas(zonasData);
-    } catch (err) {
-      console.error('Error cargando visita:', err);
-    }
-  }, [id]);
 
   const addZona = (seccion) => {
     const nuevaZona = {
