@@ -17,12 +17,15 @@ app.register_blueprint(routes)
 
 # Configurar CORS
 cors_origins = app.config.get('CORS_ORIGINS', '*')
-if isinstance(cors_origins, str):
+if isinstance(cors_origins, str) and cors_origins != '*':
     cors_origins = [origin.strip() for origin in cors_origins.split(',')]
+
+print(f"🔧 CORS Origins configurados: {cors_origins}")
+
 CORS(app, 
      supports_credentials=True, 
      origins=cors_origins,
-     allow_headers=['Content-Type', 'Authorization'],
+     allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
 # Inicializar base de datos
