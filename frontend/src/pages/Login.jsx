@@ -27,15 +27,8 @@ const Login = () => {
         localStorage.setItem('userName', currentUser.nombre);
       }
       
-      // Verificar si el usuario tiene empresa registrada
-      const empresaRes = await axios.get('/empresa');
-      
-      if (empresaRes.data.exists) {
-        navigate('/dashboard');
-      } else {
-        alert('Por favor registra tu empresa para continuar');
-        navigate('/empresa');
-      }
+      // Ir directamente al dashboard
+      navigate('/dashboard');
     } catch (err) {
       console.error('Error al iniciar sesión:', err);
       
