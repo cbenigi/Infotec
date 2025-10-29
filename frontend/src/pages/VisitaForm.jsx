@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -71,7 +71,7 @@ const VisitaForm = () => {
     }
   };
 
-  const loadVisita = async () => {
+  const loadVisita = useCallback(async () => {
     try {
       const response = await axios.get(`/visita/${id}`);
       const visita = response.data;
@@ -91,7 +91,7 @@ const VisitaForm = () => {
     } catch (err) {
       console.error('Error cargando visita:', err);
     }
-  };
+  }, [id]);
 
   const addZona = (seccion) => {
     const nuevaZona = {

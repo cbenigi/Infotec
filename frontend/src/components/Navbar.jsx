@@ -44,10 +44,6 @@ const Navbar = () => {
     if (storedName) {
       setUserName(storedName);
     }
-    
-    return () => {
-      window.removeEventListener('empresaUpdated', handleEmpresaUpdate);
-    };
 
     // Obtener rol del usuario del localStorage
     const storedRole = localStorage.getItem('rol');
@@ -55,6 +51,10 @@ const Navbar = () => {
     if (storedRole) {
       setUserRole(storedRole);
     }
+    
+    return () => {
+      window.removeEventListener('empresaUpdated', handleEmpresaUpdate);
+    };
   }, []);
 
   const handleMenu = (event) => {
