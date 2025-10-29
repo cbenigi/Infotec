@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     libharfbuzz-dev \
     libffi-dev \
     libcairo2-dev \
-    libgdk-pixbuf2.0-dev \
+    libgdk-pixbuf-xlib-2.0-dev \
     libglib2.0-dev \
     libgtk-3-dev \
     libxml2-dev \
