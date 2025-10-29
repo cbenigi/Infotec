@@ -28,4 +28,4 @@ COPY backend/ .
 EXPOSE 8000
 
 # Comando de inicio
-CMD ["sh", "-c", "gunicorn app:app -c gunicorn.conf.py"]
+CMD ["sh", "-c", "python init_db.py && gunicorn app:app -c gunicorn.conf.py"]
