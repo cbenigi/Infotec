@@ -108,16 +108,16 @@ class HTMLPDFGenerator:
     def convertir_logo_a_html(self, logo_path, alt_text):
         """Convertir logo a HTML con data URI"""
         if not logo_path or not os.path.exists(logo_path):
-            return f'<div style="width: 100px; height: 50px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #6b7280; border: 1px solid #d1d5db;">{alt_text}</div>'
+            return f'<div class="logo-placeholder">{alt_text}</div>'
         
         try:
             import base64
             with open(logo_path, 'rb') as f:
                 logo_data = base64.b64encode(f.read()).decode()
-                return f'<img src="data:image/png;base64,{logo_data}" alt="{alt_text}" style="height: 50px; max-width: 100px; object-fit: contain;">'
+                return f'<img src="data:image/png;base64,{logo_data}" alt="{alt_text}" class="logo-image">'
         except Exception as e:
             print(f"Error convirtiendo logo {logo_path}: {e}")
-            return f'<div style="width: 100px; height: 50px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #6b7280; border: 1px solid #d1d5db;">{alt_text}</div>'
+            return f'<div class="logo-placeholder">{alt_text}</div>'
     
     def convertir_foto_a_html(self, foto_path):
         """Convertir foto a HTML con data URI"""
