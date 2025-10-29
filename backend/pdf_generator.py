@@ -206,7 +206,7 @@ def generate_pdf(visita_id):
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]
-    
+
     # Función para crear bordes minimalistas y modernos
     def crear_bordes_modernos(color_principal, color_secundario):
         return [
@@ -232,49 +232,127 @@ def generate_pdf(visita_id):
         ]
     
     # Función para crear tarjetas de actividad con diseño moderno tipo cuadro
-    def crear_tarjeta_actividad(titulo, descripcion, calificacion, color_tema, icono="📋"):
-        # Crear datos para la tarjeta con diseño de cuadro separado
-        tarjeta_data = [
-            [f"{icono} {titulo.upper()}"],  # Solo título en la primera fila
-            [f"Calificación: {calificacion}"],  # Calificación en segunda fila
-            [descripcion]  # Descripción en tercera fila
-        ]
+    def crear_tarjeta_actividad_compacta(titulo, descripcion, calificacion, color_tema, icono="📋", foto_url=None):
+        # Si hay foto, intentar cargarla PRIMERO
+        foto_elemento = None
+        if foto_url:
+            posibles_rutas_foto = [
+                foto_url,
+                os.path.join('uploads', foto_url.split('/')[-1]),
+                os.path.join('backend/uploads', foto_url.split('/')[-1]),
+                os.path.join('static/uploads', foto_url.split('/')[-1]),
+            ]
+            
+            for foto_path in posibles_rutas_foto:
+                if os.path.exists(foto_path):
+                    try:
+                        from PIL import Image as PILImage
+                        with PILImage.open(foto_path) as img:
+                            img.verify()
+                        foto_elemento = Image(foto_path, 1*inch, 0.75*inch)
+                        print(f"✅ Foto cargada: {foto_path}")
+                        break
+                    except Exception as e:
+                        print(f"❌ Error cargando foto: {str(e)}")
+                        continue
         
-        # Crear tabla con diseño de tarjeta tipo cuadro
-        tarjeta_table = Table(tarjeta_data, colWidths=[6*inch])
-        tarjeta_table.setStyle(TableStyle([
-            # Título styling - fondo de color
-            ('BACKGROUND', (0, 0), (0, 0), color_tema),
-            ('TEXTCOLOR', (0, 0), (0, 0), blanco),
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 10),
-            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-            ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
-            
-            # Calificación styling - fondo gris claro
-            ('BACKGROUND', (0, 1), (0, 1), gris_claro),
-            ('TEXTCOLOR', (0, 1), (0, 1), color_tema),
-            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (0, 1), 9),
-            ('ALIGN', (0, 1), (0, 1), 'LEFT'),
-            ('VALIGN', (0, 1), (0, 1), 'MIDDLE'),
-            
-            # Descripción styling - fondo blanco
-            ('BACKGROUND', (0, 2), (0, 2), blanco),
-            ('FONTNAME', (0, 2), (0, 2), 'Helvetica'),
-            ('FONTSIZE', (0, 2), (0, 2), 8),
-            ('TEXTCOLOR', (0, 2), (0, 2), negro),
-            ('ALIGN', (0, 2), (0, 2), 'LEFT'),
-            ('VALIGN', (0, 2), (0, 2), 'TOP'),
-            
-            # Bordes del cuadro
-            ('BOX', (0, 0), (0, 2), 2, color_tema),  # Borde exterior
-            ('LINEBELOW', (0, 0), (0, 0), 1, blanco),  # Línea entre título y calificación
-            ('LINEBELOW', (0, 1), (0, 1), 1, color_tema),  # Línea entre calificación y descripción
-            
-            # Padding
-            ('PADDING', (0, 0), (0, 2), 10),
-        ]))
+        # Crear datos para la tarjeta compacta
+        if foto_elemento:
+            # Con imagen: título y calificación a la izquierda, imagen a la derecha
+            tarjeta_data = [
+                [f"{icono} {titulo.upper()}", foto_elemento],  # Título e imagen lado a lado
+                [f"Calificación: {calificacion}", ""],  # Calificación ocupa solo la izquierda
+                [Paragraph(descripcion, estilos['texto_normal']), ""]  # Descripción ocupa solo la izquierda
+            ]
+            col_widths = [2.5*inch, 1*inch]
+        else:
+            # Sin imagen: estructura normal
+            tarjeta_data = [
+                [f"{icono} {titulo.upper()}"],
+                [f"Calificación: {calificacion}"],
+                [descripcion]
+            ]
+            col_widths = [3.5*inch]
+        
+        # Crear tabla compacta
+        tarjeta_table = Table(tarjeta_data, colWidths=col_widths)
+        
+        if foto_elemento:
+            # Estilo con imagen
+            tarjeta_table.setStyle(TableStyle([
+                # Título styling (izquierda)
+                ('BACKGROUND', (0, 0), (0, 0), color_tema),
+                ('TEXTCOLOR', (0, 0), (0, 0), blanco),
+                ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (0, 0), 8),
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
+                
+                # Imagen styling (derecha)
+                ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+                ('VALIGN', (1, 0), (1, 0), 'MIDDLE'),
+                ('BACKGROUND', (1, 0), (1, 0), color_tema),
+                ('SPAN', (1, 0), (1, 2)),  # La imagen ocupa 3 filas
+                
+                # Calificación styling (izquierda)
+                ('BACKGROUND', (0, 1), (0, 1), gris_claro),
+                ('TEXTCOLOR', (0, 1), (0, 1), color_tema),
+                ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 1), (0, 1), 7),
+                ('ALIGN', (0, 1), (0, 1), 'LEFT'),
+                ('VALIGN', (0, 1), (0, 1), 'MIDDLE'),
+                
+                # Descripción styling (izquierda)
+                ('BACKGROUND', (0, 2), (0, 2), blanco),
+                ('FONTNAME', (0, 2), (0, 2), 'Helvetica'),
+                ('FONTSIZE', (0, 2), (0, 2), 7),
+                ('TEXTCOLOR', (0, 2), (0, 2), negro),
+                ('ALIGN', (0, 2), (0, 2), 'LEFT'),
+                ('VALIGN', (0, 2), (0, 2), 'TOP'),
+                
+                # Bordes
+                ('BOX', (0, 0), (1, 2), 1, color_tema),
+                ('LINEBELOW', (0, 0), (0, 0), 1, blanco),
+                ('LINEBELOW', (0, 1), (0, 1), 1, color_tema),
+                
+                # Padding compacto
+                ('PADDING', (0, 0), (1, 2), 4),
+            ]))
+        else:
+            # Estilo sin imagen
+            tarjeta_table.setStyle(TableStyle([
+                # Título styling
+                ('BACKGROUND', (0, 0), (0, 0), color_tema),
+                ('TEXTCOLOR', (0, 0), (0, 0), blanco),
+                ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (0, 0), 8),
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
+                
+                # Calificación styling
+                ('BACKGROUND', (0, 1), (0, 1), gris_claro),
+                ('TEXTCOLOR', (0, 1), (0, 1), color_tema),
+                ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 1), (0, 1), 7),
+                ('ALIGN', (0, 1), (0, 1), 'LEFT'),
+                ('VALIGN', (0, 1), (0, 1), 'MIDDLE'),
+                
+                # Descripción styling
+                ('BACKGROUND', (0, 2), (0, 2), blanco),
+                ('FONTNAME', (0, 2), (0, 2), 'Helvetica'),
+                ('FONTSIZE', (0, 2), (0, 2), 7),
+                ('TEXTCOLOR', (0, 2), (0, 2), negro),
+                ('ALIGN', (0, 2), (0, 2), 'LEFT'),
+                ('VALIGN', (0, 2), (0, 2), 'TOP'),
+                
+                # Bordes
+                ('BOX', (0, 0), (0, 2), 1, color_tema),
+                ('LINEBELOW', (0, 0), (0, 0), 1, blanco),
+                ('LINEBELOW', (0, 1), (0, 1), 1, color_tema),
+                
+                # Padding compacto
+                ('PADDING', (0, 0), (0, 2), 4),
+            ]))
         
         return tarjeta_table
 
@@ -459,7 +537,7 @@ def generate_pdf(visita_id):
         ['Email:', visita.cliente.correo[:30] + ('...' if len(visita.cliente.correo) > 30 else '')]
     ]
     
-    cliente_info_table = Table(cliente_info_data, colWidths=[1.2*inch, 2.8*inch])
+    cliente_info_table = Table(cliente_info_data, colWidths=[1*inch, 2.5*inch])
     cliente_info_table.setStyle(TableStyle([
         # Header styling
         ('SPAN', (0, 0), (1, 0)),  # Combinar columnas para el título
@@ -492,7 +570,7 @@ def generate_pdf(visita_id):
         ['Hora:', visita.hora.strftime('%H:%M') if visita.hora else visita.fecha.strftime('%H:%M')]
     ]
     
-    visita_info_table = Table(visita_info_data, colWidths=[1.2*inch, 2.8*inch])
+    visita_info_table = Table(visita_info_data, colWidths=[1*inch, 2.5*inch])
     visita_info_table.setStyle(TableStyle([
         # Header styling
         ('SPAN', (0, 0), (1, 0)),  # Combinar columnas para el título
@@ -516,8 +594,8 @@ def generate_pdf(visita_id):
         ('PADDING', (0, 0), (-1, -1), 8),
     ]))
     
-    # Crear tabla contenedora para los dos bloques lado a lado
-    bloques_info = Table([[cliente_info_table, visita_info_table]], colWidths=[4*inch, 4*inch])
+    # Crear tabla contenedora para los dos bloques lado a lado más compacta
+    bloques_info = Table([[cliente_info_table, visita_info_table]], colWidths=[3.5*inch, 3.5*inch])
     bloques_info.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -534,7 +612,7 @@ def generate_pdf(visita_id):
             secciones[zona.seccion] = []
         secciones[zona.seccion].append(zona)
 
-    # Renderizar cada sección con diseño compacto
+    # Renderizar cada sección con diseño de 2 columnas
     for seccion_nombre, zonas_seccion in secciones.items():
         # Título de sección compacto
         seccion_colors = {
@@ -544,72 +622,49 @@ def generate_pdf(visita_id):
         }
         color, icono = seccion_colors.get(seccion_nombre, (azul_principal, '📋'))
         
+        # Crear tarjetas de actividad en pares (2 columnas)
+        zonas_pares = []
+        for i in range(0, len(zonas_seccion), 2):
+            par = zonas_seccion[i:i+2]
+            zonas_pares.append(par)
         
-        # Crear tarjetas de actividad para cada zona
-        for zona in zonas_seccion:
-            # Limpiar HTML de los datos
-            concepto_limpio = limpiar_html(zona.concepto_actividad)
-            calificacion_limpia = limpiar_html(zona.calificacion)
-            observaciones_limpias = limpiar_html(zona.observaciones) or 'Sin observaciones'
+        for par_zonas in zonas_pares:
+            # Crear tarjetas para este par
+            tarjetas_par = []
             
-            # Crear tarjeta de actividad con diseño moderno
-            tarjeta_actividad = crear_tarjeta_actividad(
-                titulo=concepto_limpio,
-                descripcion=observaciones_limpias,
-                calificacion=calificacion_limpia,
-                color_tema=color,
-                icono=icono
-            )
-            
-            # Crear contenedor para la tarjeta y evidencia fotográfica
-            if zona.foto_url:
-                # Intentar diferentes rutas para la foto
-                posibles_rutas_foto = [
-                    zona.foto_url,  # Ruta completa
-                    os.path.join('uploads', zona.foto_url.split('/')[-1]),  # Solo nombre del archivo
-                    os.path.join('backend/uploads', zona.foto_url.split('/')[-1]),  # Con backend/
-                    os.path.join('static/uploads', zona.foto_url.split('/')[-1]),  # Con static/
-                ]
+            for zona in par_zonas:
+                # Limpiar HTML de los datos
+                concepto_limpio = limpiar_html(zona.concepto_actividad)
+                calificacion_limpia = limpiar_html(zona.calificacion)
+                observaciones_limpias = limpiar_html(zona.observaciones) or 'Sin observaciones'
                 
-                foto_cargada = False
-                for foto_path in posibles_rutas_foto:
-                    if os.path.exists(foto_path):
-                        try:
-                            from PIL import Image as PILImage
-                            with PILImage.open(foto_path) as img:
-                                img.verify()
-                            # Foto más grande: 2x1.5 inch para mejor visibilidad
-                            foto = Image(foto_path, 2*inch, 1.5*inch)
-                            
-                            # Crear tabla con tarjeta arriba y foto abajo
-                            actividad_con_evidencia = Table([
-                                [tarjeta_actividad],
-                                [foto]
-                            ], colWidths=[6*inch])
-                            actividad_con_evidencia.setStyle(TableStyle([
-                                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                ('PADDING', (0, 0), (-1, -1), 5),
-                                # Borde alrededor de toda la evidencia
-                                ('BOX', (0, 0), (0, 1), 1, gris_medio),
-                            ]))
-                            elements.append(actividad_con_evidencia)
-                            foto_cargada = True
-                            print(f"✅ Evidencia cargada desde: {foto_path}")
-                            break
-                        except Exception as e:
-                            print(f"❌ Error cargando imagen desde {foto_path}: {str(e)}")
-                            continue
-                
-                if not foto_cargada:
-                    print(f"⚠️ No se pudo cargar evidencia para: {zona.concepto_actividad}")
-                    elements.append(tarjeta_actividad)
-            else:
-                elements.append(tarjeta_actividad)
+                # Crear tarjeta compacta con foto integrada
+                tarjeta_actividad = crear_tarjeta_actividad_compacta(
+                    titulo=concepto_limpio,
+                    descripcion=observaciones_limpias,
+                    calificacion=calificacion_limpia,
+                    color_tema=color,
+                    icono=icono,
+                    foto_url=zona.foto_url
+                )
+                tarjetas_par.append(tarjeta_actividad)
             
-            elements.append(Spacer(1, 0.03*inch))  # Espaciado entre tarjetas
+            # Si solo hay una tarjeta, agregar una vacía para mantener el layout
+            if len(tarjetas_par) == 1:
+                tarjetas_par.append(Table([[""]], colWidths=[3.5*inch]))
+            
+            # Crear tabla de 2 columnas para las tarjetas
+            fila_tarjetas = Table([tarjetas_par], colWidths=[3.5*inch, 3.5*inch])
+            fila_tarjetas.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('PADDING', (0, 0), (-1, -1), 2),
+            ]))
+            
+            elements.append(fila_tarjetas)
+            elements.append(Spacer(1, 0.01*inch))  # Espaciado entre filas
         
-        elements.append(Spacer(1, 0.02*inch))  # Espaciado entre secciones aún más reducido
+        elements.append(Spacer(1, 0.01*inch))  # Espaciado entre secciones más compacto
 
     # Sección Conclusiones con diseño de bloque redondeado
     if visita.conclusiones:
