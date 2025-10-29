@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify, session, send_from_directory, cur
 import os
 from werkzeug.utils import secure_filename
 from models import db, User, Empresa, Cliente, Visita, Zona
+from sqlalchemy import or_
 from werkzeug.security import check_password_hash
 from datetime import datetime
 import traceback
@@ -457,3 +458,84 @@ def manage_zona(id):
         db.session.delete(zona)
         db.session.commit()
         return jsonify({'message': 'Zona eliminada'}), 200
+
+# Endpoint de búsqueda para el centro de atención
+@app.route('/search', methods=['GET'])
+def search():
+    """Búsqueda avanzada para el centro de atención"""
+    try:
+        query = request.args.get('q', '').strip()
+        search_type = request.args.get('type', 'all')
+        
+        if not query:
+            return jsonify([])
+        
+        results = []
+        
+        # Buscar en visitas
+        if search_type in ['all', 'visitas']:
+            visitas = Visita.query.join(Cliente).join(User).filter(
+                or_(
+                    Visita.id.ilike(f'%{query}%'),
+                    Cliente.nombre.ilike(f'%{query}%'),
+                    User.nombre.ilike(f'%{query}%'),
+                    Visita.conclusiones.ilike(f'%{query}%')
+                )
+            ).limit(10).all()
+            
+            for visita in visitas:
+                results.append({
+                    'tipo': 'visita',
+                    'id': visita.id,
+                    'fecha': visita.fecha.strftime('%d/%m/%Y') if visita.fecha else '',
+                    'hora': visita.hora.strftime('%H:%M') if visita.hora else '',
+                    'cliente_nombre': visita.cliente.nombre if visita.cliente else '',
+                    'supervisor_nombre': visita.supervisor.nombre if visita.supervisor else '',
+                    'conclusiones': visita.conclusiones[:100] + '...' if visita.conclusiones and len(visita.conclusiones) > 100 else visita.conclusiones or ''
+                })
+        
+        # Buscar en clientes
+        if search_type in ['all', 'clientes']:
+            clientes = Cliente.query.filter(
+                or_(
+                    Cliente.nombre.ilike(f'%{query}%'),
+                    Cliente.nit.ilike(f'%{query}%'),
+                    Cliente.administrador.ilike(f'%{query}%'),
+                    Cliente.correo.ilike(f'%{query}%')
+                )
+            ).limit(10).all()
+            
+            for cliente in clientes:
+                results.append({
+                    'tipo': 'cliente',
+                    'id': cliente.id,
+                    'nombre': cliente.nombre,
+                    'nit': cliente.nit,
+                    'administrador': cliente.administrador,
+                    'correo': cliente.correo,
+                    'telefono': cliente.telefono
+                })
+        
+        # Buscar en supervisores (usuarios)
+        if search_type in ['all', 'supervisores']:
+            supervisores = User.query.filter(
+                or_(
+                    User.nombre.ilike(f'%{query}%'),
+                    User.email.ilike(f'%{query}%')
+                )
+            ).limit(10).all()
+            
+            for supervisor in supervisores:
+                results.append({
+                    'tipo': 'supervisor',
+                    'id': supervisor.id,
+                    'nombre': supervisor.nombre,
+                    'email': supervisor.email,
+                    'rol': supervisor.rol
+                })
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        print(f"Error en búsqueda: {e}")
+        return jsonify({'error': 'Error en la búsqueda'}), 500

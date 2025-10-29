@@ -8,6 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PeopleIcon from '@mui/icons-material/People';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import axios from '../api/axiosConfig';
 
 const Navbar = () => {
@@ -15,6 +16,7 @@ const Navbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [empresa, setEmpresa] = useState(null);
   const [userName, setUserName] = useState('Usuario');
+  const [userRole, setUserRole] = useState('user');
 
   useEffect(() => {
     // Obtener datos de la empresa
@@ -44,6 +46,12 @@ const Navbar = () => {
     const storedName = localStorage.getItem('userName');
     if (storedName) {
       setUserName(storedName);
+    }
+
+    // Obtener rol del usuario del localStorage
+    const storedRole = localStorage.getItem('rol');
+    if (storedRole) {
+      setUserRole(storedRole);
     }
   }, []);
 
@@ -119,6 +127,20 @@ const Navbar = () => {
           >
             Nueva Visita
           </Button>
+          {userRole === 'admin' && (
+            <Button
+              color="inherit"
+              startIcon={<SupportAgentIcon />}
+              onClick={() => navigate('/atencion')}
+              sx={{ 
+                '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' },
+                backgroundColor: userRole === 'admin' ? 'rgba(255, 193, 7, 0.1)' : 'transparent',
+                color: userRole === 'admin' ? '#f57c00' : 'inherit'
+              }}
+            >
+              Atención
+            </Button>
+          )}
         </Box>
 
         {/* Usuario y menú */}
@@ -174,6 +196,11 @@ const Navbar = () => {
           <MenuItem onClick={() => { navigate('/visita'); handleClose(); }}>
             <AssignmentIcon sx={{ mr: 1 }} /> Nueva Visita
           </MenuItem>
+          {userRole === 'admin' && (
+            <MenuItem onClick={() => { navigate('/atencion'); handleClose(); }}>
+              <SupportAgentIcon sx={{ mr: 1 }} /> Atención
+            </MenuItem>
+          )}
           <MenuItem onClick={handleLogout}>
             <LogoutIcon sx={{ mr: 1 }} /> Cerrar Sesión
           </MenuItem>
