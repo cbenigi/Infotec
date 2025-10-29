@@ -2,9 +2,19 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Instalar dependencias del sistema
+# Instalar dependencias del sistema para WeasyPrint
 RUN apt-get update && apt-get install -y \
     gcc \
+    libpango1.0-dev \
+    libharfbuzz-dev \
+    libffi-dev \
+    libcairo2-dev \
+    libgdk-pixbuf2.0-dev \
+    libglib2.0-dev \
+    libgtk-3-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements y instalar dependencias Python
