@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction } from '@mui/material';
+import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction, Dialog, DialogContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axiosConfig';
 import Navbar from '../components/Navbar';
+import Loader from '../components/Loader';
 import AddIcon from '@mui/icons-material/Add';
 import BusinessIcon from '@mui/icons-material/Business';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
@@ -11,9 +12,11 @@ import { Download, Visibility, Delete } from '@mui/icons-material';
 
 const Dashboard = () => {
   const [visitas, setVisitas] = useState([]);
+  const [loadingPDF, setLoadingPDF] = useState(false);
   const navigate = useNavigate();
 
   const handleDownloadPDF = async (visitaId) => {
+    setLoadingPDF(true);
     try {
       const response = await axios.post(`/generar-pdf/${visitaId}`, {}, {
         responseType: 'blob'
@@ -30,6 +33,8 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error al descargar PDF:', error);
       alert('Error al descargar el PDF');
+    } finally {
+      setLoadingPDF(false);
     }
   };
 
@@ -235,6 +240,28 @@ const Dashboard = () => {
           </Paper>
         </Box>
       </Container>
+      
+      {/* Dialog con Loader para descarga de PDF */}
+      <Dialog 
+        open={loadingPDF} 
+        disableEscapeKeyDown
+        disableBackdropClick
+        PaperProps={{
+          style: {
+            backgroundColor: 'transparent',
+            boxShadow: 'none',
+          },
+        }}
+      >
+        <DialogContent>
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2, color: '#1e3a8a' }}>
+              Generando PDF...
+            </Typography>
+            <Loader />
+          </Box>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

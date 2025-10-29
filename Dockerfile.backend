@@ -1,9 +1,40 @@
 FROM python:3.9-slim
 
+# Instalar dependencias básicas y wkhtmltopdf
+RUN apt-get update && apt-get install -y \
+    wget \
+    fontconfig \
+    libfontconfig1 \
+    libfreetype6 \
+    libxrender1 \
+    libxext6 \
+    libx11-6 \
+    libjpeg62-turbo \
+    libxcb1 \
+    libxrandr2 \
+    libxss1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libatk1.0-0 \
+    libcairo-gobject2 \
+    libgtk-3-0 \
+    libgdk-pixbuf-xlib-2.0-0 \
+    && wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.bullseye_amd64.deb \
+    && dpkg -i wkhtmltox_0.12.6-1.bullseye_amd64.deb || true \
+    && apt-get install -f -y \
+    && rm -f wkhtmltox_0.12.6-1.bullseye_amd64.deb \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Instalar dependencias adicionales para HTML a PDF
+RUN pip install --no-cache-dir \
+    pdfkit \
+    jinja2 \
+    markupsafe
 
 COPY backend/ .
 

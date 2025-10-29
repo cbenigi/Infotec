@@ -1,4 +1,4 @@
-from pdf_generator import generate_pdf
+from html_pdf_generator import HTMLPDFGenerator
 from flask_mail import Mail, Message
 from flask import Blueprint, request, jsonify, session, send_from_directory, current_app, send_file
 import os
@@ -400,12 +400,14 @@ def generar_pdf(visita_id):
         
         print(f"DEBUG: Visita encontrada: {visita.id}")
         
-        pdf_path = generate_pdf(visita_id)
+        # Usar el nuevo generador HTML
+        pdf_generator = HTMLPDFGenerator()
+        pdf_path = pdf_generator.generar_pdf(visita_id)
         print(f"DEBUG: PDF generado en: {pdf_path}")
         
         if not pdf_path:
-            print("DEBUG: No se pudo generar PDF - falta al menos una foto")
-            return jsonify({'message': 'No se puede generar PDF: falta al menos una foto'}), 400
+            print("DEBUG: No se pudo generar PDF")
+            return jsonify({'message': 'No se pudo generar PDF'}), 400
         
         # Verificar que el archivo existe
         if not os.path.exists(pdf_path):

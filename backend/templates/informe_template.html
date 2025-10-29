@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Informe de Prestación del Servicio</title>
+  <style>
+    /* Reset básico */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; color: #1b1b1b; background: #f6f7f9; }
+    
+    /* Página A4 para wkhtmltopdf */
+    @page { size: A4; margin: 12mm 15mm; }
+    @media print { 
+      body { 
+        -webkit-print-color-adjust: exact; 
+        print-color-adjust: exact; 
+      } 
+      .sheet { box-shadow: none; } 
+    }
+    
+    /* Contenedor que simula la hoja A4 */
+    .sheet {
+      width: 100%;
+      max-width: 210mm;
+      min-height: 297mm; 
+      margin: 0 auto; 
+      padding: 0; 
+      background: #fff; 
+      position: relative; 
+      overflow: hidden;
+    }
+    
+    /* Paleta de colores corporativa */
+    :root {
+      --azul-principal: #1e3a8a;
+      --verde-secundario: #059669;
+      --gris-claro: #f8fafc;
+      --gris-medio: #64748b;
+      --blanco: #ffffff;
+      --negro: #1f2937;
+      --verde-aseo: #10b981;
+      --naranja-seguridad: #f59e0b;
+      --morado-colaborador: #8b5cf6;
+    }
+    
+    /* Encabezado con logos */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 15mm 15mm 8mm 15mm;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .logos {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logos img {
+      height: 50px;
+      width: auto;
+      max-width: 120px;
+    }
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 100px;
+      height: 50px;
+    }
+    
+    .title-section {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .main-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--azul-principal);
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Información del informe */
+    .info-header {
+      background: var(--azul-principal);
+      color: var(--blanco);
+      padding: 8px 15px;
+      margin: 0 15mm;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+    
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .info-label {
+      font-weight: bold;
+      font-size: 10px;
+    }
+    
+    .info-value {
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    
+    /* Bloques de información del cliente y visita */
+    .info-blocks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 10px 15mm;
+    }
+    
+    .info-block {
+      background: var(--gris-claro);
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 12px;
+    }
+    
+    .block-title {
+      background: var(--verde-secundario);
+      color: var(--blanco);
+      font-weight: bold;
+      font-size: 11px;
+      padding: 6px 10px;
+      margin: -12px -12px 8px -12px;
+      border-radius: 6px 6px 0 0;
+      text-align: center;
+    }
+    
+    .block-content {
+      font-size: 11px;
+    }
+    
+    .block-row {
+      display: flex;
+      margin-bottom: 4px;
+    }
+    
+    .block-label {
+      font-weight: bold;
+      color: var(--negro);
+      min-width: 60px;
+    }
+    
+    .block-value {
+      color: var(--negro);
+      flex: 1;
+    }
+    
+    /* Secciones de actividades */
+    .section {
+      margin: 15px 15mm 20px 15mm;
+    }
+    
+    .section-header {
+      background: var(--section-color);
+      color: var(--blanco);
+      font-weight: bold;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 4px 4px 0 0;
+      margin-bottom: 0;
+    }
+    
+    .section-header.aseo { background: var(--verde-aseo); }
+    .section-header.seguridad { background: var(--naranja-seguridad); }
+    .section-header.colaborador { background: var(--morado-colaborador); }
+    .section-header.conclusion { background: var(--verde-secundario); }
+    
+    .activities-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      background: var(--blanco);
+      border: 1px solid #e5e7eb;
+      border-top: none;
+      padding: 12px;
+      border-radius: 0 0 4px 4px;
+    }
+    
+    .activity-card {
+      background: var(--blanco);
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .activity-header {
+      background: var(--section-color);
+      color: var(--blanco);
+      font-weight: bold;
+      font-size: 10px;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .activity-header.aseo { background: var(--verde-aseo); }
+    .activity-header.seguridad { background: var(--naranja-seguridad); }
+    .activity-header.colaborador { background: var(--morado-colaborador); }
+    .activity-header.conclusion { background: var(--verde-secundario); }
+    
+    .activity-rating {
+      background: var(--gris-claro);
+      color: var(--section-color);
+      font-weight: bold;
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    
+    .activity-content {
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .activity-text {
+      flex: 1;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+    
+    .activity-photo {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .activity-photo-placeholder {
+      width: 80px;
+      height: 60px;
+      background: var(--gris-claro);
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      color: var(--gris-medio);
+    }
+    
+    /* Sección de conclusión especial */
+    .conclusion-content {
+      background: var(--blanco);
+      border: 1px solid #e5e7eb;
+      border-top: none;
+      padding: 15px;
+      border-radius: 0 0 4px 4px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--negro);
+    }
+    
+    /* Footer */
+    .footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--gris-claro);
+      border-top: 1px solid #e5e7eb;
+      padding: 8px 15mm;
+      font-size: 10px;
+      color: var(--gris-medio);
+      text-align: center;
+    }
+    
+    /* Utilidades */
+    .text-center { text-align: center; }
+    .font-bold { font-weight: bold; }
+    .text-sm { font-size: 10px; }
+    .text-xs { font-size: 9px; }
+    
+    /* Responsive para preview */
+    @media (max-width: 980px) {
+      .sheet { width: auto; margin: 12px; }
+      .activities-grid { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    
+    <!-- Header con título y logos -->
+    <div class="header">
+      <div class="title-section">
+        <h1 class="main-title">INFORME DE PRESTACIÓN DEL SERVICIO</h1>
+      </div>
+      <div class="logos">
+        <div class="logo-container">{{ company_logo|safe }}</div>
+        <div class="logo-container">{{ client_logo|safe }}</div>
+      </div>
+    </div>
+    
+    <!-- Información del informe -->
+    <div class="info-header">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">ID:</div>
+          <div class="info-value">{{visita_id}}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Fecha:</div>
+          <div class="info-value">{{fecha_visita}}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Supervisor:</div>
+          <div class="info-value">{{supervisor_nombre}}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Hora:</div>
+          <div class="info-value">{{hora_visita}}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bloques de información -->
+    <div class="info-blocks">
+      <div class="info-block">
+        <div class="block-title">INFORMACIÓN CLIENTE</div>
+        <div class="block-content">
+          <div class="block-row">
+            <div class="block-label">Cliente:</div>
+            <div class="block-value">{{cliente_nombre}}</div>
+          </div>
+          <div class="block-row">
+            <div class="block-label">NIT:</div>
+            <div class="block-value">{{cliente_nit}}</div>
+          </div>
+          <div class="block-row">
+            <div class="block-label">Admin:</div>
+            <div class="block-value">{{cliente_admin}}</div>
+          </div>
+          <div class="block-row">
+            <div class="block-label">Email:</div>
+            <div class="block-value">{{cliente_email}}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="info-block">
+        <div class="block-title">INFORMACIÓN VISITA</div>
+        <div class="block-content">
+          <div class="block-row">
+            <div class="block-label">Supervisor:</div>
+            <div class="block-value">{{supervisor_nombre}}</div>
+          </div>
+          <div class="block-row">
+            <div class="block-label">Fecha:</div>
+            <div class="block-value">{{fecha_visita}}</div>
+          </div>
+          <div class="block-row">
+            <div class="block-label">Código:</div>
+            <div class="block-value">{{codigo_visita}}</div>
+          </div>
+          <div class="block-row">
+            <div class="block-label">Hora:</div>
+            <div class="block-value">{{hora_visita}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sección: Aseo y Limpieza -->
+    {% if actividades_aseo %}
+    <div class="section">
+      <div class="section-header aseo">ASEO Y LIMPIEZA</div>
+      <div class="activities-grid">
+        {% for actividad in actividades_aseo %}
+        <div class="activity-card">
+          <div class="activity-header aseo">
+            <span>{{ actividad.concepto_actividad }}</span>
+            <span class="activity-rating">{{ actividad.calificacion }}</span>
+          </div>
+          <div class="activity-content">
+            <div class="activity-text">{{ actividad.observaciones }}</div>
+            <div class="activity-photo">
+              {{ actividad.foto_url|safe if actividad.foto_url else '<div class="activity-photo-placeholder">Sin evidencia</div>' }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Sección: Seguridad y salud en el trabajo -->
+    {% if actividades_seguridad %}
+    <div class="section">
+      <div class="section-header seguridad">SEGURIDAD Y SALUD EN EL TRABAJO</div>
+      <div class="activities-grid">
+        {% for actividad in actividades_seguridad %}
+        <div class="activity-card">
+          <div class="activity-header seguridad">
+            <span>{{ actividad.concepto_actividad }}</span>
+            <span class="activity-rating">{{ actividad.calificacion }}</span>
+          </div>
+          <div class="activity-content">
+            <div class="activity-text">{{ actividad.observaciones }}</div>
+            <div class="activity-photo">
+              {{ actividad.foto_url|safe if actividad.foto_url else '<div class="activity-photo-placeholder">Sin evidencia</div>' }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Sección: Seguridad y salud en el trabajo -->
+    {% if actividades_seguridad %}
+    <div class="section">
+      <div class="section-header seguridad">SEGURIDAD Y SALUD EN EL TRABAJO</div>
+      <div class="activities-grid">
+        {% for actividad in actividades_seguridad %}
+        <div class="activity-card">
+          <div class="activity-header seguridad">
+            <span>{{ actividad.concepto_actividad }}</span>
+            <span class="activity-rating">{{ actividad.calificacion }}</span>
+          </div>
+          <div class="activity-content">
+            <div class="activity-text">{{ actividad.observaciones }}</div>
+            <div class="activity-photo">
+              {{ actividad.foto_url|safe if actividad.foto_url else '<div class="activity-photo-placeholder">Sin evidencia</div>' }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Sección: Colaborador -->
+    {% if actividades_colaborador %}
+    <div class="section">
+      <div class="section-header colaborador">COLABORADOR</div>
+      <div class="activities-grid">
+        {% for actividad in actividades_colaborador %}
+        <div class="activity-card">
+          <div class="activity-header colaborador">
+            <span>{{ actividad.concepto_actividad }}</span>
+            <span class="activity-rating">{{ actividad.calificacion }}</span>
+          </div>
+          <div class="activity-content">
+            <div class="activity-text">{{ actividad.observaciones }}</div>
+            <div class="activity-photo">
+              {{ actividad.foto_url|safe if actividad.foto_url else '<div class="activity-photo-placeholder">Sin evidencia</div>' }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Sección: Conclusión -->
+    {% if conclusiones %}
+    <div class="section">
+      <div class="section-header conclusion">CONCLUSIÓN</div>
+      <div class="conclusion-content">
+        {{ conclusiones }}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Footer -->
+    <div class="footer">
+      <div>{{company_name}} - {{company_address}} - NIT: {{company_nit}}</div>
+    </div>
+    
+  </div>
+</body>
+</html>
