@@ -122,16 +122,16 @@ class HTMLPDFGenerator:
     def convertir_foto_a_html(self, foto_path):
         """Convertir foto a HTML con data URI"""
         if not foto_path or not os.path.exists(foto_path):
-            return '<div style="width: 80px; height: 60px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #9ca3af; border: 1px solid #d1d5db; border-radius: 4px;">Sin evidencia</div>'
+            return '<div class="activity-photo-placeholder">Sin evidencia</div>'
         
         try:
             import base64
             with open(foto_path, 'rb') as f:
                 foto_data = base64.b64encode(f.read()).decode()
-                return f'<img src="data:image/jpeg;base64,{foto_data}" alt="Evidencia" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #d1d5db;">'
+                return f'<img src="data:image/jpeg;base64,{foto_data}" alt="Evidencia" class="activity-photo-image">'
         except Exception as e:
             print(f"Error convirtiendo foto {foto_path}: {e}")
-            return '<div style="width: 80px; height: 60px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #9ca3af; border: 1px solid #d1d5db; border-radius: 4px;">Error</div>'
+            return '<div class="activity-photo-placeholder">Error</div>'
     
     def generar_pdf(self, visita_id):
         try:
