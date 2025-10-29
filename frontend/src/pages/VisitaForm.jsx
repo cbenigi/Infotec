@@ -13,9 +13,7 @@ import {
   Grid,
   Card,
   CardContent,
-  CardActions,
-  IconButton,
-  Divider
+  IconButton
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../api/axiosConfig';
@@ -52,7 +50,7 @@ const VisitaForm = () => {
     if (id) {
       loadVisita();
     }
-  }, [id]);
+  }, [id, loadVisita]);
 
   const loadClientes = async () => {
     try {

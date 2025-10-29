@@ -38,15 +38,16 @@ const Navbar = () => {
     };
     
     window.addEventListener('empresaUpdated', handleEmpresaUpdate);
-    return () => {
-      window.removeEventListener('empresaUpdated', handleEmpresaUpdate);
-    };
-
+    
     // Obtener nombre del usuario del localStorage o session
     const storedName = localStorage.getItem('userName');
     if (storedName) {
       setUserName(storedName);
     }
+    
+    return () => {
+      window.removeEventListener('empresaUpdated', handleEmpresaUpdate);
+    };
 
     // Obtener rol del usuario del localStorage
     const storedRole = localStorage.getItem('rol');

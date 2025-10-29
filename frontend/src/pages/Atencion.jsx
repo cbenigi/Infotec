@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -13,15 +13,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tabs,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   InputAdornment,
   FormControl,
   InputLabel,
@@ -34,7 +25,6 @@ import {
   Search as SearchIcon,
   Edit as EditIcon,
   Visibility as ViewIcon,
-  FilterList as FilterIcon,
   Clear as ClearIcon,
   SupportAgent as SupportIcon
 } from '@mui/icons-material';
@@ -48,7 +38,6 @@ const Atencion = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
 
   // Estados para edición
   const [editForm, setEditForm] = useState({});
