@@ -460,7 +460,7 @@ def manage_zona(id):
         return jsonify({'message': 'Zona eliminada'}), 200
 
 # Endpoint de búsqueda para el centro de atención
-@app.route('/search', methods=['GET'])
+@routes.route('/search', methods=['GET'])
 def search():
     """Búsqueda avanzada para el centro de atención"""
     try:
