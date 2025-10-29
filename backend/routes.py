@@ -187,7 +187,24 @@ def update_empresa():
 # CRUD Clientes
 @routes.route('/clientes', methods=['GET'])
 def get_clientes():
-    clientes = Cliente.query.all()
+    # Obtener el ID del usuario de la sesión
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autorizado'}), 401
+    
+    # Obtener el rol del usuario
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'Usuario no encontrado'}), 404
+    
+    # Si es admin, puede ver todos los clientes
+    if user.rol == 'admin':
+        clientes = Cliente.query.all()
+    else:
+        # Si no es admin, solo puede ver clientes de su empresa
+        # Por ahora, mostrar todos (esto se puede refinar según la lógica de negocio)
+        clientes = Cliente.query.all()
+    
     return jsonify([{'id': c.id, 'nit': c.nit, 'nombre': c.nombre, 'administrador': c.administrador, 'correo': c.correo, 'tipo_codigo': c.tipo_codigo, 'logo_url': c.logo_url} for c in clientes]), 200
 
 @routes.route('/clientes', methods=['POST'])
@@ -368,7 +385,13 @@ def delete_visita(visita_id):
 @routes.route('/visitas', methods=['GET'])
 def get_visitas():
     try:
-        visitas = Visita.query.all()
+        # Obtener el ID del usuario de la sesión
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autorizado'}), 401
+        
+        # Filtrar visitas por supervisor (usuario logueado)
+        visitas = Visita.query.filter_by(supervisor_id=user_id).all()
         return jsonify([{
             'id': v.id,
             'fecha': v.fecha.strftime('%Y-%m-%d'),

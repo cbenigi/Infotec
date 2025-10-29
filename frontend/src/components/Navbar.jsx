@@ -50,6 +50,7 @@ const Navbar = () => {
 
     // Obtener rol del usuario del localStorage
     const storedRole = localStorage.getItem('rol');
+    console.log('Rol almacenado:', storedRole);
     if (storedRole) {
       setUserRole(storedRole);
     }
