@@ -12,6 +12,9 @@ app = Flask(__name__)
 config_name = os.environ.get('FLASK_ENV', 'default')
 app.config.from_object(config[config_name])
 
+# Asegurar carpeta de uploads
+os.makedirs(app.config.get('UPLOAD_FOLDER', '/app/uploads'), exist_ok=True)
+
 # Registrar blueprint
 app.register_blueprint(routes)
 

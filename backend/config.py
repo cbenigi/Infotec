@@ -6,7 +6,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Configuración de archivos
-    UPLOAD_FOLDER = 'uploads'
+    UPLOAD_FOLDER = '/app/uploads'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     
     # Configuración de email

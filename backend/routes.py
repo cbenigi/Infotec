@@ -254,18 +254,32 @@ def manage_cliente(id):
 
 
 # Upload de imágenes
-@routes.route('/upload', methods=['POST'])
+@routes.route('/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
+    # Preflight CORS
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
     if 'file' not in request.files:
         return jsonify({'message': 'No file part'}), 400
+
     file = request.files['file']
-    if file.filename == '':
+    if not file or file.filename == '':
         return jsonify({'message': 'No selected file'}), 400
-    if file:
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-        return jsonify({'url': f'/uploads/{filename}'}), 200
+
+    # Validación simple de extensión/MIME
+    allowed_ext = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+    name_lower = file.filename.lower()
+    ext = os.path.splitext(name_lower)[1]
+    if ext not in allowed_ext:
+        return jsonify({'message': 'Tipo de archivo no permitido'}), 415
+
+    filename = secure_filename(name_lower)
+    upload_dir = current_app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, filename)
+    file.save(file_path)
+    return jsonify({'url': f'/uploads/{filename}'}), 200
 
 @routes.route('/uploads/<filename>')
 def uploaded_file(filename):
