@@ -148,6 +148,8 @@ const VisitaForm = () => {
         await axios.post('/visita', visitaData);
         alert('Visita creada exitosamente');
       }
+      // Notificar al dashboard para recargar la lista
+      window.dispatchEvent(new Event('visitaUpdated'));
       navigate('/dashboard');
     } catch (err) {
       alert('Error al guardar visita: ' + (err.response?.data?.message || err.message));

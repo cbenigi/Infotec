@@ -62,7 +62,18 @@ const Dashboard = () => {
         console.error('Error fetching visitas:', err);
       }
     };
+
     fetchVisitas();
+
+    // Refrescar cuando se cree/actualice una visita o cuando la pestaña recupere foco
+    const handleUpdated = () => fetchVisitas();
+    const handleVisibility = () => { if (document.visibilityState === 'visible') fetchVisitas(); };
+    window.addEventListener('visitaUpdated', handleUpdated);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('visitaUpdated', handleUpdated);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   return (
