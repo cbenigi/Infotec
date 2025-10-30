@@ -48,10 +48,12 @@ class Visita(db.Model):
     hora = db.Column(db.Time, nullable=True)  # Campo de hora opcional
     supervisor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'))
     conclusiones = db.Column(db.Text)
 
     supervisor = db.relationship('User', foreign_keys=[supervisor_id])
     cliente = db.relationship('Cliente')
+    empresa = db.relationship('Empresa')
     zonas = db.relationship('Zona', backref='visita', lazy=True)
 
 class Zona(db.Model):
