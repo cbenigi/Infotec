@@ -131,12 +131,17 @@ def manage_usuario(id):
         return jsonify({'message': 'Usuario eliminado'}), 200
 
 # CRUD Empresa
-@routes.route('/empresa', methods=['GET'])
+@routes.route('/empresa', methods=['GET', 'OPTIONS'])
 def get_empresa():
-    user_id = session.get('user_id')
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
+    # Permitir user_id por query para diagnóstico/fallback
+    q_user_id = request.args.get('user_id', type=int)
+    user_id = q_user_id or session.get('user_id')
     if not user_id:
         return jsonify({'message': 'No autenticado'}), 401
-    
+
     empresa = Empresa.query.filter_by(user_id=user_id).first()
     if not empresa:
         return jsonify({'exists': False}), 200
@@ -152,8 +157,11 @@ def get_empresa():
         'logo_url': empresa.logo_url
     }), 200
 
-@routes.route('/empresa', methods=['POST'])
+@routes.route('/empresa', methods=['POST', 'OPTIONS'])
 def create_empresa():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'message': 'No autenticado'}), 401
@@ -177,8 +185,11 @@ def create_empresa():
     db.session.commit()
     return jsonify({'message': 'Empresa creada exitosamente', 'id': empresa.id}), 201
 
-@routes.route('/empresa', methods=['PUT'])
+@routes.route('/empresa', methods=['PUT', 'OPTIONS'])
 def update_empresa():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'message': 'No autenticado'}), 401
