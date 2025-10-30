@@ -11,6 +11,18 @@ import traceback
 
 routes = Blueprint('routes', __name__)
 
+@routes.after_request
+def add_cors_headers(response):
+    # Asegurar headers CORS en todas las respuestas del blueprint
+    origin = request.headers.get('Origin')
+    if origin:
+        response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Vary'] = 'Origin'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    return response
+
 @routes.errorhandler(Exception)
 def handle_exception(e):
     print(f"ERROR: {str(e)}")
@@ -29,8 +41,11 @@ def handle_exception(e):
 #         print(f"RAW_DATA: {request.get_data()}")
 
 # Autenticación básica
-@routes.route('/login', methods=['POST'])
+@routes.route('/login', methods=['POST', 'OPTIONS'])
 def login():
+    # Responder preflight CORS
+    if request.method == 'OPTIONS':
+        return ('', 200)
     data = request.json
     user = User.query.filter_by(email=data['email']).first()
     if user and user.check_password(data['password']):
