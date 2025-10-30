@@ -28,6 +28,12 @@ CORS(app,
      allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
+# Cookies de sesión para entornos cross-site (Vercel ⇄ Railway)
+app.config.update(
+    SESSION_COOKIE_SAMESITE='None',
+    SESSION_COOKIE_SECURE=True,
+)
+
 # Inicializar base de datos
 db.init_app(app)
 
