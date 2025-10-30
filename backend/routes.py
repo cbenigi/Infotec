@@ -278,14 +278,31 @@ def upload_file():
     if not file or file.filename == '':
         return jsonify({'message': 'No selected file'}), 400
 
-    # Validación simple de extensión/MIME
+    # Validación/normalización de extensión y MIME
     allowed_ext = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
-    name_lower = file.filename.lower()
-    ext = os.path.splitext(name_lower)[1]
-    if ext not in allowed_ext:
-        return jsonify({'message': 'Tipo de archivo no permitido'}), 415
+    mime_to_ext = {
+        'image/png': '.png',
+        'image/jpeg': '.jpg',
+        'image/jpg': '.jpg',
+        'image/webp': '.webp',
+        'image/gif': '.gif'
+    }
 
-    filename = secure_filename(name_lower)
+    original_name = file.filename
+    name_lower = (original_name or '').lower()
+    base, ext = os.path.splitext(name_lower)
+
+    # Si la extensión no es válida, intenta por MIME; si no, por defecto .jpg
+    if ext not in allowed_ext:
+        guessed_ext = mime_to_ext.get((file.mimetype or '').lower())
+        ext = guessed_ext if guessed_ext in allowed_ext else '.jpg'
+
+    safe_base = secure_filename(base) or 'image'
+    # Evitar colisiones
+    from datetime import datetime
+    timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
+    filename = f"{safe_base}_{timestamp}{ext}"
+
     upload_dir = current_app.config['UPLOAD_FOLDER']
     os.makedirs(upload_dir, exist_ok=True)
     file_path = os.path.join(upload_dir, filename)
