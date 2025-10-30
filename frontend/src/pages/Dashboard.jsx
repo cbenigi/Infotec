@@ -56,7 +56,10 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchVisitas = async () => {
       try {
-        const res = await axios.get('/visitas');
+        const role = localStorage.getItem('rol');
+        const supervisorId = localStorage.getItem('userId');
+        const url = role === 'admin' ? '/visitas?all=true' : (supervisorId ? `/visitas?supervisor_id=${supervisorId}` : '/visitas');
+        const res = await axios.get(url);
         setVisitas(res.data);
       } catch (err) {
         console.error('Error fetching visitas:', err);

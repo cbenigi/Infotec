@@ -25,6 +25,7 @@ const Login = () => {
       const currentUser = usersRes.data.find(u => u.email === email);
       if (currentUser) {
         localStorage.setItem('userName', currentUser.nombre);
+        localStorage.setItem('userId', String(currentUser.id));
       }
       
       // Ir directamente al dashboard

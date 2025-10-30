@@ -439,16 +439,27 @@ def delete_visita(visita_id):
         db.session.rollback()
         return jsonify({'message': f'Error al eliminar visita: {str(e)}'}), 500
 
-@routes.route('/visitas', methods=['GET'])
+@routes.route('/visitas', methods=['GET', 'OPTIONS'])
 def get_visitas():
+    if request.method == 'OPTIONS':
+        return ('', 200)
     try:
-        # Obtener el ID del usuario de la sesión
+        # Parámetros opcionales
+        all_flag = request.args.get('all', 'false').lower() == 'true'
+        supervisor_id_q = request.args.get('supervisor_id', type=int)
+
         user_id = session.get('user_id')
-        if not user_id:
+        user = User.query.get(user_id) if user_id else None
+        if not user_id and not supervisor_id_q:
             return jsonify({'message': 'No autorizado'}), 401
-        
-        # Filtrar visitas por supervisor (usuario logueado)
-        visitas = Visita.query.filter_by(supervisor_id=user_id).all()
+
+        # Lógica de filtrado
+        if all_flag and user and user.rol == 'admin':
+            visitas = Visita.query.order_by(Visita.fecha.desc()).all()
+        elif supervisor_id_q:
+            visitas = Visita.query.filter_by(supervisor_id=supervisor_id_q).order_by(Visita.fecha.desc()).all()
+        else:
+            visitas = Visita.query.filter_by(supervisor_id=user_id).order_by(Visita.fecha.desc()).all()
         return jsonify([{
             'id': v.id,
             'fecha': v.fecha.strftime('%Y-%m-%d'),
