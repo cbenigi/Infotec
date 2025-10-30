@@ -56,9 +56,24 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchVisitas = async () => {
       try {
+        // Intentar por empresa primero
+        let url = '/visitas';
+        try {
+          const emp = await axios.get('/empresa');
+          if (emp.data && emp.data.exists && emp.data.id) {
+            url = `/visitas?empresa_id=${emp.data.id}`;
+          }
+        } catch { /* sin empresa, seguir */ }
+
         const role = localStorage.getItem('rol');
-        const supervisorId = localStorage.getItem('userId');
-        const url = role === 'admin' ? '/visitas?all=true' : (supervisorId ? `/visitas?supervisor_id=${supervisorId}` : '/visitas');
+        if (url === '/visitas' && role === 'admin') {
+          url = '/visitas?all=true';
+        }
+        if (url === '/visitas') {
+          const supervisorId = localStorage.getItem('userId');
+          if (supervisorId) url = `/visitas?supervisor_id=${supervisorId}`;
+        }
+
         const res = await axios.get(url);
         setVisitas(res.data);
       } catch (err) {

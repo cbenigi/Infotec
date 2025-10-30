@@ -326,6 +326,14 @@ def create_visita():
         hora = None
         if data.get('hora'):
             hora = datetime.strptime(data['hora'], '%H:%M').time()
+
+        # Resolver empresa del usuario en sesión (si existe)
+        empresa_id = None
+        user_id = session.get('user_id')
+        if user_id:
+            emp = Empresa.query.filter_by(user_id=user_id).first()
+            if emp:
+                empresa_id = emp.id
         
         visita = Visita(
             id=visita_id,
@@ -333,6 +341,7 @@ def create_visita():
             hora=hora,
             supervisor_id=data['supervisor_id'],
             cliente_id=data['cliente_id'],
+            empresa_id=empresa_id,
             conclusiones=data.get('conclusiones', '')
         )
         
@@ -398,6 +407,14 @@ def update_visita(visita_id):
         visita.supervisor_id = data['supervisor_id']
         visita.cliente_id = data['cliente_id']
         visita.conclusiones = data.get('conclusiones', '')
+
+        # Asegurar empresa_id
+        if not visita.empresa_id:
+            user_id = session.get('user_id')
+            if user_id:
+                emp = Empresa.query.filter_by(user_id=user_id).first()
+                if emp:
+                    visita.empresa_id = emp.id
         
         # Eliminar zonas existentes
         Zona.query.filter_by(visita_id=visita_id).delete()
@@ -447,15 +464,22 @@ def get_visitas():
         # Parámetros opcionales
         all_flag = request.args.get('all', 'false').lower() == 'true'
         supervisor_id_q = request.args.get('supervisor_id', type=int)
+        empresa_id_q = request.args.get('empresa_id', type=int)
 
         user_id = session.get('user_id')
         user = User.query.get(user_id) if user_id else None
         if not user_id and not supervisor_id_q:
             return jsonify({'message': 'No autorizado'}), 401
 
-        # Lógica de filtrado
+        # Si el usuario tiene empresa, priorizar filtro por empresa
+        empresa = Empresa.query.filter_by(user_id=user_id).first() if user_id else None
+
         if all_flag and user and user.rol == 'admin':
             visitas = Visita.query.order_by(Visita.fecha.desc()).all()
+        elif empresa_id_q:
+            visitas = Visita.query.filter_by(empresa_id=empresa_id_q).order_by(Visita.fecha.desc()).all()
+        elif empresa:
+            visitas = Visita.query.filter_by(empresa_id=empresa.id).order_by(Visita.fecha.desc()).all()
         elif supervisor_id_q:
             visitas = Visita.query.filter_by(supervisor_id=supervisor_id_q).order_by(Visita.fecha.desc()).all()
         else:
