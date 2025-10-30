@@ -53,12 +53,14 @@ class HTMLPDFGenerator:
         if not foto_url:
             return None
         
+        upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
+        nombre = foto_url.split('/')[-1]
         posibles_rutas = [
-            foto_url,
-            os.path.join('uploads', foto_url.split('/')[-1]),
-            os.path.join('backend/uploads', foto_url.split('/')[-1]),
-            os.path.join('static/uploads', foto_url.split('/')[-1]),
-            os.path.join('..', 'uploads', foto_url.split('/')[-1]),
+            os.path.join(upload_base, nombre),
+            os.path.join('uploads', nombre),
+            os.path.join('backend', 'uploads', nombre),
+            os.path.join('static', 'uploads', nombre),
+            nombre,
         ]
         
         for ruta in posibles_rutas:
@@ -74,11 +76,13 @@ class HTMLPDFGenerator:
         if not empresa or not empresa.logo_url:
             return None
         
+        upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
+        nombre = empresa.logo_url.split('/')[-1]
         posibles_rutas = [
-            empresa.logo_url,
-            os.path.join('uploads', empresa.logo_url.split('/')[-1]),
-            os.path.join('backend/uploads', empresa.logo_url.split('/')[-1]),
-            os.path.join('static/uploads', empresa.logo_url.split('/')[-1]),
+            os.path.join(upload_base, nombre),
+            os.path.join('uploads', nombre),
+            os.path.join('backend', 'uploads', nombre),
+            os.path.join('static', 'uploads', nombre),
         ]
         
         for ruta in posibles_rutas:
@@ -92,11 +96,13 @@ class HTMLPDFGenerator:
         if not cliente or not cliente.logo_url:
             return None
         
+        upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
+        nombre = cliente.logo_url.split('/')[-1]
         posibles_rutas = [
-            cliente.logo_url,
-            os.path.join('uploads', cliente.logo_url.split('/')[-1]),
-            os.path.join('backend/uploads', cliente.logo_url.split('/')[-1]),
-            os.path.join('static/uploads', cliente.logo_url.split('/')[-1]),
+            os.path.join(upload_base, nombre),
+            os.path.join('uploads', nombre),
+            os.path.join('backend', 'uploads', nombre),
+            os.path.join('static', 'uploads', nombre),
         ]
         
         for ruta in posibles_rutas:
