@@ -514,12 +514,13 @@ def generar_pdf(visita_id):
             print(f"DEBUG: Visita {visita_id} no encontrada")
             return jsonify({'message': f'Visita {visita_id} no encontrada'}), 404
         
-        print(f"DEBUG: Visita encontrada: {visita.id}")
+        print(f"DEBUG: Visita encontrada: {visita.id}", flush=True)
         
         # Usar el nuevo generador HTML
+        print(f"DEBUG: Creando generador con upload_folder: {current_app.config['UPLOAD_FOLDER']}", flush=True)
         pdf_generator = HTMLPDFGenerator(upload_folder=current_app.config['UPLOAD_FOLDER'])
         pdf_path = pdf_generator.generar_pdf(visita_id)
-        print(f"DEBUG: PDF generado en: {pdf_path}")
+        print(f"DEBUG: PDF generado en: {pdf_path}", flush=True)
         
         if not pdf_path:
             print("DEBUG: No se pudo generar PDF")
@@ -534,9 +535,10 @@ def generar_pdf(visita_id):
         # Enviar el archivo PDF como respuesta
         return send_file(pdf_path, as_attachment=True, download_name=f'visita-{visita_id}.pdf')
     except Exception as e:
-        print(f"DEBUG: Error al generar PDF: {str(e)}")
+        print(f"DEBUG: Error al generar PDF: {str(e)}", flush=True)
         import traceback
         traceback.print_exc()
+        print(f"FULL TRACEBACK:\n{traceback.format_exc()}", flush=True)
         return jsonify({'message': f'Error al generar PDF: {str(e)}'}), 500
 @routes.route('/zonas/<string:visita_id>', methods=['GET'])
 def get_zonas(visita_id):
