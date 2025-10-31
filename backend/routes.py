@@ -318,9 +318,28 @@ def uploaded_file(filename):
 def create_visita():
     try:
         data = request.json
-        # Generar ID automático
+        # Generar ID automático secuencial
         fecha = datetime.strptime(data['fecha'], '%Y-%m-%d')
-        visita_id = f"{fecha.strftime('%d%m%Y')}-{data.get('tipo_codigo', 'AL')}-{datetime.now().strftime('%H%M')}"
+        tipo_codigo = data.get('tipo_codigo', 'AL')
+        
+        # Obtener el último ID de visita para generar secuencial
+        patron_base = f"{tipo_codigo}-"
+        
+        # Buscar la última visita con ese tipo
+        ultima_visita = Visita.query.filter(
+            Visita.id.like(f"{patron_base}%")
+        ).order_by(Visita.id.desc()).first()
+        
+        # Generar el siguiente número secuencial
+        if ultima_visita:
+            # Extraer el número del ID (ej: "AL-1501" -> "1501" -> 1501)
+            ultimo_numero = int(ultima_visita.id.split('-')[-1])
+            siguiente_numero = ultimo_numero + 1
+        else:
+            siguiente_numero = 1
+        
+        # Formato: tipo-0001
+        visita_id = f"{patron_base}{siguiente_numero:04d}"
         
         # Procesar hora si se proporciona
         hora = None
