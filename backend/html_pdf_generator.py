@@ -336,10 +336,10 @@ class HTMLPDFGenerator:
             # Generar nombre del archivo PDF
             timestamp = datetime.now().strftime('%d%m%Y')
             filename = f"informe_{timestamp}-{visita_id}.pdf"
-            filepath = os.path.join('uploads', filename)
+            filepath = os.path.join(self.upload_folder, filename)
             
             # Crear directorio si no existe
-            os.makedirs('uploads', exist_ok=True)
+            os.makedirs(self.upload_folder, exist_ok=True)
             
             # Generar PDF con WeasyPrint
             print(f"DEBUG: Generando PDF en: {filepath}")

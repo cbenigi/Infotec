@@ -330,10 +330,14 @@ def create_visita():
         # Resolver empresa del usuario en sesión (si existe)
         empresa_id = None
         user_id = session.get('user_id')
+        print(f"DEBUG: Creando visita - user_id en sesión: {user_id}", flush=True)
         if user_id:
             emp = Empresa.query.filter_by(user_id=user_id).first()
+            print(f"DEBUG: Empresa encontrada para user_id {user_id}: {emp.id if emp else 'None'}", flush=True)
             if emp:
                 empresa_id = emp.id
+        
+        print(f"DEBUG: empresa_id asignada: {empresa_id}", flush=True)
         
         visita = Visita(
             id=visita_id,
