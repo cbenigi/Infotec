@@ -53,22 +53,31 @@ class HTMLPDFGenerator:
         if not foto_url:
             return None
         
+        # Base directory del archivo actual
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
         upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
         nombre = foto_url.split('/')[-1]
+        
         posibles_rutas = [
             os.path.join(upload_base, nombre),
+            os.path.join(base_dir, 'uploads', nombre),  # backend/uploads/nombre
+            os.path.join(base_dir, '..', 'uploads', nombre),  # uploads/nombre desde backend
             os.path.join('uploads', nombre),
             os.path.join('backend', 'uploads', nombre),
             os.path.join('static', 'uploads', nombre),
             nombre,
         ]
         
+        print(f"DEBUG: Buscando foto '{nombre}' de '{foto_url}'")
         for ruta in posibles_rutas:
+            abs_ruta = os.path.abspath(ruta)
+            print(f"DEBUG: Intentando ruta: {ruta} (abs: {abs_ruta})")
             if os.path.exists(ruta):
-                print(f"DEBUG: Foto encontrada en: {ruta}")
+                print(f"DEBUG: ✅ Foto encontrada en: {ruta}")
                 return ruta
         
-        print(f"DEBUG: No se encontró la foto: {foto_url}")
+        print(f"DEBUG: ❌ No se encontró la foto: {foto_url}")
         return None
     
     def obtener_logo_empresa(self, empresa):
@@ -76,19 +85,30 @@ class HTMLPDFGenerator:
         if not empresa or not empresa.logo_url:
             return None
         
+        # Base directory del archivo actual
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
         upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
         nombre = empresa.logo_url.split('/')[-1]
+        
         posibles_rutas = [
             os.path.join(upload_base, nombre),
+            os.path.join(base_dir, 'uploads', nombre),  # backend/uploads/nombre
+            os.path.join(base_dir, '..', 'uploads', nombre),  # uploads/nombre desde backend
             os.path.join('uploads', nombre),
             os.path.join('backend', 'uploads', nombre),
             os.path.join('static', 'uploads', nombre),
         ]
         
+        print(f"DEBUG: Buscando logo empresa '{nombre}' de '{empresa.logo_url}'")
         for ruta in posibles_rutas:
+            abs_ruta = os.path.abspath(ruta)
+            print(f"DEBUG: Intentando ruta: {ruta} (abs: {abs_ruta})")
             if os.path.exists(ruta):
+                print(f"DEBUG: ✅ Logo empresa encontrado en: {ruta}")
                 return ruta
         
+        print(f"DEBUG: ❌ No se encontró el logo empresa: {empresa.logo_url}")
         return None
     
     def obtener_logo_cliente(self, cliente):
@@ -96,19 +116,30 @@ class HTMLPDFGenerator:
         if not cliente or not cliente.logo_url:
             return None
         
+        # Base directory del archivo actual
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
         upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
         nombre = cliente.logo_url.split('/')[-1]
+        
         posibles_rutas = [
             os.path.join(upload_base, nombre),
+            os.path.join(base_dir, 'uploads', nombre),  # backend/uploads/nombre
+            os.path.join(base_dir, '..', 'uploads', nombre),  # uploads/nombre desde backend
             os.path.join('uploads', nombre),
             os.path.join('backend', 'uploads', nombre),
             os.path.join('static', 'uploads', nombre),
         ]
         
+        print(f"DEBUG: Buscando logo cliente '{nombre}' de '{cliente.logo_url}'")
         for ruta in posibles_rutas:
+            abs_ruta = os.path.abspath(ruta)
+            print(f"DEBUG: Intentando ruta: {ruta} (abs: {abs_ruta})")
             if os.path.exists(ruta):
+                print(f"DEBUG: ✅ Logo cliente encontrado en: {ruta}")
                 return ruta
         
+        print(f"DEBUG: ❌ No se encontró el logo cliente: {cliente.logo_url}")
         return None
     
     def convertir_logo_a_html(self, logo_path, alt_text):
@@ -118,9 +149,22 @@ class HTMLPDFGenerator:
         
         try:
             import base64
+            
+            # Determinar el tipo MIME basado en la extensión
+            ext = os.path.splitext(logo_path)[1].lower()
+            mime_types = {
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.jfif': 'image/jpeg',
+                '.webp': 'image/webp',
+                '.gif': 'image/gif'
+            }
+            mime_type = mime_types.get(ext, 'image/png')  # Default a PNG
+            
             with open(logo_path, 'rb') as f:
                 logo_data = base64.b64encode(f.read()).decode()
-                return f'<img src="data:image/png;base64,{logo_data}" alt="{alt_text}" class="logo-image">'
+                return f'<img src="data:{mime_type};base64,{logo_data}" alt="{alt_text}" class="logo-image">'
         except Exception as e:
             print(f"Error convirtiendo logo {logo_path}: {e}")
             return f'<div class="logo-placeholder">{alt_text}</div>'
@@ -132,9 +176,22 @@ class HTMLPDFGenerator:
         
         try:
             import base64
+            
+            # Determinar el tipo MIME basado en la extensión
+            ext = os.path.splitext(foto_path)[1].lower()
+            mime_types = {
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.jfif': 'image/jpeg',
+                '.webp': 'image/webp',
+                '.gif': 'image/gif'
+            }
+            mime_type = mime_types.get(ext, 'image/jpeg')  # Default a JPEG
+            
             with open(foto_path, 'rb') as f:
                 foto_data = base64.b64encode(f.read()).decode()
-                return f'<img src="data:image/jpeg;base64,{foto_data}" alt="Evidencia" class="activity-photo-image">'
+                return f'<img src="data:{mime_type};base64,{foto_data}" alt="Evidencia" class="activity-photo-image">'
         except Exception as e:
             print(f"Error convirtiendo foto {foto_path}: {e}")
             return '<div class="activity-photo-placeholder">Error</div>'
