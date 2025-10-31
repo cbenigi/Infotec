@@ -320,26 +320,28 @@ def create_visita():
         data = request.json
         # Generar ID automático secuencial
         fecha = datetime.strptime(data['fecha'], '%Y-%m-%d')
-        tipo_codigo = data.get('tipo_codigo', 'AL')
         
-        # Obtener el último ID de visita para generar secuencial
-        patron_base = f"{tipo_codigo}-"
-        
-        # Buscar la última visita con ese tipo
-        ultima_visita = Visita.query.filter(
-            Visita.id.like(f"{patron_base}%")
-        ).order_by(Visita.id.desc()).first()
+        # Buscar la última visita para generar secuencial
+        ultima_visita = Visita.query.order_by(Visita.id.desc()).first()
         
         # Generar el siguiente número secuencial
         if ultima_visita:
-            # Extraer el número del ID (ej: "AL-1501" -> "1501" -> 1501)
-            ultimo_numero = int(ultima_visita.id.split('-')[-1])
-            siguiente_numero = ultimo_numero + 1
+            # Intentar extraer el número del ID (puede ser solo números o tener formato antiguo)
+            try:
+                # Si el ID tiene formato "AL-0001" o "31102025-AL-1539"
+                if '-' in ultima_visita.id:
+                    ultimo_numero = int(ultima_visita.id.split('-')[-1])
+                else:
+                    # Si el ID es solo números
+                    ultimo_numero = int(ultima_visita.id)
+                siguiente_numero = ultimo_numero + 1
+            except (ValueError, AttributeError):
+                siguiente_numero = 1
         else:
             siguiente_numero = 1
         
-        # Formato: tipo-0001
-        visita_id = f"{patron_base}{siguiente_numero:04d}"
+        # Formato: solo números con padding a 4 dígitos
+        visita_id = f"{siguiente_numero:04d}"
         
         # Procesar hora si se proporciona
         hora = None
