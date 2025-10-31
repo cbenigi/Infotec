@@ -7,10 +7,13 @@ import re
 from datetime import datetime
 
 class HTMLPDFGenerator:
-    def __init__(self):
+    def __init__(self, upload_folder=None):
         # Configurar Jinja2
         self.template_dir = os.path.join(os.path.dirname(__file__), 'templates')
         self.jinja_env = Environment(loader=FileSystemLoader(self.template_dir))
+        
+        # Configurar upload folder
+        self.upload_folder = upload_folder or os.environ.get('UPLOAD_FOLDER', '/app/uploads')
         
         # Configurar WeasyPrint
         self.font_config = FontConfiguration()
@@ -56,11 +59,10 @@ class HTMLPDFGenerator:
         # Base directory del archivo actual
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
-        upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
         nombre = foto_url.split('/')[-1]
         
         posibles_rutas = [
-            os.path.join(upload_base, nombre),
+            os.path.join(self.upload_folder, nombre),  # Usar upload_folder configurado
             os.path.join(base_dir, 'uploads', nombre),  # backend/uploads/nombre
             os.path.join(base_dir, '..', 'uploads', nombre),  # uploads/nombre desde backend
             os.path.join('uploads', nombre),
@@ -88,11 +90,10 @@ class HTMLPDFGenerator:
         # Base directory del archivo actual
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
-        upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
         nombre = empresa.logo_url.split('/')[-1]
         
         posibles_rutas = [
-            os.path.join(upload_base, nombre),
+            os.path.join(self.upload_folder, nombre),  # Usar upload_folder configurado
             os.path.join(base_dir, 'uploads', nombre),  # backend/uploads/nombre
             os.path.join(base_dir, '..', 'uploads', nombre),  # uploads/nombre desde backend
             os.path.join('uploads', nombre),
@@ -119,11 +120,10 @@ class HTMLPDFGenerator:
         # Base directory del archivo actual
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
-        upload_base = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
         nombre = cliente.logo_url.split('/')[-1]
         
         posibles_rutas = [
-            os.path.join(upload_base, nombre),
+            os.path.join(self.upload_folder, nombre),  # Usar upload_folder configurado
             os.path.join(base_dir, 'uploads', nombre),  # backend/uploads/nombre
             os.path.join(base_dir, '..', 'uploads', nombre),  # uploads/nombre desde backend
             os.path.join('uploads', nombre),
@@ -199,6 +199,7 @@ class HTMLPDFGenerator:
     def generar_pdf(self, visita_id):
         try:
             print(f"=== INICIANDO GENERACIÓN HTML PDF PARA VISITA {visita_id} ===")
+            print(f"DEBUG: Upload folder configurado: {self.upload_folder}")
             
             # Obtener datos de la visita
             visita = Visita.query.get(visita_id)

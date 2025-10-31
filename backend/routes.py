@@ -517,7 +517,7 @@ def generar_pdf(visita_id):
         print(f"DEBUG: Visita encontrada: {visita.id}")
         
         # Usar el nuevo generador HTML
-        pdf_generator = HTMLPDFGenerator()
+        pdf_generator = HTMLPDFGenerator(upload_folder=current_app.config['UPLOAD_FOLDER'])
         pdf_path = pdf_generator.generar_pdf(visita_id)
         print(f"DEBUG: PDF generado en: {pdf_path}")
         
