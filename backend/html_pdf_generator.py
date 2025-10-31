@@ -56,10 +56,16 @@ class HTMLPDFGenerator:
         if not foto_url:
             return None
         
+        print(f"=== DEBUG OBTENER RUTA FOTO ===")
+        print(f"DEBUG: Foto URL desde BD: '{foto_url}'")
+        
         # Base directory del archivo actual
         base_dir = os.path.dirname(os.path.abspath(__file__))
+        print(f"DEBUG: Base dir del generador: {base_dir}")
+        print(f"DEBUG: Upload folder configurado: {self.upload_folder}")
         
         nombre = foto_url.split('/')[-1]
+        print(f"DEBUG: Nombre del archivo extraído: '{nombre}'")
         
         posibles_rutas = [
             os.path.join(self.upload_folder, nombre),  # Usar upload_folder configurado
@@ -71,26 +77,40 @@ class HTMLPDFGenerator:
             nombre,
         ]
         
-        print(f"DEBUG: Buscando foto '{nombre}' de '{foto_url}'")
-        for ruta in posibles_rutas:
+        print(f"DEBUG: Rutas que se van a probar:")
+        for i, ruta in enumerate(posibles_rutas, 1):
             abs_ruta = os.path.abspath(ruta)
-            print(f"DEBUG: Intentando ruta: {ruta} (abs: {abs_ruta})")
-            if os.path.exists(ruta):
-                print(f"DEBUG: ✅ Foto encontrada en: {ruta}")
+            existe = os.path.exists(ruta)
+            print(f"  {i}. {ruta}")
+            print(f"     Absoluta: {abs_ruta}")
+            print(f"     Existe: {existe}")
+            if existe:
+                print(f"DEBUG: ✅ FOTO ENCONTRADA EN: {ruta}")
                 return ruta
         
-        print(f"DEBUG: ❌ No se encontró la foto: {foto_url}")
+        print(f"DEBUG: ❌ NO SE ENCONTRÓ LA FOTO: {foto_url}")
         return None
     
     def obtener_logo_empresa(self, empresa):
         """Obtener la ruta del logo de la empresa"""
-        if not empresa or not empresa.logo_url:
+        print(f"=== DEBUG OBTENER LOGO EMPRESA ===")
+        if not empresa:
+            print("DEBUG: No se pasó objeto empresa")
             return None
+        if not empresa.logo_url:
+            print("DEBUG: Empresa sin logo_url")
+            return None
+        
+        print(f"DEBUG: Empresa: {empresa.nombre}")
+        print(f"DEBUG: Logo URL desde BD: '{empresa.logo_url}'")
         
         # Base directory del archivo actual
         base_dir = os.path.dirname(os.path.abspath(__file__))
+        print(f"DEBUG: Base dir del generador: {base_dir}")
+        print(f"DEBUG: Upload folder configurado: {self.upload_folder}")
         
         nombre = empresa.logo_url.split('/')[-1]
+        print(f"DEBUG: Nombre del archivo extraído: '{nombre}'")
         
         posibles_rutas = [
             os.path.join(self.upload_folder, nombre),  # Usar upload_folder configurado
@@ -101,26 +121,40 @@ class HTMLPDFGenerator:
             os.path.join('static', 'uploads', nombre),
         ]
         
-        print(f"DEBUG: Buscando logo empresa '{nombre}' de '{empresa.logo_url}'")
-        for ruta in posibles_rutas:
+        print(f"DEBUG: Rutas que se van a probar:")
+        for i, ruta in enumerate(posibles_rutas, 1):
             abs_ruta = os.path.abspath(ruta)
-            print(f"DEBUG: Intentando ruta: {ruta} (abs: {abs_ruta})")
-            if os.path.exists(ruta):
-                print(f"DEBUG: ✅ Logo empresa encontrado en: {ruta}")
+            existe = os.path.exists(ruta)
+            print(f"  {i}. {ruta}")
+            print(f"     Absoluta: {abs_ruta}")
+            print(f"     Existe: {existe}")
+            if existe:
+                print(f"DEBUG: ✅ LOGO EMPRESA ENCONTRADO EN: {ruta}")
                 return ruta
         
-        print(f"DEBUG: ❌ No se encontró el logo empresa: {empresa.logo_url}")
+        print(f"DEBUG: ❌ NO SE ENCONTRÓ EL LOGO EMPRESA: {empresa.logo_url}")
         return None
     
     def obtener_logo_cliente(self, cliente):
         """Obtener la ruta del logo del cliente"""
-        if not cliente or not cliente.logo_url:
+        print(f"=== DEBUG OBTENER LOGO CLIENTE ===")
+        if not cliente:
+            print("DEBUG: No se pasó objeto cliente")
             return None
+        if not cliente.logo_url:
+            print("DEBUG: Cliente sin logo_url")
+            return None
+        
+        print(f"DEBUG: Cliente: {cliente.nombre}")
+        print(f"DEBUG: Logo URL desde BD: '{cliente.logo_url}'")
         
         # Base directory del archivo actual
         base_dir = os.path.dirname(os.path.abspath(__file__))
+        print(f"DEBUG: Base dir del generador: {base_dir}")
+        print(f"DEBUG: Upload folder configurado: {self.upload_folder}")
         
         nombre = cliente.logo_url.split('/')[-1]
+        print(f"DEBUG: Nombre del archivo extraído: '{nombre}'")
         
         posibles_rutas = [
             os.path.join(self.upload_folder, nombre),  # Usar upload_folder configurado
@@ -131,22 +165,35 @@ class HTMLPDFGenerator:
             os.path.join('static', 'uploads', nombre),
         ]
         
-        print(f"DEBUG: Buscando logo cliente '{nombre}' de '{cliente.logo_url}'")
-        for ruta in posibles_rutas:
+        print(f"DEBUG: Rutas que se van a probar:")
+        for i, ruta in enumerate(posibles_rutas, 1):
             abs_ruta = os.path.abspath(ruta)
-            print(f"DEBUG: Intentando ruta: {ruta} (abs: {abs_ruta})")
-            if os.path.exists(ruta):
-                print(f"DEBUG: ✅ Logo cliente encontrado en: {ruta}")
+            existe = os.path.exists(ruta)
+            print(f"  {i}. {ruta}")
+            print(f"     Absoluta: {abs_ruta}")
+            print(f"     Existe: {existe}")
+            if existe:
+                print(f"DEBUG: ✅ LOGO CLIENTE ENCONTRADO EN: {ruta}")
                 return ruta
         
-        print(f"DEBUG: ❌ No se encontró el logo cliente: {cliente.logo_url}")
+        print(f"DEBUG: ❌ NO SE ENCONTRÓ EL LOGO CLIENTE: {cliente.logo_url}")
         return None
     
     def convertir_logo_a_html(self, logo_path, alt_text):
         """Convertir logo a HTML con data URI"""
-        if not logo_path or not os.path.exists(logo_path):
+        print(f"=== DEBUG CONVERTIR LOGO A HTML ===")
+        print(f"DEBUG: Logo path: '{logo_path}'")
+        print(f"DEBUG: Alt text: '{alt_text}'")
+        
+        if not logo_path:
+            print("DEBUG: No hay logo_path, retornando placeholder")
             return f'<div class="logo-placeholder">{alt_text}</div>'
         
+        if not os.path.exists(logo_path):
+            print(f"DEBUG: El archivo NO existe: {logo_path}")
+            return f'<div class="logo-placeholder">{alt_text}</div>'
+        
+        print(f"DEBUG: El archivo existe, convirtiendo a base64...")
         try:
             import base64
             
@@ -161,19 +208,32 @@ class HTMLPDFGenerator:
                 '.gif': 'image/gif'
             }
             mime_type = mime_types.get(ext, 'image/png')  # Default a PNG
+            print(f"DEBUG: Extensión: {ext}, MIME type: {mime_type}")
             
             with open(logo_path, 'rb') as f:
                 logo_data = base64.b64encode(f.read()).decode()
+                print(f"DEBUG: Logo convertido a base64, longitud: {len(logo_data)}")
                 return f'<img src="data:{mime_type};base64,{logo_data}" alt="{alt_text}" class="logo-image">'
         except Exception as e:
-            print(f"Error convirtiendo logo {logo_path}: {e}")
+            print(f"DEBUG: ❌ ERROR convirtiendo logo {logo_path}: {e}")
+            import traceback
+            traceback.print_exc()
             return f'<div class="logo-placeholder">{alt_text}</div>'
     
     def convertir_foto_a_html(self, foto_path):
         """Convertir foto a HTML con data URI"""
-        if not foto_path or not os.path.exists(foto_path):
+        print(f"=== DEBUG CONVERTIR FOTO A HTML ===")
+        print(f"DEBUG: Foto path: '{foto_path}'")
+        
+        if not foto_path:
+            print("DEBUG: No hay foto_path, retornando placeholder")
             return '<div class="activity-photo-placeholder">Sin evidencia</div>'
         
+        if not os.path.exists(foto_path):
+            print(f"DEBUG: El archivo NO existe: {foto_path}")
+            return '<div class="activity-photo-placeholder">Sin evidencia</div>'
+        
+        print(f"DEBUG: El archivo existe, convirtiendo a base64...")
         try:
             import base64
             
@@ -188,12 +248,16 @@ class HTMLPDFGenerator:
                 '.gif': 'image/gif'
             }
             mime_type = mime_types.get(ext, 'image/jpeg')  # Default a JPEG
+            print(f"DEBUG: Extensión: {ext}, MIME type: {mime_type}")
             
             with open(foto_path, 'rb') as f:
                 foto_data = base64.b64encode(f.read()).decode()
+                print(f"DEBUG: Foto convertida a base64, longitud: {len(foto_data)}")
                 return f'<img src="data:{mime_type};base64,{foto_data}" alt="Evidencia" class="activity-photo-image">'
         except Exception as e:
-            print(f"Error convirtiendo foto {foto_path}: {e}")
+            print(f"DEBUG: ❌ ERROR convirtiendo foto {foto_path}: {e}")
+            import traceback
+            traceback.print_exc()
             return '<div class="activity-photo-placeholder">Error</div>'
     
     def generar_pdf(self, visita_id):
@@ -258,6 +322,12 @@ class HTMLPDFGenerator:
             print(f"DEBUG: Actividades aseo: {len(template_data['actividades_aseo'])}")
             print(f"DEBUG: Actividades seguridad: {len(template_data['actividades_seguridad'])}")
             print(f"DEBUG: Actividades colaborador: {len(template_data['actividades_colaborador'])}")
+            
+            # Debug de logos generados
+            company_logo_preview = template_data['company_logo'][:100] if template_data['company_logo'] else 'None'
+            client_logo_preview = template_data['client_logo'][:100] if template_data['client_logo'] else 'None'
+            print(f"DEBUG: Company logo HTML (primeros 100 chars): {company_logo_preview}...")
+            print(f"DEBUG: Client logo HTML (primeros 100 chars): {client_logo_preview}...")
             
             # Cargar y renderizar plantilla
             template = self.jinja_env.get_template('informe_template.html')
