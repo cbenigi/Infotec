@@ -775,10 +775,6 @@ def create_cotizacion():
         if not user:
             return jsonify({'message': 'Usuario no encontrado'}), 404
         
-        # Verificar que sea supervisor o admin
-        if user.rol not in ['supervisor', 'admin']:
-            return jsonify({'message': 'Solo supervisores y administradores pueden crear cotizaciones'}), 403
-        
         # Obtener empresa del usuario
         empresa = Empresa.query.filter_by(user_id=user_id).first()
         if not empresa:
