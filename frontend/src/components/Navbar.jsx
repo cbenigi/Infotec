@@ -143,23 +143,25 @@ const Navbar = () => {
                 label="NEW"
                 size="small"
                 sx={{
-                  height: '18px',
-                  fontSize: '9px',
+                  height: '20px',
+                  fontSize: '10px',
                   fontWeight: 'bold',
-                  backgroundColor: '#ff4c8b',
+                  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
                   color: 'white',
-                  animation: 'pulse 2s infinite',
-                  '@keyframes pulse': {
+                  boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)',
+                  animation: 'shine 2.5s ease-in-out infinite',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  '@keyframes shine': {
                     '0%': { 
-                      boxShadow: '0 0 0 0 rgba(255, 76, 139, 0.7)',
+                      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)',
                       transform: 'scale(1)'
                     },
                     '50%': { 
-                      boxShadow: '0 0 0 8px rgba(255, 76, 139, 0)',
-                      transform: 'scale(1.05)'
+                      boxShadow: '0 2px 12px rgba(66, 165, 245, 0.6), 0 0 20px rgba(25, 118, 210, 0.3)',
+                      transform: 'scale(1.03)'
                     },
                     '100%': { 
-                      boxShadow: '0 0 0 0 rgba(255, 76, 139, 0)',
+                      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)',
                       transform: 'scale(1)'
                     }
                   }
@@ -241,15 +243,17 @@ const Navbar = () => {
           <MenuItem onClick={() => { navigate('/cotizaciones'); handleClose(); }}>
             <RequestQuoteIcon sx={{ mr: 1 }} /> Cotizaciones
             <Chip 
-              label="NEW" 
+              label="New" 
               size="small" 
               sx={{ 
                 ml: 1, 
-                height: '18px', 
-                fontSize: '9px',
-                backgroundColor: '#ff4c8b',
+                height: '20px', 
+                fontSize: '10px',
+                background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
                 color: 'white',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)',
+                border: '1px solid rgba(255, 255, 255, 0.3)'
               }} 
             />
           </MenuItem>
