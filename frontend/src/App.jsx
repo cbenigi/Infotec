@@ -10,6 +10,8 @@ import EmpresaForm from './pages/EmpresaForm';
 import ClienteForm from './pages/ClienteForm';
 import SupervisorForm from './pages/SupervisorForm';
 import Atencion from './pages/Atencion';
+import CotizacionHistorial from './pages/CotizacionHistorial';
+import CotizacionForm from './pages/CotizacionForm';
 
 const theme = createTheme({
   palette: {
@@ -32,6 +34,9 @@ function App() {
           <Route path="/clientes/new" element={<ClienteForm />} />
           <Route path="/supervisores/new" element={<SupervisorForm />} />
           <Route path="/atencion" element={<Atencion />} />
+          <Route path="/cotizaciones" element={<CotizacionHistorial />} />
+          <Route path="/cotizacion/nueva" element={<CotizacionForm />} />
+          <Route path="/cotizacion/:id" element={<CotizacionForm />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </Router>

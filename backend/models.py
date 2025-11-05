@@ -65,3 +65,25 @@ class Zona(db.Model):
     calificacion = db.Column(Enum('Buena', 'Media', 'Mala', name='calif_enum'), nullable=False)
     observaciones = db.Column(db.Text)
     foto_url = db.Column(db.String(200))  # URL relativa a la imagen subida (solo para Aseo y Seguridad)
+
+class Cotizacion(db.Model):
+    __tablename__ = 'cotizaciones'
+    id = db.Column(db.Integer, primary_key=True)
+    fecha_creacion = db.Column(db.DateTime, nullable=False)
+    supervisor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=False)
+    observaciones = db.Column(db.Text)
+    estado = db.Column(db.String(20), nullable=False, default='pendiente')  # pendiente, enviada, aprobada, rechazada
+    
+    supervisor = db.relationship('User', foreign_keys=[supervisor_id])
+    empresa = db.relationship('Empresa')
+    items = db.relationship('CotizacionItem', backref='cotizacion', lazy=True, cascade='all, delete-orphan')
+
+class CotizacionItem(db.Model):
+    __tablename__ = 'cotizacion_items'
+    id = db.Column(db.Integer, primary_key=True)
+    cotizacion_id = db.Column(db.Integer, db.ForeignKey('cotizaciones.id'), nullable=False)
+    producto_servicio = db.Column(db.String(200), nullable=False)
+    cantidad = db.Column(db.String(50), nullable=False)
+    uso = db.Column(db.String(200), nullable=False)
+    orden = db.Column(db.Integer, nullable=False, default=0)

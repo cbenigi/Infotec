@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem, Avatar } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem, Avatar, Badge, Chip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import BusinessIcon from '@mui/icons-material/Business';
@@ -9,6 +9,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PeopleIcon from '@mui/icons-material/People';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import axios from '../api/axiosConfig';
 
 const Navbar = () => {
@@ -129,6 +130,45 @@ const Navbar = () => {
           >
             Nueva Visita
           </Button>
+          <Button
+            color="inherit"
+            startIcon={<RequestQuoteIcon />}
+            onClick={() => navigate('/cotizaciones')}
+            sx={{ 
+              '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' },
+              position: 'relative'
+            }}
+            endIcon={
+              <Chip
+                label="NEW"
+                size="small"
+                sx={{
+                  height: '18px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ff4c8b',
+                  color: 'white',
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%': { 
+                      boxShadow: '0 0 0 0 rgba(255, 76, 139, 0.7)',
+                      transform: 'scale(1)'
+                    },
+                    '50%': { 
+                      boxShadow: '0 0 0 8px rgba(255, 76, 139, 0)',
+                      transform: 'scale(1.05)'
+                    },
+                    '100%': { 
+                      boxShadow: '0 0 0 0 rgba(255, 76, 139, 0)',
+                      transform: 'scale(1)'
+                    }
+                  }
+                }}
+              />
+            }
+          >
+            Cotizaciones
+          </Button>
           {userRole === 'admin' && (
             <Button
               color="inherit"
@@ -197,6 +237,21 @@ const Navbar = () => {
           </MenuItem>
           <MenuItem onClick={() => { navigate('/visita'); handleClose(); }}>
             <AssignmentIcon sx={{ mr: 1 }} /> Nueva Visita
+          </MenuItem>
+          <MenuItem onClick={() => { navigate('/cotizaciones'); handleClose(); }}>
+            <RequestQuoteIcon sx={{ mr: 1 }} /> Cotizaciones
+            <Chip 
+              label="NEW" 
+              size="small" 
+              sx={{ 
+                ml: 1, 
+                height: '18px', 
+                fontSize: '9px',
+                backgroundColor: '#ff4c8b',
+                color: 'white',
+                fontWeight: 'bold'
+              }} 
+            />
           </MenuItem>
           {userRole === 'admin' && (
             <MenuItem onClick={() => { navigate('/atencion'); handleClose(); }}>

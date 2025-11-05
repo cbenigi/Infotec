@@ -3,7 +3,7 @@ from flask_mail import Mail, Message
 from flask import Blueprint, request, jsonify, session, send_from_directory, current_app, send_file
 import os
 from werkzeug.utils import secure_filename
-from models import db, User, Empresa, Cliente, Visita, Zona
+from models import db, User, Empresa, Cliente, Visita, Zona, Cotizacion, CotizacionItem
 from sqlalchemy import or_
 from werkzeug.security import check_password_hash
 from datetime import datetime
@@ -681,3 +681,254 @@ def search():
     except Exception as e:
         print(f"Error en búsqueda: {e}")
         return jsonify({'error': 'Error en la búsqueda'}), 500
+
+# CRUD Cotizaciones
+@routes.route('/cotizaciones', methods=['GET', 'OPTIONS'])
+def get_cotizaciones():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autorizado'}), 401
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        # Obtener empresa del usuario
+        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        if not empresa:
+            return jsonify({'message': 'No hay empresa asociada al usuario'}), 404
+        
+        # Filtrar cotizaciones por empresa
+        if user.rol == 'admin':
+            # Admin puede ver todas las cotizaciones de la empresa
+            cotizaciones = Cotizacion.query.filter_by(empresa_id=empresa.id).order_by(Cotizacion.fecha_creacion.desc()).all()
+        else:
+            # Supervisores solo ven sus propias cotizaciones
+            cotizaciones = Cotizacion.query.filter_by(empresa_id=empresa.id, supervisor_id=user_id).order_by(Cotizacion.fecha_creacion.desc()).all()
+        
+        return jsonify([{
+            'id': c.id,
+            'fecha_creacion': c.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S'),
+            'supervisor': c.supervisor.nombre,
+            'supervisor_id': c.supervisor_id,
+            'estado': c.estado,
+            'observaciones': c.observaciones or '',
+            'total_items': len(c.items)
+        } for c in cotizaciones]), 200
+        
+    except Exception as e:
+        print(f"Error al obtener cotizaciones: {str(e)}")
+        return jsonify({'message': f'Error al obtener cotizaciones: {str(e)}'}), 500
+
+@routes.route('/cotizacion/<int:id>', methods=['GET', 'OPTIONS'])
+def get_cotizacion(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        cotizacion = Cotizacion.query.get_or_404(id)
+        
+        # Verificar permisos
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
+        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        
+        if cotizacion.empresa_id != empresa.id:
+            return jsonify({'message': 'No tienes permiso para ver esta cotización'}), 403
+        
+        if user.rol != 'admin' and cotizacion.supervisor_id != user_id:
+            return jsonify({'message': 'No tienes permiso para ver esta cotización'}), 403
+        
+        return jsonify({
+            'id': cotizacion.id,
+            'fecha_creacion': cotizacion.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S'),
+            'supervisor_id': cotizacion.supervisor_id,
+            'supervisor': {'nombre': cotizacion.supervisor.nombre, 'email': cotizacion.supervisor.email},
+            'empresa': {'nombre': cotizacion.empresa.nombre, 'logo_url': cotizacion.empresa.logo_url},
+            'estado': cotizacion.estado,
+            'observaciones': cotizacion.observaciones or '',
+            'items': [{
+                'id': item.id,
+                'producto_servicio': item.producto_servicio,
+                'cantidad': item.cantidad,
+                'uso': item.uso,
+                'orden': item.orden
+            } for item in sorted(cotizacion.items, key=lambda x: x.orden)]
+        }), 200
+        
+    except Exception as e:
+        print(f"Error al obtener cotización: {str(e)}")
+        return jsonify({'message': f'Error al obtener cotización: {str(e)}'}), 500
+
+@routes.route('/cotizacion', methods=['POST', 'OPTIONS'])
+def create_cotizacion():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autorizado'}), 401
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        # Verificar que sea supervisor o admin
+        if user.rol not in ['supervisor', 'admin']:
+            return jsonify({'message': 'Solo supervisores y administradores pueden crear cotizaciones'}), 403
+        
+        # Obtener empresa del usuario
+        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        if not empresa:
+            return jsonify({'message': 'No hay empresa asociada al usuario'}), 404
+        
+        data = request.json
+        
+        # Validar que haya al menos un item
+        if not data.get('items') or len(data['items']) == 0:
+            return jsonify({'message': 'Debe agregar al menos un producto o servicio'}), 400
+        
+        # Crear cotización
+        cotizacion = Cotizacion(
+            fecha_creacion=datetime.utcnow(),
+            supervisor_id=user_id,
+            empresa_id=empresa.id,
+            observaciones=data.get('observaciones', ''),
+            estado='pendiente'
+        )
+        
+        db.session.add(cotizacion)
+        db.session.flush()
+        
+        # Agregar items
+        for idx, item_data in enumerate(data['items']):
+            item = CotizacionItem(
+                cotizacion_id=cotizacion.id,
+                producto_servicio=item_data['producto_servicio'],
+                cantidad=item_data['cantidad'],
+                uso=item_data['uso'],
+                orden=idx
+            )
+            db.session.add(item)
+        
+        db.session.commit()
+        
+        return jsonify({'message': 'Cotización creada exitosamente', 'id': cotizacion.id}), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al crear cotización: {str(e)}")
+        return jsonify({'message': f'Error al crear cotización: {str(e)}'}), 500
+
+@routes.route('/cotizacion/<int:id>', methods=['PUT', 'OPTIONS'])
+def update_cotizacion(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
+        cotizacion = Cotizacion.query.get_or_404(id)
+        
+        # Verificar permisos
+        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        if cotizacion.empresa_id != empresa.id:
+            return jsonify({'message': 'No tienes permiso para editar esta cotización'}), 403
+        
+        if user.rol != 'admin' and cotizacion.supervisor_id != user_id:
+            return jsonify({'message': 'No tienes permiso para editar esta cotización'}), 403
+        
+        data = request.json
+        
+        # Validar que haya al menos un item
+        if not data.get('items') or len(data['items']) == 0:
+            return jsonify({'message': 'Debe agregar al menos un producto o servicio'}), 400
+        
+        # Actualizar cotización
+        cotizacion.observaciones = data.get('observaciones', '')
+        cotizacion.estado = data.get('estado', cotizacion.estado)
+        
+        # Eliminar items existentes
+        CotizacionItem.query.filter_by(cotizacion_id=id).delete()
+        
+        # Agregar nuevos items
+        for idx, item_data in enumerate(data['items']):
+            item = CotizacionItem(
+                cotizacion_id=cotizacion.id,
+                producto_servicio=item_data['producto_servicio'],
+                cantidad=item_data['cantidad'],
+                uso=item_data['uso'],
+                orden=idx
+            )
+            db.session.add(item)
+        
+        db.session.commit()
+        
+        return jsonify({'message': 'Cotización actualizada exitosamente'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al actualizar cotización: {str(e)}")
+        return jsonify({'message': f'Error al actualizar cotización: {str(e)}'}), 500
+
+@routes.route('/cotizacion/<int:id>', methods=['DELETE', 'OPTIONS'])
+def delete_cotizacion(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        user = User.query.get(user_id)
+        cotizacion = Cotizacion.query.get_or_404(id)
+        
+        # Verificar permisos
+        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        if cotizacion.empresa_id != empresa.id:
+            return jsonify({'message': 'No tienes permiso para eliminar esta cotización'}), 403
+        
+        if user.rol != 'admin' and cotizacion.supervisor_id != user_id:
+            return jsonify({'message': 'No tienes permiso para eliminar esta cotización'}), 403
+        
+        # Eliminar items (cascade debería hacerlo automáticamente)
+        db.session.delete(cotizacion)
+        db.session.commit()
+        
+        return jsonify({'message': 'Cotización eliminada exitosamente'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al eliminar cotización: {str(e)}")
+        return jsonify({'message': f'Error al eliminar cotización: {str(e)}'}), 500
+
+@routes.route('/generar-pdf-cotizacion/<int:id>', methods=['POST', 'OPTIONS'])
+def generar_pdf_cotizacion(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        from html_cotizacion_generator import HTMLCotizacionGenerator
+        
+        cotizacion = Cotizacion.query.get_or_404(id)
+        
+        # Verificar permisos
+        user_id = session.get('user_id')
+        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        if cotizacion.empresa_id != empresa.id:
+            return jsonify({'message': 'No tienes permiso para generar el PDF de esta cotización'}), 403
+        
+        pdf_generator = HTMLCotizacionGenerator(upload_folder=current_app.config['UPLOAD_FOLDER'])
+        pdf_path = pdf_generator.generar_pdf(id)
+        
+        if not pdf_path or not os.path.exists(pdf_path):
+            return jsonify({'message': 'No se pudo generar el PDF'}), 500
+        
+        # Actualizar estado a 'enviada' si estaba en 'pendiente'
+        if cotizacion.estado == 'pendiente':
+            cotizacion.estado = 'enviada'
+            db.session.commit()
+        
+        return send_file(pdf_path, as_attachment=True, download_name=f'cotizacion-{id}.pdf')
+        
+    except Exception as e:
+        print(f"Error al generar PDF de cotización: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'message': f'Error al generar PDF: {str(e)}'}), 500
