@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -6,7 +6,6 @@ import {
   Paper,
   Button,
   TextField,
-  Grid,
   IconButton,
   Table,
   TableBody,
@@ -39,13 +38,7 @@ const CotizacionForm = () => {
     { producto_servicio: '', cantidad: '', uso: '' }
   ]);
 
-  useEffect(() => {
-    if (id) {
-      loadCotizacion();
-    }
-  }, [id]);
-
-  const loadCotizacion = async () => {
+  const loadCotizacion = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`/cotizacion/${id}`);
@@ -68,7 +61,13 @@ const CotizacionForm = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      loadCotizacion();
+    }
+  }, [id, loadCotizacion]);
 
   const addItem = () => {
     setItems([...items, { producto_servicio: '', cantidad: '', uso: '' }]);
