@@ -48,24 +48,16 @@
     .header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      padding: 15mm 15mm 5mm 15mm;
-    }
-    
-    .logos {
-      display: flex;
-      gap: 20px;
       align-items: center;
-      justify-content: flex-end;
-      flex-wrap: nowrap;
-      width: 50%;
+      padding: 15mm 15mm 5mm 15mm;
+      gap: 20px;
     }
     
     .logo-container {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 150px;
+      width: 120px;
       height: 70px;
       flex-shrink: 0;
       position: relative;
@@ -83,19 +75,19 @@
     .logo-image {
       height: 70px;
       width: auto;
-      max-width: 150px;
+      max-width: 120px;
       display: block;
       object-fit: contain;
     }
     
     .logo-placeholder {
-      width: 150px;
+      width: 120px;
       height: 70px;
       background: #e5e7eb;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 10px;
       color: #6b7280;
       border: 1px solid #d1d5db;
       border-radius: 4px;
@@ -104,14 +96,16 @@
     .title-section {
       text-align: center;
       flex: 1;
+      padding: 0 10px;
     }
     
     .main-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: bold;
       color: var(--azul-principal);
       margin: 0;
       letter-spacing: 0.5px;
+      line-height: 1.3;
     }
     
     /* Información del informe */
@@ -345,13 +339,16 @@
     
     <!-- Header con título y logos -->
     <div class="header">
+      <!-- Logo del Cliente (Copropiedad) a la izquierda -->
+      <div class="logo-container">{{ client_logo|safe }}</div>
+      
+      <!-- Título en el centro -->
       <div class="title-section">
         <h1 class="main-title">INFORME DE PRESTACIÓN DEL SERVICIO</h1>
       </div>
-      <div class="logos">
-        <div class="logo-container">{{ company_logo|safe }}</div>
-        <div class="logo-container">{{ client_logo|safe }}</div>
-      </div>
+      
+      <!-- Logo de la Empresa a la derecha -->
+      <div class="logo-container">{{ company_logo|safe }}</div>
     </div>
     
     <!-- Información del informe -->
