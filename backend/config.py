@@ -17,6 +17,9 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME')
+    MAIL_MAX_EMAILS = None
+    MAIL_ASCII_ATTACHMENTS = False
+    MAIL_TIMEOUT = 60  # Timeout de 60 segundos para operaciones SMTP
     
     # CORS
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')

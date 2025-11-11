@@ -700,7 +700,13 @@ def enviar_informe(visita_id):
         </html>
         """
         
+        # Verificar configuración de correo
+        if not current_app.config.get('MAIL_USERNAME'):
+            print("ERROR: MAIL_USERNAME no configurado", flush=True)
+            return jsonify({'message': 'Error: Configuración de correo no encontrada. Configura las variables MAIL_USERNAME y MAIL_PASSWORD en Railway.'}), 500
+        
         # Crear mensaje
+        print(f"DEBUG: Creando mensaje de correo...", flush=True)
         msg = Message(
             subject=asunto,
             recipients=[email_destino],
@@ -708,6 +714,7 @@ def enviar_informe(visita_id):
         )
         
         # Adjuntar el PDF
+        print(f"DEBUG: Adjuntando PDF...", flush=True)
         with open(pdf_path, 'rb') as pdf_file:
             msg.attach(
                 filename=f"informe_visita_{visita_id}.pdf",
@@ -717,8 +724,15 @@ def enviar_informe(visita_id):
         
         # Enviar el correo
         print(f"DEBUG: Enviando correo a {email_destino}...", flush=True)
-        mail.send(msg)
-        print(f"DEBUG: Correo enviado exitosamente", flush=True)
+        print(f"DEBUG: Usando SMTP: {current_app.config.get('MAIL_SERVER')}:{current_app.config.get('MAIL_PORT')}", flush=True)
+        print(f"DEBUG: Usuario SMTP: {current_app.config.get('MAIL_USERNAME')}", flush=True)
+        
+        try:
+            mail.send(msg)
+            print(f"DEBUG: Correo enviado exitosamente", flush=True)
+        except Exception as mail_error:
+            print(f"ERROR al enviar correo: {str(mail_error)}", flush=True)
+            raise
         
         return jsonify({
             'message': 'Informe enviado exitosamente',
