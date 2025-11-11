@@ -77,7 +77,7 @@ const Dashboard = () => {
 
     setSendingEmail(true);
     try {
-      const response = await axios.post(`/enviar-informe/${selectedVisita.id}`, {
+      await axios.post(`/enviar-informe/${selectedVisita.id}`, {
         email_destino: emailDestino
       });
       
