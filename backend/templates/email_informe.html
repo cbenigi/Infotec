@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .intro {
+            margin-bottom: 25px;
+            color: #666;
+        }
+        .info-row {
+            margin: 12px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #1976d2;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .info-row:hover {
+            background-color: #e3f2fd;
+        }
+        .info-row strong {
+            color: #1976d2;
+            font-weight: 600;
+        }
+        .info-label {
+            display: inline-block;
+            min-width: 140px;
+        }
+        .closing-text {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            color: #856404;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .attachment-notice {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 4px;
+        }
+        .attachment-notice strong {
+            color: #2e7d32;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 4px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>📋 Informe de Visita Técnica</h1>
+        </div>
+        
+        <div class="content">
+            <p class="greeting">Estimado/a Administrador/a,</p>
+            
+            <p class="intro">
+                Se adjunta el informe de visita técnica realizada. A continuación encontrará 
+                los detalles principales de la visita:
+            </p>
+            
+            <div class="info-row">
+                <span class="info-label"><strong>🆔 ID de Visita:</strong></span>
+                <span>{{ visita_id }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label"><strong>🏢 Cliente:</strong></span>
+                <span>{{ cliente_nombre }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label"><strong>👤 Supervisor:</strong></span>
+                <span>{{ supervisor_nombre }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label"><strong>📅 Fecha de Visita:</strong></span>
+                <span>{{ fecha_visita }}</span>
+            </div>
+            
+            {% if hora_visita %}
+            <div class="info-row">
+                <span class="info-label"><strong>🕐 Hora:</strong></span>
+                <span>{{ hora_visita }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="info-row">
+                <span class="info-label"><strong>🏭 Empresa:</strong></span>
+                <span>{{ empresa_nombre }}</span>
+            </div>
+            
+            <div class="attachment-notice">
+                <strong>📎 Archivo Adjunto:</strong> El informe completo en formato PDF 
+                se encuentra adjunto a este correo con todas las evidencias fotográficas 
+                y observaciones detalladas.
+            </div>
+            
+            <div class="closing-text">
+                💡 <strong>Nota:</strong> Por favor, revise el informe adjunto y no dude en 
+                contactarnos si tiene alguna pregunta o requiere información adicional.
+            </div>
+            
+            <div class="footer">
+                <p>Este es un correo automático generado por el sistema <strong>Informetec</strong>.</p>
+                <p>© {{ year }} {{ empresa_nombre }}. Todos los derechos reservados.</p>
+                <p style="margin-top: 10px; color: #999; font-size: 11px;">
+                    Por favor, no responda a este correo. Para consultas, contacte directamente con su supervisor.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

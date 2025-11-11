@@ -1,6 +1,6 @@
 from html_pdf_generator import HTMLPDFGenerator
 from flask_mail import Mail, Message
-from flask import Blueprint, request, jsonify, session, send_from_directory, current_app, send_file
+from flask import Blueprint, request, jsonify, session, send_from_directory, current_app, send_file, render_template
 import os
 from werkzeug.utils import secure_filename
 from models import db, User, Empresa, Cliente, Visita, Zona, Cotizacion, CotizacionItem
@@ -610,95 +610,17 @@ def enviar_informe(visita_id):
         print(f"DEBUG: Creando mensaje de correo...", flush=True)
         asunto = f"Informe de Visita Técnica - {visita_id} - {visita.cliente.nombre}"
         
-        # Cuerpo del correo en HTML
-        cuerpo_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }}
-                .header {{
-                    background-color: #1976d2;
-                    color: white;
-                    padding: 20px;
-                    text-align: center;
-                    border-radius: 5px 5px 0 0;
-                }}
-                .content {{
-                    background-color: #f9f9f9;
-                    padding: 30px;
-                    border-radius: 0 0 5px 5px;
-                }}
-                .info-row {{
-                    margin: 10px 0;
-                    padding: 10px;
-                    background-color: white;
-                    border-left: 4px solid #1976d2;
-                }}
-                .footer {{
-                    margin-top: 20px;
-                    padding-top: 20px;
-                    border-top: 1px solid #ddd;
-                    text-align: center;
-                    color: #666;
-                    font-size: 12px;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>📋 Informe de Visita Técnica</h1>
-                </div>
-                <div class="content">
-                    <p>Estimado/a Administrador/a,</p>
-                    
-                    <p>Se adjunta el informe de visita técnica con los siguientes detalles:</p>
-                    
-                    <div class="info-row">
-                        <strong>🆔 ID de Visita:</strong> {visita_id}
-                    </div>
-                    
-                    <div class="info-row">
-                        <strong>🏢 Cliente:</strong> {visita.cliente.nombre}
-                    </div>
-                    
-                    <div class="info-row">
-                        <strong>👤 Supervisor:</strong> {visita.supervisor.nombre}
-                    </div>
-                    
-                    <div class="info-row">
-                        <strong>📅 Fecha de Visita:</strong> {visita.fecha.strftime('%d/%m/%Y')}
-                    </div>
-                    
-                    {f'<div class="info-row"><strong>🕐 Hora:</strong> {visita.hora.strftime("%H:%M")}</div>' if visita.hora else ''}
-                    
-                    <div class="info-row">
-                        <strong>🏭 Empresa:</strong> {empresa_nombre}
-                    </div>
-                    
-                    <p style="margin-top: 20px;">
-                        El informe completo se encuentra adjunto en formato PDF. Por favor, revíselo y no dude en contactarnos si tiene alguna pregunta.
-                    </p>
-                    
-                    <div class="footer">
-                        <p>Este es un correo automático generado por el sistema Informetec.</p>
-                        <p>© {datetime.now().year} {empresa_nombre}. Todos los derechos reservados.</p>
-                    </div>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        # Renderizar el template HTML
+        cuerpo_html = render_template(
+            'email_informe.html',
+            visita_id=visita_id,
+            cliente_nombre=visita.cliente.nombre,
+            supervisor_nombre=visita.supervisor.nombre,
+            fecha_visita=visita.fecha.strftime('%d/%m/%Y'),
+            hora_visita=visita.hora.strftime('%H:%M') if visita.hora else None,
+            empresa_nombre=empresa_nombre,
+            year=datetime.now().year
+        )
         
         # Verificar configuración de correo
         if not current_app.config.get('MAIL_USERNAME'):
@@ -724,15 +646,54 @@ def enviar_informe(visita_id):
         
         # Enviar el correo
         print(f"DEBUG: Enviando correo a {email_destino}...", flush=True)
-        print(f"DEBUG: Usando SMTP: {current_app.config.get('MAIL_SERVER')}:{current_app.config.get('MAIL_PORT')}", flush=True)
-        print(f"DEBUG: Usuario SMTP: {current_app.config.get('MAIL_USERNAME')}", flush=True)
         
-        try:
-            mail.send(msg)
-            print(f"DEBUG: Correo enviado exitosamente", flush=True)
-        except Exception as mail_error:
-            print(f"ERROR al enviar correo: {str(mail_error)}", flush=True)
-            raise
+        # Intentar con SendGrid primero (Railway bloquea SMTP)
+        if current_app.config.get('USE_SENDGRID') and current_app.config.get('SENDGRID_API_KEY'):
+            print(f"DEBUG: Usando SendGrid API", flush=True)
+            try:
+                from sendgrid import SendGridAPIClient
+                from sendgrid.helpers.mail import Mail as SendGridMail, Attachment, FileContent, FileName, FileType, Disposition
+                import base64
+                
+                sg_mail = SendGridMail(
+                    from_email=current_app.config.get('MAIL_DEFAULT_SENDER'),
+                    to_emails=email_destino,
+                    subject=asunto,
+                    html_content=cuerpo_html
+                )
+                
+                # Adjuntar PDF
+                with open(pdf_path, 'rb') as f:
+                    data = f.read()
+                encoded_file = base64.b64encode(data).decode()
+                
+                attached_file = Attachment(
+                    FileContent(encoded_file),
+                    FileName(f'informe_visita_{visita_id}.pdf'),
+                    FileType('application/pdf'),
+                    Disposition('attachment')
+                )
+                sg_mail.attachment = attached_file
+                
+                sg = SendGridAPIClient(current_app.config.get('SENDGRID_API_KEY'))
+                response = sg.send(sg_mail)
+                print(f"DEBUG: Correo enviado exitosamente con SendGrid (status: {response.status_code})", flush=True)
+                
+            except Exception as sg_error:
+                print(f"ERROR al enviar con SendGrid: {str(sg_error)}", flush=True)
+                raise
+        else:
+            # Fallback a SMTP tradicional
+            print(f"DEBUG: Usando SMTP: {current_app.config.get('MAIL_SERVER')}:{current_app.config.get('MAIL_PORT')}", flush=True)
+            print(f"DEBUG: Usuario SMTP: {current_app.config.get('MAIL_USERNAME')}", flush=True)
+            
+            try:
+                mail.send(msg)
+                print(f"DEBUG: Correo enviado exitosamente con SMTP", flush=True)
+            except Exception as mail_error:
+                print(f"ERROR al enviar correo con SMTP: {str(mail_error)}", flush=True)
+                print(f"SUGERENCIA: Railway bloquea SMTP. Usa SendGrid configurando USE_SENDGRID=true y SENDGRID_API_KEY", flush=True)
+                raise
         
         return jsonify({
             'message': 'Informe enviado exitosamente',

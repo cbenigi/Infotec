@@ -10,6 +10,11 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     
     # Configuración de email
+    # Railway bloquea SMTP directo, usa SendGrid como alternativa
+    USE_SENDGRID = os.environ.get('USE_SENDGRID', 'false').lower() in ['true', 'on', '1']
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+    
+    # Configuración SMTP tradicional (para desarrollo local)
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
