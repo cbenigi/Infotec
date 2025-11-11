@@ -1,10 +1,14 @@
 import os
+from dotenv import load_dotenv
 from flask_mail import Mail
-from routes import routes
+from routes import routes, mail as routes_mail
 from flask import Flask
 from flask_cors import CORS
 from models import db
 from config import config
+
+# Cargar variables de entorno desde .env
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -40,9 +44,14 @@ app.config.update(
 # Inicializar base de datos
 db.init_app(app)
 
-# Inicializar mail
-mail = Mail()
-mail.init_app(app)
+# Inicializar mail desde routes
+routes_mail.init_app(app)
+
+print(f"📧 Configuración de correo:")
+print(f"   - Servidor: {app.config.get('MAIL_SERVER', 'No configurado')}")
+print(f"   - Puerto: {app.config.get('MAIL_PORT', 'No configurado')}")
+print(f"   - Usuario: {app.config.get('MAIL_USERNAME', 'No configurado')}")
+print(f"   - TLS: {app.config.get('MAIL_USE_TLS', False)}")
 
 # Crear tablas
 with app.app_context():

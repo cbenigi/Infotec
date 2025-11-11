@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction, Dialog, DialogContent } from '@mui/material';
+import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction, Dialog, DialogContent, DialogTitle, DialogActions, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axiosConfig';
 import Navbar from '../components/Navbar';
@@ -8,11 +8,15 @@ import AddIcon from '@mui/icons-material/Add';
 import BusinessIcon from '@mui/icons-material/Business';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { Download, Visibility, Delete } from '@mui/icons-material';
+import { Download, Visibility, Delete, Email } from '@mui/icons-material';
 
 const Dashboard = () => {
   const [visitas, setVisitas] = useState([]);
   const [loadingPDF, setLoadingPDF] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [selectedVisita, setSelectedVisita] = useState(null);
+  const [emailDestino, setEmailDestino] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
   const navigate = useNavigate();
 
   const handleDownloadPDF = async (visitaId) => {
@@ -50,6 +54,41 @@ const Dashboard = () => {
         console.error('Error al eliminar visita:', error);
         alert('Error al eliminar la visita');
       }
+    }
+  };
+
+  const handleOpenEmailDialog = (visita) => {
+    setSelectedVisita(visita);
+    setEmailDestino('');
+    setEmailDialogOpen(true);
+  };
+
+  const handleCloseEmailDialog = () => {
+    setEmailDialogOpen(false);
+    setSelectedVisita(null);
+    setEmailDestino('');
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailDestino || !emailDestino.includes('@')) {
+      alert('Por favor ingresa un correo electrónico válido');
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const response = await axios.post(`/enviar-informe/${selectedVisita.id}`, {
+        email_destino: emailDestino
+      });
+      
+      alert('¡Correo enviado exitosamente!');
+      handleCloseEmailDialog();
+    } catch (error) {
+      console.error('Error al enviar correo:', error);
+      const errorMsg = error.response?.data?.message || 'Error al enviar el correo. Por favor intenta de nuevo.';
+      alert(errorMsg);
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -241,6 +280,14 @@ const Dashboard = () => {
                       </IconButton>
                       <IconButton 
                         edge="end" 
+                        onClick={() => handleOpenEmailDialog(v)}
+                        sx={{ mr: 1, color: '#EA4335' }}
+                        title="Enviar por correo"
+                      >
+                        <Email />
+                      </IconButton>
+                      <IconButton 
+                        edge="end" 
                         onClick={() => handleDeleteVisita(v.id)}
                         title="Eliminar visita"
                         sx={{ color: 'red' }}
@@ -290,6 +337,63 @@ const Dashboard = () => {
             <Loader />
           </Box>
         </DialogContent>
+      </Dialog>
+
+      {/* Dialog para enviar correo */}
+      <Dialog 
+        open={emailDialogOpen} 
+        onClose={handleCloseEmailDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center' }}>
+          <Email sx={{ mr: 1 }} />
+          Enviar Informe por Correo
+        </DialogTitle>
+        <DialogContent sx={{ mt: 3 }}>
+          {selectedVisita && (
+            <>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                <strong>Visita:</strong> {selectedVisita.id}
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                <strong>Cliente:</strong> {selectedVisita.cliente}
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+                <strong>Supervisor:</strong> {selectedVisita.supervisor}
+              </Typography>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Correo del Administrador"
+                type="email"
+                fullWidth
+                variant="outlined"
+                value={emailDestino}
+                onChange={(e) => setEmailDestino(e.target.value)}
+                placeholder="ejemplo@empresa.com"
+                disabled={sendingEmail}
+                helperText="Ingresa el correo del administrador donde se enviará el informe"
+              />
+            </>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button 
+            onClick={handleCloseEmailDialog} 
+            disabled={sendingEmail}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSendEmail} 
+            variant="contained" 
+            disabled={sendingEmail || !emailDestino}
+            startIcon={sendingEmail ? null : <Email />}
+          >
+            {sendingEmail ? 'Enviando...' : 'Enviar Correo'}
+          </Button>
+        </DialogActions>
       </Dialog>
     </>
   );

@@ -9,6 +9,9 @@ from werkzeug.security import check_password_hash
 from datetime import datetime
 import traceback
 
+# Inicializar Mail
+mail = Mail()
+
 routes = Blueprint('routes', __name__)
 
 @routes.after_request
@@ -565,6 +568,169 @@ def generar_pdf(visita_id):
         traceback.print_exc()
         print(f"FULL TRACEBACK:\n{traceback.format_exc()}", flush=True)
         return jsonify({'message': f'Error al generar PDF: {str(e)}'}), 500
+
+@routes.route('/enviar-informe/<string:visita_id>', methods=['POST', 'OPTIONS'])
+def enviar_informe(visita_id):
+    """Envía el informe de visita por correo electrónico"""
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    
+    try:
+        print(f"DEBUG: Enviando informe para visita {visita_id}", flush=True)
+        
+        # Verificar que la visita existe
+        visita = Visita.query.get(visita_id)
+        if not visita:
+            return jsonify({'message': f'Visita {visita_id} no encontrada'}), 404
+        
+        # Obtener el correo de destino del request
+        data = request.json
+        email_destino = data.get('email_destino')
+        
+        if not email_destino:
+            return jsonify({'message': 'El correo de destino es requerido'}), 400
+        
+        # Validar formato de email
+        if '@' not in email_destino:
+            return jsonify({'message': 'Formato de correo inválido'}), 400
+        
+        # Obtener información de la empresa
+        empresa = visita.empresa
+        empresa_nombre = empresa.nombre if empresa else 'Empresa'
+        
+        # Generar el PDF
+        print(f"DEBUG: Generando PDF para envío...", flush=True)
+        pdf_generator = HTMLPDFGenerator(upload_folder=current_app.config['UPLOAD_FOLDER'])
+        pdf_path = pdf_generator.generar_pdf(visita_id)
+        
+        if not pdf_path or not os.path.exists(pdf_path):
+            return jsonify({'message': 'No se pudo generar el PDF'}), 500
+        
+        # Crear el mensaje de correo
+        print(f"DEBUG: Creando mensaje de correo...", flush=True)
+        asunto = f"Informe de Visita Técnica - {visita_id} - {visita.cliente.nombre}"
+        
+        # Cuerpo del correo en HTML
+        cuerpo_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    background-color: #1976d2;
+                    color: white;
+                    padding: 20px;
+                    text-align: center;
+                    border-radius: 5px 5px 0 0;
+                }}
+                .content {{
+                    background-color: #f9f9f9;
+                    padding: 30px;
+                    border-radius: 0 0 5px 5px;
+                }}
+                .info-row {{
+                    margin: 10px 0;
+                    padding: 10px;
+                    background-color: white;
+                    border-left: 4px solid #1976d2;
+                }}
+                .footer {{
+                    margin-top: 20px;
+                    padding-top: 20px;
+                    border-top: 1px solid #ddd;
+                    text-align: center;
+                    color: #666;
+                    font-size: 12px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📋 Informe de Visita Técnica</h1>
+                </div>
+                <div class="content">
+                    <p>Estimado/a Administrador/a,</p>
+                    
+                    <p>Se adjunta el informe de visita técnica con los siguientes detalles:</p>
+                    
+                    <div class="info-row">
+                        <strong>🆔 ID de Visita:</strong> {visita_id}
+                    </div>
+                    
+                    <div class="info-row">
+                        <strong>🏢 Cliente:</strong> {visita.cliente.nombre}
+                    </div>
+                    
+                    <div class="info-row">
+                        <strong>👤 Supervisor:</strong> {visita.supervisor.nombre}
+                    </div>
+                    
+                    <div class="info-row">
+                        <strong>📅 Fecha de Visita:</strong> {visita.fecha.strftime('%d/%m/%Y')}
+                    </div>
+                    
+                    {f'<div class="info-row"><strong>🕐 Hora:</strong> {visita.hora.strftime("%H:%M")}</div>' if visita.hora else ''}
+                    
+                    <div class="info-row">
+                        <strong>🏭 Empresa:</strong> {empresa_nombre}
+                    </div>
+                    
+                    <p style="margin-top: 20px;">
+                        El informe completo se encuentra adjunto en formato PDF. Por favor, revíselo y no dude en contactarnos si tiene alguna pregunta.
+                    </p>
+                    
+                    <div class="footer">
+                        <p>Este es un correo automático generado por el sistema Informetec.</p>
+                        <p>© {datetime.now().year} {empresa_nombre}. Todos los derechos reservados.</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Crear mensaje
+        msg = Message(
+            subject=asunto,
+            recipients=[email_destino],
+            html=cuerpo_html
+        )
+        
+        # Adjuntar el PDF
+        with open(pdf_path, 'rb') as pdf_file:
+            msg.attach(
+                filename=f"informe_visita_{visita_id}.pdf",
+                content_type="application/pdf",
+                data=pdf_file.read()
+            )
+        
+        # Enviar el correo
+        print(f"DEBUG: Enviando correo a {email_destino}...", flush=True)
+        mail.send(msg)
+        print(f"DEBUG: Correo enviado exitosamente", flush=True)
+        
+        return jsonify({
+            'message': 'Informe enviado exitosamente',
+            'email_destino': email_destino,
+            'visita_id': visita_id
+        }), 200
+        
+    except Exception as e:
+        print(f"DEBUG: Error al enviar correo: {str(e)}", flush=True)
+        traceback.print_exc()
+        return jsonify({'message': f'Error al enviar correo: {str(e)}'}), 500
+
 @routes.route('/zonas/<string:visita_id>', methods=['GET'])
 def get_zonas(visita_id):
     zonas = Zona.query.filter_by(visita_id=visita_id).all()
