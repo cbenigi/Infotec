@@ -65,34 +65,16 @@ const OrdenCompraForm = () => {
   });
   const [items, setItems] = useState([defaultItem]);
 
-  useEffect(() => {
-    loadClientes();
-    loadEmpresa();
-    loadProveedores();
-  }, []);
-
-  useEffect(() => {
-    if (id) {
-      loadOrden();
-    }
-  }, [id, loadOrden]);
-
-  useEffect(() => {
-    if (!form.comprador_id && compradorOptions.length > 0) {
-      setForm((prev) => ({ ...prev, comprador_id: compradorOptions[0].id }));
-    }
-  }, [compradorOptions, form.comprador_id]);
-
-  const loadClientes = async () => {
+  const loadClientes = useCallback(async () => {
     try {
       const { data } = await axios.get('/clientes');
       setClientes(data);
     } catch (error) {
       console.error('Error cargando clientes:', error);
     }
-  };
+  }, []);
 
-  const loadEmpresa = async () => {
+  const loadEmpresa = useCallback(async () => {
     try {
       const { data } = await axios.get('/empresa');
       if (data.exists) {
@@ -104,16 +86,16 @@ const OrdenCompraForm = () => {
     } catch (error) {
       console.error('Error cargando empresa:', error);
     }
-  };
+  }, [form.comprador_id, form.comprador_tipo]);
 
-  const loadProveedores = async () => {
+  const loadProveedores = useCallback(async () => {
     try {
       const { data } = await axios.get('/proveedores');
       setProveedores(data);
     } catch (error) {
       console.error('Error cargando proveedores:', error);
     }
-  };
+  }, []);
 
   const loadOrden = useCallback(async () => {
     try {
@@ -155,6 +137,24 @@ const OrdenCompraForm = () => {
       setLoading(false);
     }
   }, [id]);
+
+  useEffect(() => {
+    loadClientes();
+    loadEmpresa();
+    loadProveedores();
+  }, [loadClientes, loadEmpresa, loadProveedores]);
+
+  useEffect(() => {
+    if (id) {
+      loadOrden();
+    }
+  }, [id, loadOrden]);
+
+  useEffect(() => {
+    if (!form.comprador_id && compradorOptions.length > 0) {
+      setForm((prev) => ({ ...prev, comprador_id: compradorOptions[0].id }));
+    }
+  }, [compradorOptions, form.comprador_id]);
 
   const compradorOptions = form.comprador_tipo === 'cliente' ? clientes : empresa ? [empresa] : [];
 
