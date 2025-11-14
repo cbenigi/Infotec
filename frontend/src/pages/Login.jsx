@@ -70,18 +70,18 @@ const Login = () => {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          color: '#1b1b1b',
+          color: '#0f1f47',
           padding: 4,
-          backgroundColor: '#fff7f1',
+          backgroundColor: '#f8fbff',
           backgroundImage: `
-            radial-gradient(circle at 20% 15%, rgba(255, 115, 92, 0.35), transparent 45%),
-            radial-gradient(circle at 80% 10%, rgba(217, 177, 255, 0.35), transparent 45%),
-            radial-gradient(circle at 15% 80%, rgba(137, 187, 255, 0.4), transparent 50%),
-            radial-gradient(circle at 85% 75%, rgba(255, 208, 120, 0.5), transparent 45%),
-            linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 18%),
-            linear-gradient(90deg, rgba(248, 150, 72, 0.08) 0%, rgba(248, 150, 72, 0) 30%),
-            linear-gradient(90deg, rgba(115, 139, 255, 0.1) 0%, rgba(115, 139, 255, 0) 25%)`,
-          backgroundSize: 'cover, cover, cover, cover, 120px, 180px, 220px',
+            radial-gradient(circle at 25% 20%, rgba(113, 135, 255, 0.35), transparent 35%),
+            radial-gradient(circle at 75% 15%, rgba(173, 219, 255, 0.4), transparent 40%),
+            radial-gradient(circle at 15% 80%, rgba(71, 163, 253, 0.3), transparent 45%),
+            radial-gradient(circle at 80% 80%, rgba(0, 122, 204, 0.25), transparent 45%),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 20%),
+            linear-gradient(90deg, rgba(39, 122, 255, 0.08) 0%, rgba(39, 122, 255, 0) 40%),
+            linear-gradient(90deg, rgba(0, 173, 181, 0.08) 0%, rgba(0, 173, 181, 0) 30%)`,
+          backgroundSize: 'cover, cover, cover, cover, 150px, 220px, 260px',
           backgroundRepeat: 'no-repeat'
         }}
       >
