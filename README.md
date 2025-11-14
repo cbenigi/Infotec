@@ -1,4 +1,4 @@
-# Informetec - Informes de Visitas Técnicas
+# PROCLYM - Gestión de Visitas Técnicas
 
 ## Por qué hice esto
 

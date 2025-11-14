@@ -6,7 +6,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import BusinessIcon from '@mui/icons-material/Business';
+import { Box as MuiBox } from '@mui/system';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -53,7 +53,7 @@ const Login = () => {
     <Grid container sx={{ minHeight: '100vh' }}>
       {/* Columna Izquierda - Imagen/Branding */}
       <Grid size={{ xs: 12, md: 6 }} sx={{
-        background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -61,12 +61,17 @@ const Login = () => {
         color: 'white',
         padding: 4
       }}>
-        <BusinessIcon sx={{ fontSize: 120, mb: 3, opacity: 0.9 }} />
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
-          Informetec
+        <MuiBox
+          component="img"
+          src="/ChatGPT_Image_14_nov_2025__15_45_43-removebg-preview.png"
+          alt="Logo PROCLYM"
+          sx={{ width: 180, height: 'auto', mb: 3 }}
+        />
+        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 2 }}>
+          PROCLYM
         </Typography>
-        <Typography variant="h6" sx={{ opacity: 0.9, textAlign: 'center', maxWidth: 400 }}>
-          Sistema profesional de informes de visitas técnicas para empresas de aseo y mantenimiento
+        <Typography variant="h6" sx={{ opacity: 0.9, textAlign: 'center', maxWidth: 420 }}>
+          Plataforma integral para coordinar visitas técnicas, compras y documentación de servicios de mantenimiento.
         </Typography>
         <Box sx={{ mt: 4, opacity: 0.8 }}>
           <Typography variant="body2">✓ Genera PDFs profesionales</Typography>

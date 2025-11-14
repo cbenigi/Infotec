@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Box, Paper, Grid, InputAdornment, IconButton, Link } from '@mui/material';
+import { Box as MuiBox } from '@mui/system';
 import axios from '../api/axiosConfig';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import PersonIcon from '@mui/icons-material/Person';
@@ -7,7 +8,6 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import BusinessIcon from '@mui/icons-material/Business';
 
 const Register = () => {
   const [form, setForm] = useState({ nombre: '', email: '', password: '' });
@@ -62,7 +62,7 @@ const Register = () => {
     <Grid container sx={{ minHeight: '100vh' }}>
       {/* Columna Izquierda - Imagen/Branding */}
       <Grid size={{ xs: 12, md: 6 }} sx={{
-        background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -70,12 +70,17 @@ const Register = () => {
         color: 'white',
         padding: 4
       }}>
-        <BusinessIcon sx={{ fontSize: 120, mb: 3, opacity: 0.9 }} />
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
-          Informetec
+        <MuiBox
+          component="img"
+          src="/ChatGPT_Image_14_nov_2025__15_45_43-removebg-preview.png"
+          alt="Logo PROCLYM"
+          sx={{ width: 180, height: 'auto', mb: 3 }}
+        />
+        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 2 }}>
+          PROCLYM
         </Typography>
-        <Typography variant="h6" sx={{ opacity: 0.9, textAlign: 'center', maxWidth: 400 }}>
-          Únete y comienza a profesionalizar tus informes de visitas técnicas
+        <Typography variant="h6" sx={{ opacity: 0.9, textAlign: 'center', maxWidth: 420 }}>
+          Únete y centraliza tus operaciones de servicio, compras y visitas técnicas en una sola plataforma.
         </Typography>
         <Box sx={{ mt: 4, opacity: 0.8 }}>
           <Typography variant="body2">✓ Configuración rápida</Typography>

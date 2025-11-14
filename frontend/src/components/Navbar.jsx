@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
-import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -84,21 +83,17 @@ const Navbar = () => {
       <Toolbar>
         {/* Logo de la empresa o icono por defecto */}
         <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
-          {empresa && empresa.logo_url ? (
-            <Avatar
-              src={`${axios.defaults.baseURL}${empresa.logo_url}`}
-              alt={empresa.nombre}
-              sx={{ width: 45, height: 45, mr: 1.5, border: '2px solid #1976d2' }}
-            />
-          ) : (
-            <BusinessIcon sx={{ fontSize: 40, mr: 1.5, color: '#1976d2' }} />
-          )}
+          <Avatar
+            src="/ChatGPT_Image_14_nov_2025__15_45_43-removebg-preview.png"
+            alt="Proclym"
+            sx={{ width: 45, height: 45, mr: 1.5, border: '2px solid #1976d2', backgroundColor: '#fff' }}
+          />
           <Box>
             <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: '#1976d2', lineHeight: 1.2 }}>
-              {empresa ? empresa.nombre : 'Informetec'}
+              PROCLYM
             </Typography>
             <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
-              Informes Técnicos
+              Gestión Operativa
             </Typography>
           </Box>
         </Box>
