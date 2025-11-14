@@ -61,7 +61,23 @@ const Login = () => {
   };
 
   return (
-    <Grid container sx={{ minHeight: '100vh' }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: '#f8fbff',
+        backgroundImage: `
+          radial-gradient(circle at 22% 18%, rgba(113, 135, 255, 0.4), transparent 38%),
+          radial-gradient(circle at 78% 12%, rgba(173, 219, 255, 0.45), transparent 40%),
+          radial-gradient(circle at 12% 85%, rgba(71, 163, 253, 0.35), transparent 45%),
+          radial-gradient(circle at 82% 78%, rgba(0, 122, 204, 0.25), transparent 45%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 18%),
+          linear-gradient(90deg, rgba(39, 122, 255, 0.08) 0%, rgba(39, 122, 255, 0) 40%),
+          linear-gradient(90deg, rgba(0, 173, 181, 0.08) 0%, rgba(0, 173, 181, 0) 28%)`,
+        backgroundSize: 'cover, cover, cover, cover, 150px, 220px, 260px',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+    <Grid container sx={{ minHeight: '100vh', backgroundColor: 'transparent' }}>
       {/* Columna Izquierda - Imagen/Branding */}
       <Grid
         size={{ xs: 12, md: 6 }}
@@ -71,18 +87,7 @@ const Login = () => {
           justifyContent: 'center',
           alignItems: 'center',
           color: '#0f1f47',
-          padding: 4,
-          backgroundColor: '#f8fbff',
-          backgroundImage: `
-            radial-gradient(circle at 25% 20%, rgba(113, 135, 255, 0.35), transparent 35%),
-            radial-gradient(circle at 75% 15%, rgba(173, 219, 255, 0.4), transparent 40%),
-            radial-gradient(circle at 15% 80%, rgba(71, 163, 253, 0.3), transparent 45%),
-            radial-gradient(circle at 80% 80%, rgba(0, 122, 204, 0.25), transparent 45%),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 20%),
-            linear-gradient(90deg, rgba(39, 122, 255, 0.08) 0%, rgba(39, 122, 255, 0) 40%),
-            linear-gradient(90deg, rgba(0, 173, 181, 0.08) 0%, rgba(0, 173, 181, 0) 30%)`,
-          backgroundSize: 'cover, cover, cover, cover, 150px, 220px, 260px',
-          backgroundRepeat: 'no-repeat'
+          padding: 4
         }}
       >
         <Avatar
@@ -107,7 +112,7 @@ const Login = () => {
         justifyContent: 'center',
         alignItems: 'center',
         padding: 4,
-        backgroundColor: '#f5f5f5'
+        backgroundColor: 'transparent'
       }}>
         <Paper elevation={6} sx={{ p: 5, maxWidth: 450, width: '100%', borderRadius: 3 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -195,6 +200,7 @@ const Login = () => {
         </Paper>
       </Grid>
     </Grid>
+    </Box>
   );
 };
 
