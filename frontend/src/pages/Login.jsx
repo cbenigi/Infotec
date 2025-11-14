@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
-import { TextField, Button, Typography, Box, Link, Paper, Grid, InputAdornment, IconButton } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Link,
+  Paper,
+  Grid,
+  InputAdornment,
+  IconButton,
+  Avatar
+} from '@mui/material';
 import axios from '../api/axiosConfig';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { Box as MuiBox } from '@mui/system';
+import { styled } from '@mui/system';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -52,24 +63,32 @@ const Login = () => {
   return (
     <Grid container sx={{ minHeight: '100vh' }}>
       {/* Columna Izquierda - Imagen/Branding */}
-      <Grid size={{ xs: 12, md: 6 }} sx={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        color: 'white',
-        padding: 4
-      }}>
-        <MuiBox
-          component="img"
+      <Grid
+        size={{ xs: 12, md: 6 }}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: 'white',
+          padding: 4,
+          backgroundColor: '#0b1220',
+          backgroundImage: `
+            radial-gradient(circle at 20% 20%, rgba(86,138,255,0.35), transparent 45%),
+            radial-gradient(circle at 80% 0%, rgba(180,89,255,0.3), transparent 40%),
+            radial-gradient(circle at 10% 80%, rgba(18,227,251,0.3), transparent 40%),
+            radial-gradient(circle at 80% 80%, rgba(248,150,72,0.3), transparent 45%),
+            linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 15%)`,
+          backgroundSize: 'cover, cover, cover, cover, 140px',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <Avatar
           src="/ChatGPT_Image_14_nov_2025__15_45_43-removebg-preview.png"
           alt="Logo PROCLYM"
-          sx={{ width: 180, height: 'auto', mb: 3 }}
+          sx={{ width: 220, height: 220, mb: 3, backgroundColor: 'transparent' }}
+          variant="square"
         />
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 2 }}>
-          PROCLYM
-        </Typography>
         <Typography variant="h6" sx={{ opacity: 0.9, textAlign: 'center', maxWidth: 420 }}>
           Plataforma integral para coordinar visitas técnicas, compras y documentación de servicios de mantenimiento.
         </Typography>
@@ -79,7 +98,6 @@ const Login = () => {
           <Typography variant="body2">✓ Registros con fotografías</Typography>
         </Box>
       </Grid>
-
       {/* Columna Derecha - Formulario */}
       <Grid size={{ xs: 12, md: 6 }} sx={{
         display: 'flex',
