@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fb; margin: 0; padding: 0; color: #1f2937; }
+    .sheet { max-width: 780px; margin: 0 auto; background: #fff; padding: 32px 40px 48px; border-radius: 12px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .company-info h1 { margin: 0; font-size: 18px; color: #0f172a; letter-spacing: 1px; }
+    .company-info p { margin: 2px 0; font-size: 11px; color: #475569; }
+    .logo-box { width: 140px; height: 80px; border: 1px dashed #cbd5f5; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #f8fafc; }
+    .meta { margin-bottom: 32px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .meta-card { background: #eef2ff; padding: 12px 16px; border-radius: 10px; border: 1px solid #c7d2fe; }
+    .meta-card span { display: block; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: .05em; }
+    .meta-card strong { font-size: 14px; color: #0f172a; }
+    .section-title { font-size: 13px; margin: 24px 0 8px; text-transform: uppercase; color: #475569; letter-spacing: .1em; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .info-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+    .info-card h3 { margin: 0 0 8px; font-size: 14px; color: #0f172a; }
+    .info-row { font-size: 12px; margin-bottom: 4px; }
+    .info-label { font-weight: 600; color: #475569; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    thead { background: #1d4ed8; color: #fff; }
+    th, td { padding: 10px 12px; font-size: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    tbody tr:nth-child(odd) { background: #f8fafc; }
+    .totals { margin-top: 24px; max-width: 320px; margin-left: auto; }
+    .totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; }
+    .totals-row span { color: #475569; }
+    .totals-row strong { color: #0f172a; }
+    .totals-row.total { font-size: 15px; font-weight: 700; border-top: 1px solid #cbd5f5; margin-top: 4px; padding-top: 12px; }
+    .notes { margin-top: 32px; font-size: 12px; color: #475569; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="header">
+      <div class="company-info">
+        <h1>ORDEN DE COMPRA</h1>
+        <p>{{ empresa.nombre if empresa else 'Empresa' }}</p>
+        <p>NIT: {{ empresa.nit if empresa else 'N/A' }}</p>
+        <p>{{ empresa.direccion if empresa and empresa.direccion else '' }}</p>
+      </div>
+      <div class="logo-box">{{ company_logo|safe }}</div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-card">
+        <span>Número</span>
+        <strong>{{ orden.numero }}</strong>
+      </div>
+      <div class="meta-card">
+        <span>Fecha de emisión</span>
+        <strong>{{ fecha_emision }}</strong>
+      </div>
+      <div class="meta-card">
+        <span>Fecha estimada entrega</span>
+        <strong>{{ fecha_entrega }}</strong>
+      </div>
+      <div class="meta-card">
+        <span>Responsable</span>
+        <strong>{{ supervisor.nombre if supervisor else '—' }}</strong>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>COMPRADOR</h3>
+        <div class="info-row"><span class="info-label">Nombre:</span> {{ comprador_nombre }}</div>
+        <div class="info-row"><span class="info-label">Tipo:</span> {{ orden.comprador_tipo|capitalize }}</div>
+      </div>
+      <div class="info-card">
+        <h3>PROVEEDOR</h3>
+        <div class="info-row"><span class="info-label">Nombre:</span> {{ orden.proveedor_nombre }}</div>
+        <div class="info-row"><span class="info-label">NIT:</span> {{ orden.proveedor_nit or '—' }}</div>
+        <div class="info-row"><span class="info-label">Dirección:</span> {{ proveedor_direccion }}</div>
+        <div class="info-row"><span class="info-label">Insumos:</span> {{ proveedor_insumos }}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Detalle de la orden</div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Descripción</th>
+          <th>Cantidad</th>
+          <th>Unidad</th>
+          <th>Precio Unitario</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.index }}</td>
+          <td>
+            {{ item.descripcion }}
+            {% if item.comentarios %}
+            <div style="color:#64748b;font-size:11px;margin-top:2px;">{{ item.comentarios }}</div>
+            {% endif %}
+          </td>
+          <td>{{ item.cantidad }}</td>
+          <td>{{ item.unidad }}</td>
+          <td>{{ item.precio_unitario }}</td>
+          <td>{{ item.subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="totals-row">
+        <span>Subtotal</span>
+        <strong>{{ subtotal }}</strong>
+      </div>
+      <div class="totals-row">
+        <span>IVA ({{ iva_porcentaje }})</span>
+        <strong>{{ iva }}</strong>
+      </div>
+      <div class="totals-row total">
+        <span>Total</span>
+        <strong>{{ total }}</strong>
+      </div>
+    </div>
+
+    {% if orden.condiciones_pago %}
+    <div class="section-title">Condiciones de pago</div>
+    <div class="notes">{{ orden.condiciones_pago }}</div>
+    {% endif %}
+
+    {% if orden.notas %}
+    <div class="section-title">Notas</div>
+    <div class="notes">{{ orden.notas }}</div>
+    {% endif %}
+  </div>
+</body>
+</html>
+

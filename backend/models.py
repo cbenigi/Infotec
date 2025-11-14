@@ -87,3 +87,49 @@ class CotizacionItem(db.Model):
     cantidad = db.Column(db.String(50), nullable=False)
     uso = db.Column(db.String(200), nullable=False)
     orden = db.Column(db.Integer, nullable=False, default=0)
+
+class OrdenCompra(db.Model):
+    __tablename__ = 'ordenes_compra'
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.String(30), unique=True, nullable=False)
+    fecha_creacion = db.Column(db.DateTime, nullable=False)
+    fecha_entrega = db.Column(db.Date, nullable=True)
+    comprador_tipo = db.Column(db.String(20), nullable=False, default='cliente')
+    comprador_id = db.Column(db.Integer, nullable=False)
+    proveedor_id = db.Column(db.Integer, db.ForeignKey('proveedores.id'), nullable=True)
+    proveedor_nombre = db.Column(db.String(150), nullable=False)
+    proveedor_nit = db.Column(db.String(50))
+    proveedor_direccion = db.Column(db.String(200))
+    proveedor_tipo_insumos = db.Column(db.String(200))
+    condiciones_pago = db.Column(db.String(200))
+    notas = db.Column(db.Text)
+    estado = db.Column(db.String(20), nullable=False, default='borrador')
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=False)
+    supervisor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    subtotal = db.Column(db.Float, nullable=True)
+    iva_valor = db.Column(db.Float, nullable=True)
+    total = db.Column(db.Float, nullable=True)
+
+    empresa = db.relationship('Empresa')
+    supervisor = db.relationship('User', foreign_keys=[supervisor_id])
+    proveedor = db.relationship('Proveedor')
+    items = db.relationship('OrdenCompraItem', backref='orden_compra', lazy=True, cascade='all, delete-orphan')
+
+class OrdenCompraItem(db.Model):
+    __tablename__ = 'orden_compra_items'
+    id = db.Column(db.Integer, primary_key=True)
+    orden_id = db.Column(db.Integer, db.ForeignKey('ordenes_compra.id'), nullable=False)
+    descripcion = db.Column(db.String(250), nullable=False)
+    cantidad = db.Column(db.String(50), nullable=False)
+    unidad = db.Column(db.String(30), nullable=False)
+    precio_unitario = db.Column(db.Float, nullable=True)
+    comentarios = db.Column(db.String(250))
+    posicion = db.Column(db.Integer, nullable=False, default=0)
+
+class Proveedor(db.Model):
+    __tablename__ = 'proveedores'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_comercial = db.Column(db.String(150), nullable=False)
+    nit = db.Column(db.String(50), nullable=False)
+    direccion = db.Column(db.String(200))
+    tipo_insumos = db.Column(db.String(200))

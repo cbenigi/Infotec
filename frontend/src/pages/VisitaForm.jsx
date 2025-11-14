@@ -313,7 +313,7 @@ const VisitaForm = () => {
           {/* Secciones */}
           {renderSeccion('Aseo y Limpieza', 'aseo', zonas.aseo, true)}
           {renderSeccion('Seguridad y Salud en el Trabajo', 'seguridad', zonas.seguridad, true)}
-          {renderSeccion('Colaborador', 'colaborador', zonas.colaborador, false)}
+          {renderSeccion('Colaborador', 'colaborador', zonas.colaborador, true)}
 
           {/* Conclusiones */}
           <Paper sx={{ p: 3, mb: 3 }}>

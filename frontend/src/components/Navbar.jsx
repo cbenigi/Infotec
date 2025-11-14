@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem, Avatar, Chip } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import BusinessIcon from '@mui/icons-material/Business';
@@ -10,6 +10,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import PeopleIcon from '@mui/icons-material/People';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import axios from '../api/axiosConfig';
 
 const Navbar = () => {
@@ -134,42 +135,17 @@ const Navbar = () => {
             color="inherit"
             startIcon={<RequestQuoteIcon />}
             onClick={() => navigate('/cotizaciones')}
-            sx={{ 
-              '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' },
-              position: 'relative'
-            }}
-            endIcon={
-              <Chip
-                label="NEW"
-                size="small"
-                sx={{
-                  height: '20px',
-                  fontSize: '10px',
-                  fontWeight: 'bold',
-                  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-                  color: 'white',
-                  boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)',
-                  animation: 'shine 2.5s ease-in-out infinite',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  '@keyframes shine': {
-                    '0%': { 
-                      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)',
-                      transform: 'scale(1)'
-                    },
-                    '50%': { 
-                      boxShadow: '0 2px 12px rgba(66, 165, 245, 0.6), 0 0 20px rgba(25, 118, 210, 0.3)',
-                      transform: 'scale(1.03)'
-                    },
-                    '100%': { 
-                      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)',
-                      transform: 'scale(1)'
-                    }
-                  }
-                }}
-              />
-            }
+            sx={{ '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' } }}
           >
             Cotizaciones
+          </Button>
+          <Button
+            color="inherit"
+            startIcon={<ShoppingCartIcon />}
+            onClick={() => navigate('/ordenes-compra')}
+            sx={{ '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' } }}
+          >
+            Ordenes de Compra
           </Button>
           {userRole === 'admin' && (
             <Button
@@ -242,20 +218,9 @@ const Navbar = () => {
           </MenuItem>
           <MenuItem onClick={() => { navigate('/cotizaciones'); handleClose(); }}>
             <RequestQuoteIcon sx={{ mr: 1 }} /> Cotizaciones
-            <Chip 
-              label="New" 
-              size="small" 
-              sx={{ 
-                ml: 1, 
-                height: '20px', 
-                fontSize: '10px',
-                background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-                color: 'white',
-                fontWeight: 'bold',
-                boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)',
-                border: '1px solid rgba(255, 255, 255, 0.3)'
-              }} 
-            />
+          </MenuItem>
+          <MenuItem onClick={() => { navigate('/ordenes-compra'); handleClose(); }}>
+            <ShoppingCartIcon sx={{ mr: 1 }} /> Ordenes de Compra
           </MenuItem>
           {userRole === 'admin' && (
             <MenuItem onClick={() => { navigate('/atencion'); handleClose(); }}>

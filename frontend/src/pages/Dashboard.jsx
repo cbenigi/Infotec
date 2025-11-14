@@ -191,6 +191,29 @@ const Dashboard = () => {
                 </CardActions>
               </Card>
             </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <BusinessIcon sx={{ fontSize: 40, color: '#1976d2', mb: 2 }} />
+                  <Typography variant="h6" gutterBottom>
+                    Registrar Proveedor
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Administra tus proveedores para órdenes de compra
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
+                  <Button
+                    variant="contained"
+                    onClick={() => navigate('/proveedores/nuevo')}
+                    startIcon={<AddIcon />}
+                    fullWidth
+                  >
+                    Nuevo Proveedor
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>

@@ -63,6 +63,16 @@
       position: relative;
       overflow: hidden;
     }
+
+    .logo-container.client-logo {
+      width: 160px;
+      height: 90px;
+    }
+
+    .logo-container.company-logo {
+      width: 110px;
+      height: 65px;
+    }
     
     .logo-container * {
       max-width: 100%;
@@ -73,9 +83,9 @@
     }
     
     .logo-image {
-      height: 70px;
+      height: 80px;
       width: auto;
-      max-width: 120px;
+      max-width: 100%;
       display: block;
       object-fit: contain;
     }
@@ -340,7 +350,7 @@
     <!-- Header con título y logos -->
     <div class="header">
       <!-- Logo del Cliente (Copropiedad) a la izquierda -->
-      <div class="logo-container">{{ client_logo|safe }}</div>
+      <div class="logo-container client-logo">{{ client_logo|safe }}</div>
       
       <!-- Título en el centro -->
       <div class="title-section">
@@ -348,7 +358,7 @@
       </div>
       
       <!-- Logo de la Empresa a la derecha -->
-      <div class="logo-container">{{ company_logo|safe }}</div>
+      <div class="logo-container company-logo">{{ company_logo|safe }}</div>
     </div>
     
     <!-- Información del informe -->

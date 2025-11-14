@@ -1,18 +1,86 @@
 from html_pdf_generator import HTMLPDFGenerator
+from html_orden_generator import HTMLOrdenGenerator
 from flask_mail import Mail, Message
 from flask import Blueprint, request, jsonify, session, send_from_directory, current_app, send_file, render_template
 import os
 from werkzeug.utils import secure_filename
-from models import db, User, Empresa, Cliente, Visita, Zona, Cotizacion, CotizacionItem
+from models import db, User, Empresa, Cliente, Visita, Zona, Cotizacion, CotizacionItem, OrdenCompra, OrdenCompraItem, Proveedor
 from sqlalchemy import or_
 from werkzeug.security import check_password_hash
 from datetime import datetime
 import traceback
+import re
 
 # Inicializar Mail
 mail = Mail()
 
 routes = Blueprint('routes', __name__)
+
+def _parse_float(value):
+    if value is None:
+        return None
+    try:
+        if isinstance(value, str):
+            value = value.replace(',', '.')
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+def _generar_consecutivo_orden():
+    ultima_orden = OrdenCompra.query.order_by(OrdenCompra.id.desc()).first()
+    numero = 1
+    if ultima_orden and ultima_orden.numero:
+        match = re.search(r'(\d+)$', ultima_orden.numero)
+        if match:
+            try:
+                numero = int(match.group(1)) + 1
+            except ValueError:
+                numero = ultima_orden.id + 1
+    return f"OC-{numero:04d}"
+
+def _obtener_empresa_actual(user_id):
+    if not user_id:
+        return None
+    return Empresa.query.filter_by(user_id=user_id).first()
+
+def _resolver_nombre_comprador(comprador_tipo, comprador_id):
+    if comprador_tipo == 'cliente':
+        cliente = Cliente.query.get(comprador_id)
+        return cliente.nombre if cliente else 'Cliente no disponible'
+    empresa = Empresa.query.get(comprador_id)
+    return empresa.nombre if empresa else 'Empresa no disponible'
+
+def _calcular_total_estimado(items):
+    total = 0.0
+    for item in items:
+        cantidad_valor = _parse_float(item.cantidad if hasattr(item, 'cantidad') else item.get('cantidad'))
+        precio = item.precio_unitario if hasattr(item, 'precio_unitario') else _parse_float(item.get('precio_unitario'))
+        if cantidad_valor is not None and precio:
+            total += cantidad_valor * precio
+    return round(total, 2)
+
+def _calcular_totales(data, items):
+    iva_rate = 0.19
+    subtotal_input = _parse_float(data.get('subtotal')) if isinstance(data, dict) else None
+    total_input = _parse_float(data.get('total')) if isinstance(data, dict) else None
+    items_total = _calcular_total_estimado(items) if items else 0.0
+
+    if subtotal_input and subtotal_input > 0:
+        subtotal = subtotal_input
+        iva_valor = round(subtotal * iva_rate, 2)
+        total = round(subtotal + iva_valor, 2)
+    elif total_input and total_input > 0:
+        total = total_input
+        subtotal = round(total / (1 + iva_rate), 2)
+        iva_valor = round(total - subtotal, 2)
+    elif items_total > 0:
+        subtotal = round(items_total, 2)
+        iva_valor = round(subtotal * iva_rate, 2)
+        total = round(subtotal + iva_valor, 2)
+    else:
+        subtotal = iva_valor = total = 0.0
+
+    return subtotal, iva_valor, total
 
 @routes.after_request
 def add_cors_headers(response):
@@ -214,6 +282,68 @@ def update_empresa():
     return jsonify({'message': 'Empresa actualizada exitosamente'}), 200
 
 # CRUD Clientes
+# CRUD Proveedores
+@routes.route('/proveedores', methods=['GET', 'OPTIONS'])
+def get_proveedores():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        proveedores = Proveedor.query.order_by(Proveedor.nombre_comercial.asc()).all()
+        return jsonify([{
+            'id': p.id,
+            'nombre_comercial': p.nombre_comercial,
+            'nit': p.nit,
+            'direccion': p.direccion,
+            'tipo_insumos': p.tipo_insumos
+        } for p in proveedores]), 200
+    except Exception as e:
+        return jsonify({'message': f'Error al obtener proveedores: {str(e)}'}), 500
+
+@routes.route('/proveedores', methods=['POST', 'OPTIONS'])
+def create_proveedor():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        data = request.json or {}
+        required = ['nombre_comercial', 'nit']
+        for field in required:
+            if not data.get(field):
+                return jsonify({'message': f'El campo {field} es requerido'}), 400
+        proveedor = Proveedor(
+            nombre_comercial=data['nombre_comercial'].strip(),
+            nit=data['nit'].strip(),
+            direccion=data.get('direccion', '').strip(),
+            tipo_insumos=data.get('tipo_insumos', '').strip()
+        )
+        db.session.add(proveedor)
+        db.session.commit()
+        return jsonify({'message': 'Proveedor creado', 'id': proveedor.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error al crear proveedor: {str(e)}'}), 500
+
+@routes.route('/proveedores/<int:id>', methods=['PUT', 'DELETE', 'OPTIONS'])
+def manage_proveedor(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    proveedor = Proveedor.query.get_or_404(id)
+    try:
+        if request.method == 'PUT':
+            data = request.json or {}
+            proveedor.nombre_comercial = data.get('nombre_comercial', proveedor.nombre_comercial).strip()
+            proveedor.nit = data.get('nit', proveedor.nit).strip()
+            proveedor.direccion = data.get('direccion', proveedor.direccion).strip()
+            proveedor.tipo_insumos = data.get('tipo_insumos', proveedor.tipo_insumos).strip()
+            db.session.commit()
+            return jsonify({'message': 'Proveedor actualizado'}), 200
+        else:
+            db.session.delete(proveedor)
+            db.session.commit()
+            return jsonify({'message': 'Proveedor eliminado'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error al procesar proveedor: {str(e)}'}), 500
+
 @routes.route('/clientes', methods=['GET'])
 def get_clientes():
     # Obtener el ID del usuario de la sesión
@@ -1069,3 +1199,317 @@ def generar_pdf_cotizacion(id):
         print(f"Error al generar PDF de cotización: {str(e)}")
         traceback.print_exc()
         return jsonify({'message': f'Error al generar PDF: {str(e)}'}), 500
+
+# --- Órdenes de compra ---
+@routes.route('/ordenes-compra', methods=['GET', 'OPTIONS'])
+def get_ordenes_compra():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autenticado'}), 401
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+
+        empresa = _obtener_empresa_actual(user_id)
+        if not empresa:
+            return jsonify({'message': 'Debes registrar una empresa antes de gestionar órdenes de compra'}), 400
+
+        query = OrdenCompra.query.filter_by(empresa_id=empresa.id).order_by(OrdenCompra.fecha_creacion.desc())
+        if user.rol != 'admin':
+            query = query.filter_by(supervisor_id=user_id)
+
+        ordenes = query.all()
+        return jsonify([{
+            'id': orden.id,
+            'numero': orden.numero,
+            'fecha_creacion': orden.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S'),
+            'fecha_entrega': orden.fecha_entrega.strftime('%Y-%m-%d') if orden.fecha_entrega else None,
+            'estado': orden.estado,
+            'comprador_tipo': orden.comprador_tipo,
+            'comprador_nombre': _resolver_nombre_comprador(orden.comprador_tipo, orden.comprador_id),
+            'proveedor_nombre': orden.proveedor_nombre,
+            'proveedor_nit': orden.proveedor_nit,
+            'total_items': len(orden.items),
+            'subtotal': orden.subtotal,
+            'iva': orden.iva_valor,
+            'total': orden.total
+        } for orden in ordenes]), 200
+    except Exception as e:
+        print(f"Error al obtener órdenes de compra: {str(e)}")
+        return jsonify({'message': f'Error al obtener órdenes de compra: {str(e)}'}), 500
+
+@routes.route('/orden-compra/<int:id>', methods=['GET', 'OPTIONS'])
+def get_orden_compra(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autenticado'}), 401
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+
+        orden = OrdenCompra.query.get_or_404(id)
+        empresa = _obtener_empresa_actual(user_id)
+        if not empresa or orden.empresa_id != empresa.id:
+            return jsonify({'message': 'No tienes permiso para ver esta orden'}), 403
+
+        if user.rol != 'admin' and orden.supervisor_id != user_id:
+            return jsonify({'message': 'No tienes permiso para ver esta orden'}), 403
+
+        return jsonify({
+            'id': orden.id,
+            'numero': orden.numero,
+            'fecha_creacion': orden.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S'),
+            'fecha_entrega': orden.fecha_entrega.strftime('%Y-%m-%d') if orden.fecha_entrega else None,
+            'comprador_tipo': orden.comprador_tipo,
+            'comprador_id': orden.comprador_id,
+            'comprador_nombre': _resolver_nombre_comprador(orden.comprador_tipo, orden.comprador_id),
+            'proveedor_nombre': orden.proveedor_nombre,
+            'proveedor_nit': orden.proveedor_nit,
+            'proveedor_direccion': orden.proveedor_direccion,
+            'proveedor_tipo_insumos': orden.proveedor_tipo_insumos,
+            'condiciones_pago': orden.condiciones_pago,
+            'notas': orden.notas,
+            'estado': orden.estado,
+            'subtotal': orden.subtotal,
+            'iva': orden.iva_valor,
+            'total': orden.total,
+            'proveedor_id': orden.proveedor_id,
+            'items': [{
+                'id': item.id,
+                'descripcion': item.descripcion,
+                'cantidad': item.cantidad,
+                'unidad': item.unidad,
+                'precio_unitario': item.precio_unitario,
+                'comentarios': item.comentarios,
+                'posicion': item.posicion,
+                'subtotal': _calcular_total_estimado([item])
+            } for item in sorted(orden.items, key=lambda x: x.posicion)]
+        }), 200
+    except Exception as e:
+        print(f"Error al obtener orden de compra: {str(e)}")
+        return jsonify({'message': f'Error al obtener orden de compra: {str(e)}'}), 500
+
+@routes.route('/orden-compra', methods=['POST', 'OPTIONS'])
+def create_orden_compra():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autenticado'}), 401
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+
+        empresa = _obtener_empresa_actual(user_id)
+        if not empresa:
+            return jsonify({'message': 'Debes registrar una empresa antes de crear órdenes de compra'}), 400
+
+        data = request.json or {}
+        items = data.get('items', [])
+        if not isinstance(items, list) or len(items) == 0:
+            return jsonify({'message': 'Debes agregar al menos un item a la orden'}), 400
+
+        comprador_tipo = data.get('comprador_tipo')
+        comprador_id = data.get('comprador_id')
+        if comprador_tipo not in ['cliente', 'empresa']:
+            return jsonify({'message': 'Tipo de comprador inválido'}), 400
+        if not comprador_id:
+            return jsonify({'message': 'El comprador es requerido'}), 400
+
+        proveedor_id = data.get('proveedor_id')
+        proveedor = None
+        if proveedor_id:
+            proveedor = Proveedor.query.get(proveedor_id)
+            if not proveedor:
+                return jsonify({'message': 'Proveedor no encontrado'}), 404
+
+        orden = OrdenCompra(
+            numero=data.get('numero') or _generar_consecutivo_orden(),
+            fecha_creacion=datetime.utcnow(),
+            fecha_entrega=datetime.strptime(data['fecha_entrega'], '%Y-%m-%d').date() if data.get('fecha_entrega') else None,
+            comprador_tipo=comprador_tipo,
+            comprador_id=int(comprador_id),
+            proveedor_id=proveedor.id if proveedor else None,
+            proveedor_nombre=data.get('proveedor_nombre', proveedor.nombre_comercial if proveedor else '').strip(),
+            proveedor_nit=data.get('proveedor_nit', proveedor.nit if proveedor else '').strip(),
+            proveedor_direccion=data.get('proveedor_direccion', proveedor.direccion if proveedor else '').strip(),
+            proveedor_tipo_insumos=data.get('proveedor_tipo_insumos', proveedor.tipo_insumos if proveedor else '').strip(),
+            condiciones_pago=data.get('condiciones_pago', '').strip(),
+            notas=data.get('notas', '').strip(),
+            estado=data.get('estado', 'borrador'),
+            empresa_id=empresa.id,
+            supervisor_id=user_id
+        )
+
+        if not orden.proveedor_nombre:
+            return jsonify({'message': 'El proveedor es requerido'}), 400
+
+        db.session.add(orden)
+        db.session.flush()
+
+        for index, item in enumerate(items):
+            if not item.get('descripcion') or not item.get('cantidad') or not item.get('unidad'):
+                db.session.rollback()
+                return jsonify({'message': 'Todos los items deben tener descripción, cantidad y unidad'}), 400
+            item_model = OrdenCompraItem(
+                orden_id=orden.id,
+                descripcion=item['descripcion'],
+                cantidad=item['cantidad'],
+                unidad=item['unidad'],
+                precio_unitario=_parse_float(item.get('precio_unitario')),
+                comentarios=item.get('comentarios', ''),
+                posicion=index
+            )
+            db.session.add(item_model)
+
+        subtotal, iva_valor, total = _calcular_totales(data, items)
+        orden.subtotal = subtotal
+        orden.iva_valor = iva_valor
+        orden.total = total
+
+        db.session.commit()
+        return jsonify({'message': 'Orden de compra creada exitosamente', 'id': orden.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al crear orden de compra: {str(e)}")
+        return jsonify({'message': f'Error al crear orden de compra: {str(e)}'}), 500
+
+@routes.route('/orden-compra/<int:id>', methods=['PUT', 'OPTIONS'])
+def update_orden_compra(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autenticado'}), 401
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+
+        orden = OrdenCompra.query.get_or_404(id)
+        empresa = _obtener_empresa_actual(user_id)
+        if not empresa or orden.empresa_id != empresa.id:
+            return jsonify({'message': 'No tienes permiso para editar esta orden'}), 403
+        if user.rol != 'admin' and orden.supervisor_id != user_id:
+            return jsonify({'message': 'No tienes permiso para editar esta orden'}), 403
+
+        data = request.json or {}
+        items = data.get('items', [])
+        if not isinstance(items, list) or len(items) == 0:
+            return jsonify({'message': 'Debes agregar al menos un item a la orden'}), 400
+
+        comprador_tipo = data.get('comprador_tipo')
+        comprador_id = data.get('comprador_id')
+        if comprador_tipo not in ['cliente', 'empresa']:
+            return jsonify({'message': 'Tipo de comprador inválido'}), 400
+        if not comprador_id:
+            return jsonify({'message': 'El comprador es requerido'}), 400
+
+        proveedor_id = data.get('proveedor_id')
+        proveedor = None
+        if proveedor_id:
+            proveedor = Proveedor.query.get(proveedor_id)
+            if not proveedor:
+                return jsonify({'message': 'Proveedor no encontrado'}), 404
+
+        orden.fecha_entrega = datetime.strptime(data['fecha_entrega'], '%Y-%m-%d').date() if data.get('fecha_entrega') else None
+        orden.comprador_tipo = comprador_tipo
+        orden.comprador_id = int(comprador_id)
+        orden.proveedor_id = proveedor.id if proveedor else None
+        orden.proveedor_nombre = data.get('proveedor_nombre', proveedor.nombre_comercial if proveedor else '').strip()
+        orden.proveedor_nit = data.get('proveedor_nit', proveedor.nit if proveedor else '').strip()
+        orden.proveedor_direccion = data.get('proveedor_direccion', proveedor.direccion if proveedor else '').strip()
+        orden.proveedor_tipo_insumos = data.get('proveedor_tipo_insumos', proveedor.tipo_insumos if proveedor else '').strip()
+        orden.condiciones_pago = data.get('condiciones_pago', '').strip()
+        orden.notas = data.get('notas', '').strip()
+        orden.estado = data.get('estado', orden.estado)
+
+        if not orden.proveedor_nombre:
+            return jsonify({'message': 'El proveedor es requerido'}), 400
+
+        OrdenCompraItem.query.filter_by(orden_id=id).delete()
+
+        for index, item in enumerate(items):
+            if not item.get('descripcion') or not item.get('cantidad') or not item.get('unidad'):
+                db.session.rollback()
+                return jsonify({'message': 'Todos los items deben tener descripción, cantidad y unidad'}), 400
+            item_model = OrdenCompraItem(
+                orden_id=orden.id,
+                descripcion=item['descripcion'],
+                cantidad=item['cantidad'],
+                unidad=item['unidad'],
+                precio_unitario=_parse_float(item.get('precio_unitario')),
+                comentarios=item.get('comentarios', ''),
+                posicion=index
+            )
+            db.session.add(item_model)
+
+        subtotal, iva_valor, total = _calcular_totales(data, items)
+        orden.subtotal = subtotal
+        orden.iva_valor = iva_valor
+        orden.total = total
+
+        db.session.commit()
+        return jsonify({'message': 'Orden de compra actualizada exitosamente'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al actualizar orden de compra: {str(e)}")
+        return jsonify({'message': f'Error al actualizar orden de compra: {str(e)}'}), 500
+
+@routes.route('/orden-compra/<int:id>', methods=['DELETE', 'OPTIONS'])
+def delete_orden_compra(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autenticado'}), 401
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+
+        orden = OrdenCompra.query.get_or_404(id)
+        empresa = _obtener_empresa_actual(user_id)
+        if not empresa or orden.empresa_id != empresa.id:
+            return jsonify({'message': 'No tienes permiso para eliminar esta orden'}), 403
+        if user.rol != 'admin' and orden.supervisor_id != user_id:
+            return jsonify({'message': 'No tienes permiso para eliminar esta orden'}), 403
+
+        OrdenCompraItem.query.filter_by(orden_id=id).delete()
+        db.session.delete(orden)
+        db.session.commit()
+        return jsonify({'message': 'Orden de compra eliminada exitosamente'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al eliminar orden de compra: {str(e)}")
+        return jsonify({'message': f'Error al eliminar orden de compra: {str(e)}'}), 500
+
+@routes.route('/generar-pdf-orden/<int:id>', methods=['POST', 'OPTIONS'])
+def generar_pdf_orden(id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'message': 'No autenticado'}), 401
+        orden = OrdenCompra.query.get_or_404(id)
+        empresa = _obtener_empresa_actual(user_id)
+        if not empresa or orden.empresa_id != empresa.id:
+            return jsonify({'message': 'No tienes permiso para generar el PDF de esta orden'}), 403
+
+        generator = HTMLOrdenGenerator(upload_folder=current_app.config['UPLOAD_FOLDER'])
+        pdf_path = generator.generar_pdf(id)
+        if not pdf_path or not os.path.exists(pdf_path):
+            return jsonify({'message': 'No se pudo generar el PDF'}), 500
+        return send_file(pdf_path, as_attachment=True, download_name=f'orden-compra-{orden.numero}.pdf')
+    except Exception as e:
+        print(f"Error al generar PDF de orden: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'message': f'Error al generar PDF de orden: {str(e)}'}), 500
