@@ -138,6 +138,8 @@ const OrdenCompraForm = () => {
     }
   }, [id]);
 
+  const compradorOptions = form.comprador_tipo === 'cliente' ? clientes : empresa ? [empresa] : [];
+
   useEffect(() => {
     loadClientes();
     loadEmpresa();
@@ -155,8 +157,6 @@ const OrdenCompraForm = () => {
       setForm((prev) => ({ ...prev, comprador_id: compradorOptions[0].id }));
     }
   }, [compradorOptions, form.comprador_id]);
-
-  const compradorOptions = form.comprador_tipo === 'cliente' ? clientes : empresa ? [empresa] : [];
 
   const handleAddItem = () => setItems((prev) => [...prev, defaultItem]);
 
