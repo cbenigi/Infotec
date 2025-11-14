@@ -70,26 +70,28 @@ const Login = () => {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          color: 'white',
+          color: '#1b1b1b',
           padding: 4,
-          backgroundColor: '#0b1220',
+          backgroundColor: '#fff7f1',
           backgroundImage: `
-            radial-gradient(circle at 20% 20%, rgba(86,138,255,0.35), transparent 45%),
-            radial-gradient(circle at 80% 0%, rgba(180,89,255,0.3), transparent 40%),
-            radial-gradient(circle at 10% 80%, rgba(18,227,251,0.3), transparent 40%),
-            radial-gradient(circle at 80% 80%, rgba(248,150,72,0.3), transparent 45%),
-            linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 15%)`,
-          backgroundSize: 'cover, cover, cover, cover, 140px',
+            radial-gradient(circle at 20% 15%, rgba(255, 115, 92, 0.35), transparent 45%),
+            radial-gradient(circle at 80% 10%, rgba(217, 177, 255, 0.35), transparent 45%),
+            radial-gradient(circle at 15% 80%, rgba(137, 187, 255, 0.4), transparent 50%),
+            radial-gradient(circle at 85% 75%, rgba(255, 208, 120, 0.5), transparent 45%),
+            linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 18%),
+            linear-gradient(90deg, rgba(248, 150, 72, 0.08) 0%, rgba(248, 150, 72, 0) 30%),
+            linear-gradient(90deg, rgba(115, 139, 255, 0.1) 0%, rgba(115, 139, 255, 0) 25%)`,
+          backgroundSize: 'cover, cover, cover, cover, 120px, 180px, 220px',
           backgroundRepeat: 'no-repeat'
         }}
       >
         <Avatar
           src="/ChatGPT_Image_14_nov_2025__15_45_43-removebg-preview.png"
           alt="Logo PROCLYM"
-          sx={{ width: 220, height: 220, mb: 3, backgroundColor: 'transparent' }}
+          sx={{ width: 240, height: 240, mb: 3, backgroundColor: 'transparent' }}
           variant="square"
         />
-        <Typography variant="h6" sx={{ opacity: 0.9, textAlign: 'center', maxWidth: 420 }}>
+        <Typography variant="h6" sx={{ opacity: 0.85, textAlign: 'center', maxWidth: 420 }}>
           Plataforma integral para coordinar visitas técnicas, compras y documentación de servicios de mantenimiento.
         </Typography>
         <Box sx={{ mt: 4, opacity: 0.8 }}>
