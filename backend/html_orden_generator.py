@@ -6,6 +6,8 @@ from weasyprint.text.fonts import FontConfiguration
 from models import OrdenCompra, Empresa, Proveedor, User, Cliente
 from html_pdf_generator import HTMLPDFGenerator
 
+IVA_RATE = 0.19
+
 class HTMLOrdenGenerator:
     def __init__(self, upload_folder=None):
         base_dir = os.path.dirname(__file__)
@@ -36,6 +38,7 @@ class HTMLOrdenGenerator:
         supervisor = User.query.get(orden.supervisor_id)
         empresa = orden.empresa or (Empresa.query.filter_by(user_id=supervisor.id).first() if supervisor else None)
         proveedor = orden.proveedor if orden.proveedor_id else None
+        comprador_cliente = Cliente.query.get(orden.comprador_id) if orden.comprador_tipo == 'cliente' else None
 
         template = self.jinja_env.get_template('orden_compra_template.html')
 
@@ -50,27 +53,33 @@ class HTMLOrdenGenerator:
             subtotal = None
             if cantidad_val is not None and item.precio_unitario:
                 subtotal = cantidad_val * item.precio_unitario
+            iva_valor = subtotal * IVA_RATE if subtotal is not None else None
             item_rows.append({
                 'index': idx,
                 'descripcion': item.descripcion,
                 'cantidad': cantidad,
                 'unidad': item.unidad,
                 'precio_unitario': self._format_currency(item.precio_unitario) if item.precio_unitario else '—',
+                'iva': self._format_currency(iva_valor) if iva_valor is not None else '—',
                 'subtotal': self._format_currency(subtotal) if subtotal is not None else '—',
                 'comentarios': item.comentarios
             })
 
-        company_logo = self.logo_helper.convertir_logo_a_html(
-            self.logo_helper.obtener_logo_empresa(empresa),
-            "Logo Empresa"
-        ) if empresa else None
-
-        if orden.comprador_tipo == 'cliente':
-            comprador = Cliente.query.get(orden.comprador_id)
-            comprador_nombre = comprador.nombre if comprador else 'Cliente'
+        if orden.comprador_tipo == 'cliente' and comprador_cliente:
+            branding_nombre = comprador_cliente.nombre
+            branding_nit = comprador_cliente.nit or 'NIT no disponible'
+            branding_direccion = getattr(comprador_cliente, 'direccion', None) or 'Dirección no disponible'
+            logo_path = self.logo_helper.obtener_logo_cliente(comprador_cliente)
         else:
-            comprador = empresa
-            comprador_nombre = empresa.nombre if empresa else 'Empresa'
+            branding_nombre = empresa.nombre if empresa else 'Empresa'
+            branding_nit = empresa.nit if empresa and empresa.nit else 'NIT no disponible'
+            branding_direccion = empresa.direccion if empresa and empresa.direccion else 'Dirección no disponible'
+            logo_path = self.logo_helper.obtener_logo_empresa(empresa)
+
+        branding_logo = self.logo_helper.convertir_logo_a_html(
+            logo_path,
+            "Logo Comprador"
+        ) if logo_path else ''
 
         proveedor_direccion = orden.proveedor_direccion or (proveedor.direccion if proveedor and proveedor.direccion else '')
         proveedor_insumos = orden.proveedor_tipo_insumos or (proveedor.tipo_insumos if proveedor and proveedor.tipo_insumos else '')
@@ -81,14 +90,16 @@ class HTMLOrdenGenerator:
             'proveedor': proveedor,
             'supervisor': supervisor,
             'items': item_rows,
-            'company_logo': company_logo or '',
+            'branding_logo': branding_logo,
             'fecha_emision': orden.fecha_creacion.strftime('%d/%m/%Y'),
             'fecha_entrega': orden.fecha_entrega.strftime('%d/%m/%Y') if orden.fecha_entrega else 'Pendiente',
             'subtotal': self._format_currency(orden.subtotal),
             'iva': self._format_currency(orden.iva_valor),
             'total': self._format_currency(orden.total),
             'iva_porcentaje': '19%',
-            'comprador_nombre': comprador_nombre,
+            'comprador_nombre': branding_nombre,
+            'comprador_nit': branding_nit,
+            'comprador_direccion': branding_direccion,
             'proveedor_direccion': proveedor_direccion or '—',
             'proveedor_insumos': proveedor_insumos or '—'
         }

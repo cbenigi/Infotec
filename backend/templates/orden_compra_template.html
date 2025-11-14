@@ -37,11 +37,11 @@
     <div class="header">
       <div class="company-info">
         <h1>ORDEN DE COMPRA</h1>
-        <p>{{ empresa.nombre if empresa else 'Empresa' }}</p>
-        <p>NIT: {{ empresa.nit if empresa else 'N/A' }}</p>
-        <p>{{ empresa.direccion if empresa and empresa.direccion else '' }}</p>
+        <p>{{ comprador_nombre }}</p>
+        <p>NIT: {{ comprador_nit }}</p>
+        <p>{{ comprador_direccion }}</p>
       </div>
-      <div class="logo-box">{{ company_logo|safe }}</div>
+      <div class="logo-box">{{ branding_logo|safe }}</div>
     </div>
 
     <div class="meta">
@@ -68,6 +68,8 @@
         <h3>COMPRADOR</h3>
         <div class="info-row"><span class="info-label">Nombre:</span> {{ comprador_nombre }}</div>
         <div class="info-row"><span class="info-label">Tipo:</span> {{ orden.comprador_tipo|capitalize }}</div>
+        <div class="info-row"><span class="info-label">NIT:</span> {{ comprador_nit }}</div>
+        <div class="info-row"><span class="info-label">Dirección:</span> {{ comprador_direccion }}</div>
       </div>
       <div class="info-card">
         <h3>PROVEEDOR</h3>
@@ -87,6 +89,7 @@
           <th>Cantidad</th>
           <th>Unidad</th>
           <th>Precio Unitario</th>
+          <th>IVA (19%)</th>
           <th>Subtotal</th>
         </tr>
       </thead>
@@ -103,6 +106,7 @@
           <td>{{ item.cantidad }}</td>
           <td>{{ item.unidad }}</td>
           <td>{{ item.precio_unitario }}</td>
+          <td>{{ item.iva }}</td>
           <td>{{ item.subtotal }}</td>
         </tr>
         {% endfor %}

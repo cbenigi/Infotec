@@ -46,7 +46,6 @@ const OrdenCompraForm = () => {
   const [loading, setLoading] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [proveedores, setProveedores] = useState([]);
-  const [manualTotalsSource, setManualTotalsSource] = useState(null);
   const [form, setForm] = useState({
     numero: '',
     fecha_entrega: '',
@@ -195,41 +194,6 @@ const OrdenCompraForm = () => {
   }, [items]);
 
   useEffect(() => {
-    if (manualTotalsSource) return;
-    const subtotalFromItems = calculateItemsSubtotal();
-    if (subtotalFromItems !== null) {
-      const iva = subtotalFromItems * IVA_RATE;
-      const total = subtotalFromItems + iva;
-      setForm((prev) => ({
-        ...prev,
-        subtotal: subtotalFromItems.toFixed(2),
-        total: total.toFixed(2)
-      }));
-    }
-  }, [items, manualTotalsSource, calculateItemsSubtotal]);
-
-  const handleSubtotalInput = (value) => {
-    const parsed = parseNumber(value);
-    setManualTotalsSource(value ? 'subtotal' : null);
-    setForm((prev) => ({
-      ...prev,
-      subtotal: value,
-      total: parsed !== null ? (parsed * (1 + IVA_RATE)).toFixed(2) : ''
-    }));
-  };
-
-  const handleTotalInput = (value) => {
-    const parsed = parseNumber(value);
-    setManualTotalsSource(value ? 'total' : null);
-    setForm((prev) => ({
-      ...prev,
-      total: value,
-      subtotal: parsed !== null ? (parsed / (1 + IVA_RATE)).toFixed(2) : ''
-    }));
-  };
-
-  const handleResetTotalsToItems = () => {
-    setManualTotalsSource(null);
     const subtotalFromItems = calculateItemsSubtotal();
     if (subtotalFromItems !== null) {
       const iva = subtotalFromItems * IVA_RATE;
@@ -242,13 +206,17 @@ const OrdenCompraForm = () => {
     } else {
       setForm((prev) => ({ ...prev, subtotal: '', total: '' }));
     }
-  };
+  }, [items, calculateItemsSubtotal]);
 
   const getSubtotal = (item) => {
     const cantidad = parseNumber(item.cantidad);
     const precio = parseNumber(item.precio_unitario);
     if (cantidad === null || precio === null) return 0;
     return cantidad * precio;
+  };
+  const getIva = (item) => {
+    const subtotal = getSubtotal(item);
+    return subtotal * IVA_RATE;
   };
 
   const totalEstimado = items.reduce((acc, item) => acc + getSubtotal(item), 0);
@@ -492,51 +460,6 @@ const OrdenCompraForm = () => {
           </Paper>
 
           <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Resumen económico
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Subtotal"
-                  value={form.subtotal}
-                  onChange={(e) => handleSubtotalInput(e.target.value)}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="IVA (19%)"
-                  value={(() => {
-                    const subtotalNumber = parseNumber(form.subtotal);
-                    const totalNumber = parseNumber(form.total);
-                    if (subtotalNumber !== null && totalNumber !== null) {
-                      return (totalNumber - subtotalNumber).toFixed(2);
-                    }
-                    if (subtotalNumber !== null) {
-                      return (subtotalNumber * IVA_RATE).toFixed(2);
-                    }
-                    return '';
-                  })()}
-                  fullWidth
-                  disabled
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Total"
-                  value={form.total}
-                  onChange={(e) => handleTotalInput(e.target.value)}
-                  fullWidth
-                />
-              </Grid>
-            </Grid>
-            <Button sx={{ mt: 2 }} onClick={handleResetTotalsToItems}>
-              Usar valores calculados desde los ítems
-            </Button>
-          </Paper>
-
-          <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6" sx={{ fontWeight: 600, color: '#1976d2' }}>
                 Detalle de la orden
@@ -554,6 +477,7 @@ const OrdenCompraForm = () => {
                     <TableCell>Cantidad *</TableCell>
                     <TableCell>Unidad *</TableCell>
                     <TableCell>Precio Unitario</TableCell>
+                    <TableCell>IVA (19 %)</TableCell>
                     <TableCell>Subtotal</TableCell>
                     <TableCell>Acciones</TableCell>
                   </TableRow>
@@ -596,6 +520,9 @@ const OrdenCompraForm = () => {
                           size="small"
                           placeholder="Ej: 25000"
                         />
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>
+                        {getSubtotal(item) > 0 ? `$ ${getIva(item).toLocaleString('es-CO')}` : '—'}
                       </TableCell>
                       <TableCell sx={{ fontWeight: 600 }}>
                         {getSubtotal(item) > 0 ? `$ ${getSubtotal(item).toLocaleString('es-CO')}` : '—'}
