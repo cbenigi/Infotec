@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, Typography, Box, Paper, Grid, InputAdornment, IconButton, Link } from '@mui/material';
+import { TextField, Button, Typography, Box, Paper, Grid, InputAdornment, IconButton, Link, MenuItem } from '@mui/material';
 import { Box as MuiBox } from '@mui/system';
 import axios from '../api/axiosConfig';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
@@ -10,13 +10,13 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const Register = () => {
-  const [form, setForm] = useState({ nombre: '', email: '', password: '' });
+  const [form, setForm] = useState({ nombre: '', email: '', password: '', rol: 'aseo' });
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async () => {
     try {
-      await axios.post('/usuarios', { ...form, rol: 'user' });
+      await axios.post('/usuarios', form);
       
       // Guardar nombre del usuario
       localStorage.setItem('userName', form.nombre);
@@ -107,6 +107,20 @@ const Register = () => {
               Completa los datos para registrarte
             </Typography>
           </Box>
+
+          <TextField
+            select
+            label="Rol"
+            value={form.rol}
+            onChange={(e) => setForm({ ...form, rol: e.target.value })}
+            onKeyPress={handleKeyPress}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+          >
+            <MenuItem value="aseo">Aseo</MenuItem>
+            <MenuItem value="nomina">Nómina</MenuItem>
+          </TextField>
 
           <TextField
             label="Nombre Completo"

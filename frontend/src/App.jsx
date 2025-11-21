@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import NominaDashboard from './pages/NominaDashboard';
 import VisitaForm from './pages/VisitaForm';
 import EmpresaForm from './pages/EmpresaForm';
 import ClienteForm from './pages/ClienteForm';
@@ -33,6 +34,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/empresa" element={<EmpresaForm />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/nomina" element={<NominaDashboard />} />
           <Route path="/visita/:id?" element={<VisitaForm />} />
           <Route path="/clientes/new" element={<ClienteForm />} />
           <Route path="/supervisores/new" element={<SupervisorForm />} />

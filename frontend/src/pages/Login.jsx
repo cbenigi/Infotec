@@ -39,8 +39,8 @@ const Login = () => {
         localStorage.setItem('userId', String(currentUser.id));
       }
       
-      // Ir directamente al dashboard
-      navigate('/dashboard');
+      const targetRoute = res.data.rol === 'nomina' ? '/dashboard/nomina' : '/dashboard';
+      navigate(targetRoute);
     } catch (err) {
       console.error('Error al iniciar sesión:', err);
       

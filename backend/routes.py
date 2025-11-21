@@ -151,7 +151,10 @@ def create_usuario():
             return jsonify({'message': 'No se recibieron datos'}), 400
         
         data = request.json
-        
+        rol = data.get('rol', 'aseo')
+        if rol not in ('aseo', 'nomina', 'admin'):
+            return jsonify({'message': 'Rol inválido'}), 400
+
         # Validar campos requeridos
         required_fields = ['nombre', 'email', 'password']
         for field in required_fields:
@@ -164,7 +167,7 @@ def create_usuario():
             return jsonify({'message': 'El email ya está registrado'}), 400
         
         # Crear usuario
-        user = User(nombre=data['nombre'], email=data['email'], rol=data.get('rol', 'user'))
+        user = User(nombre=data['nombre'], email=data['email'], rol=rol)
         user.set_password(data['password'])
         db.session.add(user)
         db.session.commit()
