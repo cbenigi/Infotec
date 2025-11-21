@@ -4,7 +4,21 @@ from flask_mail import Mail, Message
 from flask import Blueprint, request, jsonify, session, send_from_directory, current_app, send_file, render_template
 import os
 from werkzeug.utils import secure_filename
-from models import db, User, Empresa, Cliente, Visita, Zona, Cotizacion, CotizacionItem, OrdenCompra, OrdenCompraItem, Proveedor
+from models import (
+    db,
+    User,
+    Empresa,
+    Cliente,
+    Visita,
+    Zona,
+    Cotizacion,
+    CotizacionItem,
+    OrdenCompra,
+    OrdenCompraItem,
+    Proveedor,
+    EmpresaAcceso,
+    EmpresaNominaRelacion
+)
 from sqlalchemy import or_
 from werkzeug.security import check_password_hash
 from datetime import datetime
@@ -60,6 +74,22 @@ def _calcular_total_estimado(items):
     return round(total, 2)
 
 def _calcular_totales(data, items):
+def _serialize_empresa(empresa, current_user_id=None, es_compartida=False):
+    owner = empresa.user
+    return {
+        'id': empresa.id,
+        'nombre': empresa.nombre,
+        'nit': empresa.nit,
+        'telefono': empresa.telefono,
+        'correo': empresa.correo,
+        'direccion': empresa.direccion,
+        'logo_url': empresa.logo_url,
+        'owner_id': empresa.user_id,
+        'owner_nombre': owner.nombre if owner else None,
+        'owner_email': owner.email if owner else None,
+        'es_propietario': current_user_id is not None and empresa.user_id == current_user_id,
+        'es_compartida': es_compartida
+    }
     iva_rate = 0.19
     subtotal_input = _parse_float(data.get('subtotal')) if isinstance(data, dict) else None
     total_input = _parse_float(data.get('total')) if isinstance(data, dict) else None
@@ -81,6 +111,13 @@ def _calcular_totales(data, items):
         subtotal = iva_valor = total = 0.0
 
     return subtotal, iva_valor, total
+
+def _usuario_tiene_acceso_empresa(user_id, empresa_id):
+    if not user_id:
+        return False
+    if Empresa.query.filter_by(id=empresa_id, user_id=user_id).first():
+        return True
+    return EmpresaNominaRelacion.query.filter_by(empresa_id=empresa_id, user_id=user_id).first() is not None
 
 @routes.after_request
 def add_cors_headers(response):
@@ -222,13 +259,7 @@ def get_empresa():
     
     return jsonify({
         'exists': True,
-        'id': empresa.id,
-        'nombre': empresa.nombre,
-        'nit': empresa.nit,
-        'telefono': empresa.telefono,
-        'correo': empresa.correo,
-        'direccion': empresa.direccion,
-        'logo_url': empresa.logo_url
+        **_serialize_empresa(empresa, current_user_id=user_id)
     }), 200
 
 @routes.route('/empresa', methods=['POST', 'OPTIONS'])
@@ -283,6 +314,230 @@ def update_empresa():
     
     db.session.commit()
     return jsonify({'message': 'Empresa actualizada exitosamente'}), 200
+
+@routes.route('/empresas', methods=['GET', 'POST', 'OPTIONS'])
+def manage_empresas_multiple():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+
+    if session.get('rol') != 'nomina':
+        return jsonify({'message': 'Acceso restringido a rol nómina'}), 403
+
+    if request.method == 'GET':
+        propias = Empresa.query.filter_by(user_id=user_id).order_by(Empresa.id.desc()).all()
+        relaciones = EmpresaNominaRelacion.query.filter_by(user_id=user_id).all()
+        data = [_serialize_empresa(e, current_user_id=user_id) for e in propias]
+        propias_ids = {e.id for e in propias}
+        for rel in relaciones:
+            if rel.empresa_id in propias_ids or not rel.empresa:
+                continue
+            data.append(_serialize_empresa(rel.empresa, current_user_id=user_id, es_compartida=True))
+        return jsonify(data), 200
+
+    data = request.json or {}
+    required = ['nombre', 'nit', 'telefono', 'correo']
+    for field in required:
+        if not data.get(field):
+            return jsonify({'message': f'El campo {field} es requerido'}), 400
+
+    empresa = Empresa(
+        user_id=user_id,
+        nombre=data['nombre'].strip(),
+        nit=data['nit'].strip(),
+        telefono=data['telefono'].strip(),
+        correo=data['correo'].strip(),
+        direccion=data.get('direccion', '').strip(),
+        logo_url=data.get('logo_url', '').strip()
+    )
+    db.session.add(empresa)
+    db.session.commit()
+    return jsonify({'message': 'Empresa creada', 'empresa': _serialize_empresa(empresa)}), 201
+
+@routes.route('/empresas/<int:empresa_id>', methods=['PUT', 'DELETE', 'OPTIONS'])
+def update_or_delete_empresa(empresa_id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+
+    if session.get('rol') != 'nomina':
+        return jsonify({'message': 'Acceso restringido a rol nómina'}), 403
+
+    empresa = Empresa.query.filter_by(id=empresa_id, user_id=user_id).first()
+    if not empresa:
+        return jsonify({'message': 'Empresa no encontrada'}), 404
+
+    try:
+        if request.method == 'PUT':
+            data = request.json or {}
+            for field in ['nombre', 'nit', 'telefono', 'correo', 'direccion', 'logo_url']:
+                if field in data:
+                    setattr(empresa, field, data[field])
+            db.session.commit()
+            return jsonify({'message': 'Empresa actualizada', 'empresa': _serialize_empresa(empresa)}), 200
+        else:
+            db.session.delete(empresa)
+            db.session.commit()
+            return jsonify({'message': 'Empresa eliminada'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error al procesar la empresa: {str(e)}'}), 500
+
+@routes.route('/empresas/buscar', methods=['GET'])
+def buscar_empresa_por_nit():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+
+    nit = (request.args.get('nit') or '').strip()
+    if not nit:
+        return jsonify({'message': 'El parámetro nit es requerido'}), 400
+
+    empresa = Empresa.query.filter_by(nit=nit).first()
+    if not empresa:
+        return jsonify({'found': False}), 200
+
+    tiene_acceso = _usuario_tiene_acceso_empresa(user_id, empresa.id)
+    solicitud_pendiente = EmpresaAcceso.query.filter_by(
+        empresa_id=empresa.id,
+        solicitante_id=user_id,
+        estado='pendiente'
+    ).first() is not None
+
+    owner = empresa.user
+
+    return jsonify({
+        'found': True,
+        'empresa': _serialize_empresa(empresa, current_user_id=user_id),
+        'owner': {
+            'id': owner.id if owner else None,
+            'nombre': owner.nombre if owner else 'Propietario no disponible',
+            'email': owner.email if owner else ''
+        },
+        'tiene_acceso': tiene_acceso,
+        'solicitud_pendiente': solicitud_pendiente
+    }), 200
+
+@routes.route('/empresas/<int:empresa_id>/solicitudes', methods=['POST', 'OPTIONS'])
+def solicitar_acceso_empresa(empresa_id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+    if session.get('rol') != 'nomina':
+        return jsonify({'message': 'Solo usuarios de nómina pueden solicitar acceso'}), 403
+
+    empresa = Empresa.query.get_or_404(empresa_id)
+    if empresa.user_id == user_id:
+        return jsonify({'message': 'Ya eres propietario de esta empresa'}), 400
+
+    if _usuario_tiene_acceso_empresa(user_id, empresa.id):
+        return jsonify({'message': 'Ya tienes acceso a esta empresa'}), 200
+
+    existing = EmpresaAcceso.query.filter_by(
+        empresa_id=empresa.id,
+        solicitante_id=user_id,
+        estado='pendiente'
+    ).first()
+    if existing:
+        return jsonify({'message': 'Ya existe una solicitud pendiente para esta empresa'}), 200
+
+    data = request.json or {}
+    mensaje = (data.get('mensaje') or '').strip() or None
+
+    solicitud = EmpresaAcceso(
+        empresa_id=empresa.id,
+        solicitante_id=user_id,
+        mensaje=mensaje
+    )
+    db.session.add(solicitud)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Solicitud enviada',
+        'solicitud_id': solicitud.id
+    }), 201
+
+@routes.route('/empresa/solicitudes', methods=['GET', 'OPTIONS'])
+def obtener_solicitudes_empresas():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+
+    # Solo propietarios (aseo/admin) pueden ver solicitudes de sus empresas
+    empresas_propias = Empresa.query.filter_by(user_id=user_id).all()
+    if not empresas_propias:
+        return jsonify([]), 200
+
+    empresa_ids = [e.id for e in empresas_propias]
+    solicitudes = EmpresaAcceso.query.filter(
+        EmpresaAcceso.empresa_id.in_(empresa_ids),
+        EmpresaAcceso.estado == 'pendiente'
+    ).order_by(EmpresaAcceso.creado_en.asc()).all()
+
+    result = []
+    for sol in solicitudes:
+        result.append({
+            'id': sol.id,
+            'estado': sol.estado,
+            'mensaje': sol.mensaje,
+            'creado_en': sol.creado_en.isoformat() if sol.creado_en else None,
+            'empresa': _serialize_empresa(sol.empresa, current_user_id=user_id) if sol.empresa else None,
+            'solicitante': {
+                'id': sol.solicitante.id if sol.solicitante else None,
+                'nombre': sol.solicitante.nombre if sol.solicitante else 'Usuario no disponible',
+                'email': sol.solicitante.email if sol.solicitante else ''
+            }
+        })
+
+    return jsonify(result), 200
+
+@routes.route('/empresa/solicitudes/<int:solicitud_id>', methods=['PUT', 'OPTIONS'])
+def resolver_solicitud_empresa(solicitud_id):
+    if request.method == 'OPTIONS':
+        return ('', 200)
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'message': 'No autenticado'}), 401
+
+    solicitud = EmpresaAcceso.query.get_or_404(solicitud_id)
+    if not solicitud.empresa or solicitud.empresa.user_id != user_id:
+        return jsonify({'message': 'No autorizado para gestionar esta solicitud'}), 403
+
+    data = request.json or {}
+    accion = (data.get('accion') or '').lower()
+    if accion not in ('aprobar', 'rechazar'):
+        return jsonify({'message': 'Acción inválida'}), 400
+
+    try:
+        if accion == 'aprobar':
+            solicitud.estado = 'aprobado'
+            if not _usuario_tiene_acceso_empresa(solicitud.solicitante_id, solicitud.empresa_id):
+                relacion = EmpresaNominaRelacion(
+                    empresa_id=solicitud.empresa_id,
+                    user_id=solicitud.solicitante_id
+                )
+                db.session.add(relacion)
+        else:
+            solicitud.estado = 'rechazado'
+
+        db.session.commit()
+        return jsonify({'message': f'Solicitud {accion}ada correctamente'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error al actualizar la solicitud: {str(e)}'}), 500
 
 # CRUD Clientes
 # CRUD Proveedores

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction, Dialog, DialogContent, DialogTitle, DialogActions, TextField } from '@mui/material';
+import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction, Dialog, DialogContent, DialogTitle, DialogActions, TextField, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axiosConfig';
 import Navbar from '../components/Navbar';
@@ -17,7 +17,11 @@ const Dashboard = () => {
   const [selectedVisita, setSelectedVisita] = useState(null);
   const [emailDestino, setEmailDestino] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [solicitudesAcceso, setSolicitudesAcceso] = useState([]);
+  const [solicitudesDialogOpen, setSolicitudesDialogOpen] = useState(false);
+  const [gestionandoSolicitud, setGestionandoSolicitud] = useState(false);
   const navigate = useNavigate();
+  const rol = localStorage.getItem('rol') || 'aseo';
 
   const handleDownloadPDF = async (visitaId) => {
     setLoadingPDF(true);
@@ -132,6 +136,41 @@ const Dashboard = () => {
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
+
+  useEffect(() => {
+    if (rol === 'nomina') return;
+    const fetchSolicitudes = async () => {
+      try {
+        const res = await axios.get('/empresa/solicitudes');
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setSolicitudesAcceso(res.data);
+          setSolicitudesDialogOpen(true);
+        } else {
+          setSolicitudesAcceso([]);
+        }
+      } catch (err) {
+        console.error('Error al obtener solicitudes de empresas:', err);
+      }
+    };
+    fetchSolicitudes();
+  }, [rol]);
+
+  const handleResolverSolicitud = async (solicitudId, accion) => {
+    try {
+      setGestionandoSolicitud(true);
+      await axios.put(`/empresa/solicitudes/${solicitudId}`, { accion });
+      const restantes = solicitudesAcceso.filter((s) => s.id !== solicitudId);
+      setSolicitudesAcceso(restantes);
+      if (restantes.length === 0) {
+        setSolicitudesDialogOpen(false);
+      }
+    } catch (err) {
+      console.error('Error al actualizar la solicitud:', err);
+      alert(err.response?.data?.message || 'No se pudo procesar la solicitud.');
+    } finally {
+      setGestionandoSolicitud(false);
+    }
+  };
 
   return (
     <>
@@ -415,6 +454,71 @@ const Dashboard = () => {
             startIcon={sendingEmail ? null : <Email />}
           >
             {sendingEmail ? 'Enviando...' : 'Enviar Correo'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog para solicitudes de acceso a empresas */}
+      <Dialog
+        open={solicitudesDialogOpen}
+        onClose={() => setSolicitudesDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Solicitudes de acceso a empresas</DialogTitle>
+        <DialogContent dividers>
+          {solicitudesAcceso.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No tienes solicitudes pendientes.
+            </Typography>
+          ) : (
+            solicitudesAcceso.map((solicitud) => (
+              <Box
+                key={solicitud.id}
+                sx={{
+                  border: '1px solid #e0e0e0',
+                  borderRadius: 2,
+                  p: 2,
+                  mb: 2
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  {solicitud.solicitante?.nombre || 'Usuario desconocido'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {solicitud.solicitante?.email}
+                </Typography>
+                <Typography variant="body2">
+                  Empresa: {solicitud.empresa?.nombre} (NIT: {solicitud.empresa?.nit})
+                </Typography>
+                {solicitud.mensaje && (
+                  <Alert severity="info" sx={{ mt: 1, mb: 1 }}>
+                    {solicitud.mensaje}
+                  </Alert>
+                )}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
+                  <Button
+                    color="error"
+                    onClick={() => handleResolverSolicitud(solicitud.id, 'rechazar')}
+                    disabled={gestionandoSolicitud}
+                  >
+                    Rechazar
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => handleResolverSolicitud(solicitud.id, 'aprobar')}
+                    disabled={gestionandoSolicitud}
+                  >
+                    Aprobar
+                  </Button>
+                </Box>
+              </Box>
+            ))
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSolicitudesDialogOpen(false)} disabled={gestionandoSolicitud}>
+            Cerrar
           </Button>
         </DialogActions>
       </Dialog>

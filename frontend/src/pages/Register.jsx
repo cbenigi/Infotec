@@ -24,12 +24,16 @@ const Register = () => {
       // Verificar si el usuario tiene empresa registrada
       const empresaRes = await axios.get('/empresa');
       
+      if (form.rol === 'nomina') {
+        alert('Registro exitoso. Ahora puedes crear empresas para nómina.');
+        navigate('/dashboard/nomina');
+        return;
+      }
+
       if (empresaRes.data.exists) {
-        // Ya tiene empresa, ir al dashboard
         alert('Registro exitoso. Bienvenido de nuevo!');
         navigate('/dashboard');
       } else {
-        // No tiene empresa, debe registrarla primero
         alert('Registro exitoso! Ahora registra tu empresa para empezar a crear informes.');
         navigate('/empresa');
       }

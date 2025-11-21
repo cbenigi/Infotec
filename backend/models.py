@@ -1,5 +1,6 @@
+from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Enum
+from sqlalchemy import Enum, UniqueConstraint
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -22,7 +23,7 @@ class User(db.Model):
 class Empresa(db.Model):
     __tablename__ = 'empresas'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
     nit = db.Column(db.String(20), nullable=False)
     telefono = db.Column(db.String(20), nullable=False)
@@ -134,3 +135,30 @@ class Proveedor(db.Model):
     nit = db.Column(db.String(50), nullable=False)
     direccion = db.Column(db.String(200))
     tipo_insumos = db.Column(db.String(200))
+
+class EmpresaAcceso(db.Model):
+    __tablename__ = 'empresa_accesos'
+    id = db.Column(db.Integer, primary_key=True)
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=False)
+    solicitante_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    estado = db.Column(db.String(20), nullable=False, default='pendiente')  # pendiente, aprobado, rechazado
+    mensaje = db.Column(db.String(255))
+    creado_en = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    actualizado_en = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    empresa = db.relationship('Empresa')
+    solicitante = db.relationship('User', foreign_keys=[solicitante_id])
+
+class EmpresaNominaRelacion(db.Model):
+    __tablename__ = 'empresa_nomina_relaciones'
+    id = db.Column(db.Integer, primary_key=True)
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    creado_en = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('empresa_id', 'user_id', name='uq_nomina_empresa_user'),
+    )
+
+    empresa = db.relationship('Empresa')
+    user = db.relationship('User')
