@@ -74,22 +74,6 @@ def _calcular_total_estimado(items):
     return round(total, 2)
 
 def _calcular_totales(data, items):
-def _serialize_empresa(empresa, current_user_id=None, es_compartida=False):
-    owner = empresa.user
-    return {
-        'id': empresa.id,
-        'nombre': empresa.nombre,
-        'nit': empresa.nit,
-        'telefono': empresa.telefono,
-        'correo': empresa.correo,
-        'direccion': empresa.direccion,
-        'logo_url': empresa.logo_url,
-        'owner_id': empresa.user_id,
-        'owner_nombre': owner.nombre if owner else None,
-        'owner_email': owner.email if owner else None,
-        'es_propietario': current_user_id is not None and empresa.user_id == current_user_id,
-        'es_compartida': es_compartida
-    }
     iva_rate = 0.19
     subtotal_input = _parse_float(data.get('subtotal')) if isinstance(data, dict) else None
     total_input = _parse_float(data.get('total')) if isinstance(data, dict) else None
@@ -111,6 +95,23 @@ def _serialize_empresa(empresa, current_user_id=None, es_compartida=False):
         subtotal = iva_valor = total = 0.0
 
     return subtotal, iva_valor, total
+
+def _serialize_empresa(empresa, current_user_id=None, es_compartida=False):
+    owner = empresa.user
+    return {
+        'id': empresa.id,
+        'nombre': empresa.nombre,
+        'nit': empresa.nit,
+        'telefono': empresa.telefono,
+        'correo': empresa.correo,
+        'direccion': empresa.direccion,
+        'logo_url': empresa.logo_url,
+        'owner_id': empresa.user_id,
+        'owner_nombre': owner.nombre if owner else None,
+        'owner_email': owner.email if owner else None,
+        'es_propietario': current_user_id is not None and empresa.user_id == current_user_id,
+        'es_compartida': es_compartida
+    }
 
 def _usuario_tiene_acceso_empresa(user_id, empresa_id):
     if not user_id:
