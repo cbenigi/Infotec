@@ -35,11 +35,21 @@ CORS(app,
      allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
-# Cookies de sesión para entornos cross-site (Vercel ⇄ Railway)
-app.config.update(
-    SESSION_COOKIE_SAMESITE='None',
-    SESSION_COOKIE_SECURE=True,
-)
+# Cookies de sesión
+if app.config.get('DEBUG') or os.environ.get('FLASK_ENV') == 'development':
+    # Entorno de desarrollo (Local): Secure=False para soportar HTTP (necesario para acceso desde IP/móvil)
+    app.config.update(
+        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SECURE=False,
+    )
+    print("🍪 Cookies configuradas para DESARROLLO (Secure=False, SameSite=Lax)")
+else:
+    # Entorno de producción (Deploy): Secure=True y SameSite=None para soportar cross-site
+    app.config.update(
+        SESSION_COOKIE_SAMESITE='None',
+        SESSION_COOKIE_SECURE=True,
+    )
+    print("🍪 Cookies configuradas para PRODUCCIÓN (Secure=True, SameSite=None)")
 
 # Inicializar base de datos
 db.init_app(app)
