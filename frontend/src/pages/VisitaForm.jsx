@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Paper, 
-  Button, 
-  TextField, 
-  FormControl, 
-  InputLabel, 
-  Select, 
+import {
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
   MenuItem,
   Grid,
   Card,
@@ -29,7 +29,7 @@ const VisitaForm = () => {
   const [loading, setLoading] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [supervisores, setSupervisores] = useState([]);
-  
+
   const [form, setForm] = useState({
     cliente_id: '',
     supervisor_id: '',
@@ -86,7 +86,9 @@ const VisitaForm = () => {
   const loadSupervisores = async () => {
     try {
       const response = await axios.get('/usuarios');
-      const supervisoresData = response.data.filter(user => user.rol === 'supervisor');
+      const supervisoresData = response.data.filter(user =>
+        ['supervisor', 'tecnico', 'admin', 'aseo'].includes(user.rol)
+      );
       setSupervisores(supervisoresData);
     } catch (err) {
       console.error('Error cargando supervisores:', err);
@@ -111,7 +113,7 @@ const VisitaForm = () => {
   const updateZona = (seccion, index, field, value) => {
     setZonas(prev => ({
       ...prev,
-      [seccion]: prev[seccion].map((zona, i) => 
+      [seccion]: prev[seccion].map((zona, i) =>
         i === index ? { ...zona, [field]: value } : zona
       )
     }));
@@ -260,32 +262,32 @@ const VisitaForm = () => {
               <Grid size={{ xs: 12, md: 4 }}>
                 <FormControl fullWidth>
                   <InputLabel>Cliente *</InputLabel>
-          <Select
-            value={form.cliente_id}
-            onChange={(e) => setForm({ ...form, cliente_id: e.target.value })}
+                  <Select
+                    value={form.cliente_id}
+                    onChange={(e) => setForm({ ...form, cliente_id: e.target.value })}
                   >
                     {clientes.map(cliente => (
                       <MenuItem key={cliente.id} value={cliente.id}>
                         {cliente.nombre}
                       </MenuItem>
                     ))}
-          </Select>
-        </FormControl>
+                  </Select>
+                </FormControl>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <FormControl fullWidth>
                   <InputLabel>Supervisor *</InputLabel>
-          <Select
-            value={form.supervisor_id}
-            onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
+                  <Select
+                    value={form.supervisor_id}
+                    onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
                   >
                     {supervisores.map(supervisor => (
                       <MenuItem key={supervisor.id} value={supervisor.id}>
                         {supervisor.nombre}
                       </MenuItem>
                     ))}
-          </Select>
-        </FormControl>
+                  </Select>
+                </FormControl>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
@@ -350,8 +352,8 @@ const VisitaForm = () => {
               {loading ? 'Guardando...' : (id ? 'Actualizar Visita' : 'Crear Visita')}
             </Button>
           </Box>
-      </Box>
-    </Container>
+        </Box>
+      </Container>
     </>
   );
 };

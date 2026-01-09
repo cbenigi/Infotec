@@ -190,7 +190,7 @@ def create_usuario():
         
         data = request.json
         rol = data.get('rol', 'aseo')
-        if rol not in ('aseo', 'nomina', 'admin'):
+        if rol not in ('aseo', 'nomina', 'admin', 'supervisor', 'tecnico'):
             return jsonify({'message': 'Rol inválido'}), 400
 
         # Validar campos requeridos
