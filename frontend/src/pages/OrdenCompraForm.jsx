@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -137,7 +137,9 @@ const OrdenCompraForm = () => {
     }
   }, [id]);
 
-  const compradorOptions = form.comprador_tipo === 'cliente' ? clientes : empresa ? [empresa] : [];
+  const compradorOptions = useMemo(() => (
+    form.comprador_tipo === 'cliente' ? clientes : empresa ? [empresa] : []
+  ), [form.comprador_tipo, clientes, empresa]);
 
   useEffect(() => {
     loadClientes();

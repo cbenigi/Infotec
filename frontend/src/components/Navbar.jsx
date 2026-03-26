@@ -15,7 +15,6 @@ import axios from '../api/axiosConfig';
 const Navbar = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [empresa, setEmpresa] = useState(null);
   const [userName, setUserName] = useState('Usuario');
   const [userRole, setUserRole] = useState('user');
 
@@ -23,10 +22,7 @@ const Navbar = () => {
     // Obtener datos de la empresa
     const fetchEmpresa = async () => {
       try {
-        const res = await axios.get('/empresa');
-        if (res.data.exists) {
-          setEmpresa(res.data);
-        }
+        await axios.get('/empresa');
       } catch (err) {
         console.error('Error al cargar empresa:', err);
       }
