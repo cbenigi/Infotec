@@ -778,6 +778,18 @@ def create_visita():
             db.session.add(zona)
         
         db.session.commit()
+        
+        # Enviar informe automáticamente al cliente y a solamysas@gmail.com
+        try:
+            cliente = Cliente.query.get(data['cliente_id'])
+            if cliente and cliente.correo:
+                emails = [cliente.correo.strip(), 'solamysas@gmail.com']
+                print(f"DEBUG: Enviando informe automático a: {emails}", flush=True)
+                _enviar_informe_email(visita.id, emails)
+        except Exception as email_err:
+            print(f"ERROR: No se pudo enviar el informe automático: {str(email_err)}", flush=True)
+            # No fallar la creación de la visita si falla el correo
+            
         return jsonify({'message': 'Visita creada exitosamente', 'id': visita.id}), 201
         
     except Exception as e:
@@ -958,45 +970,31 @@ def generar_pdf(visita_id):
         print(f"FULL TRACEBACK:\n{traceback.format_exc()}", flush=True)
         return jsonify({'message': f'Error al generar PDF: {str(e)}'}), 500
 
-@routes.route('/enviar-informe/<string:visita_id>', methods=['POST', 'OPTIONS'])
-def enviar_informe(visita_id):
-    """Envía el informe de visita por correo electrónico"""
-    if request.method == 'OPTIONS':
-        return ('', 200)
-    
+def _enviar_informe_email(visita_id, emails_destino):
+    """Función interna para enviar el informe por correo"""
+    if isinstance(emails_destino, str):
+        emails_destino = [emails_destino]
+        
     try:
-        print(f"DEBUG: Enviando informe para visita {visita_id}", flush=True)
+        print(f"DEBUG: Iniciando _enviar_informe_email para {visita_id} a {emails_destino}", flush=True)
         
         # Verificar que la visita existe
         visita = Visita.query.get(visita_id)
         if not visita:
-            return jsonify({'message': f'Visita {visita_id} no encontrada'}), 404
-        
-        # Obtener el correo de destino del request
-        data = request.json
-        email_destino = data.get('email_destino')
-        
-        if not email_destino:
-            return jsonify({'message': 'El correo de destino es requerido'}), 400
-        
-        # Validar formato de email
-        if '@' not in email_destino:
-            return jsonify({'message': 'Formato de correo inválido'}), 400
+            raise Exception(f"Visita {visita_id} no encontrada")
         
         # Obtener información de la empresa
         empresa = visita.empresa
         empresa_nombre = empresa.nombre if empresa else 'Empresa'
         
         # Generar el PDF
-        print(f"DEBUG: Generando PDF para envío...", flush=True)
         pdf_generator = HTMLPDFGenerator(upload_folder=current_app.config['UPLOAD_FOLDER'])
         pdf_path = pdf_generator.generar_pdf(visita_id)
         
         if not pdf_path or not os.path.exists(pdf_path):
-            return jsonify({'message': 'No se pudo generar el PDF'}), 500
+            raise Exception("No se pudo generar el PDF")
         
         # Crear el mensaje de correo
-        print(f"DEBUG: Creando mensaje de correo...", flush=True)
         asunto = f"Informe de Visita Técnica - {visita_id} - {visita.cliente.nombre}"
         
         # Renderizar el template HTML
@@ -1013,76 +1011,72 @@ def enviar_informe(visita_id):
         
         # Verificar configuración de correo
         if not current_app.config.get('MAIL_USERNAME'):
-            print("ERROR: MAIL_USERNAME no configurado", flush=True)
-            return jsonify({'message': 'Error: Configuración de correo no encontrada. Configura las variables MAIL_USERNAME y MAIL_PASSWORD en Railway.'}), 500
+            raise Exception("Configuración de correo no encontrada")
         
-        # Crear mensaje
-        print(f"DEBUG: Creando mensaje de correo...", flush=True)
-        msg = Message(
-            subject=asunto,
-            recipients=[email_destino],
-            html=cuerpo_html
-        )
-        
-        # Adjuntar el PDF
-        print(f"DEBUG: Adjuntando PDF...", flush=True)
-        with open(pdf_path, 'rb') as pdf_file:
-            msg.attach(
-                filename=f"informe_visita_{visita_id}.pdf",
-                content_type="application/pdf",
-                data=pdf_file.read()
-            )
-        
-        # Enviar el correo
-        print(f"DEBUG: Enviando correo a {email_destino}...", flush=True)
-        
-        # Intentar con SendGrid primero (Railway bloquea SMTP)
+        # Intentar con SendGrid primero
         if current_app.config.get('USE_SENDGRID') and current_app.config.get('SENDGRID_API_KEY'):
-            print(f"DEBUG: Usando SendGrid API", flush=True)
-            try:
-                from sendgrid import SendGridAPIClient
-                from sendgrid.helpers.mail import Mail as SendGridMail, Attachment, FileContent, FileName, FileType, Disposition
-                import base64
-                
-                sg_mail = SendGridMail(
-                    from_email=current_app.config.get('MAIL_DEFAULT_SENDER'),
-                    to_emails=email_destino,
-                    subject=asunto,
-                    html_content=cuerpo_html
-                )
-                
-                # Adjuntar PDF
-                with open(pdf_path, 'rb') as f:
-                    data = f.read()
-                encoded_file = base64.b64encode(data).decode()
-                
-                attached_file = Attachment(
-                    FileContent(encoded_file),
-                    FileName(f'informe_visita_{visita_id}.pdf'),
-                    FileType('application/pdf'),
-                    Disposition('attachment')
-                )
-                sg_mail.attachment = attached_file
-                
-                sg = SendGridAPIClient(current_app.config.get('SENDGRID_API_KEY'))
-                response = sg.send(sg_mail)
-                print(f"DEBUG: Correo enviado exitosamente con SendGrid (status: {response.status_code})", flush=True)
-                
-            except Exception as sg_error:
-                print(f"ERROR al enviar con SendGrid: {str(sg_error)}", flush=True)
-                raise
+            from sendgrid import SendGridAPIClient
+            from sendgrid.helpers.mail import Mail as SendGridMail, Attachment, FileContent, FileName, FileType, Disposition
+            import base64
+            
+            sg_mail = SendGridMail(
+                from_email=current_app.config.get('MAIL_DEFAULT_SENDER'),
+                to_emails=emails_destino,
+                subject=asunto,
+                html_content=cuerpo_html
+            )
+            
+            with open(pdf_path, 'rb') as f:
+                data = f.read()
+            encoded_file = base64.b64encode(data).decode()
+            
+            attached_file = Attachment(
+                FileContent(encoded_file),
+                FileName(f'informe_visita_{visita_id}.pdf'),
+                FileType('application/pdf'),
+                Disposition('attachment')
+            )
+            sg_mail.attachment = attached_file
+            
+            sg = SendGridAPIClient(current_app.config.get('SENDGRID_API_KEY'))
+            sg.send(sg_mail)
         else:
             # Fallback a SMTP tradicional
-            print(f"DEBUG: Usando SMTP: {current_app.config.get('MAIL_SERVER')}:{current_app.config.get('MAIL_PORT')}", flush=True)
-            print(f"DEBUG: Usuario SMTP: {current_app.config.get('MAIL_USERNAME')}", flush=True)
-            
-            try:
+            for email in emails_destino:
+                msg = Message(
+                    subject=asunto,
+                    recipients=[email],
+                    html=cuerpo_html
+                )
+                with open(pdf_path, 'rb') as pdf_file:
+                    msg.attach(
+                        filename=f"informe_visita_{visita_id}.pdf",
+                        content_type="application/pdf",
+                        data=pdf_file.read()
+                    )
                 mail.send(msg)
-                print(f"DEBUG: Correo enviado exitosamente con SMTP", flush=True)
-            except Exception as mail_error:
-                print(f"ERROR al enviar correo con SMTP: {str(mail_error)}", flush=True)
-                print(f"SUGERENCIA: Railway bloquea SMTP. Usa SendGrid configurando USE_SENDGRID=true y SENDGRID_API_KEY", flush=True)
-                raise
+        
+        return True
+    except Exception as e:
+        print(f"ERROR en _enviar_informe_email: {str(e)}", flush=True)
+        import traceback
+        traceback.print_exc()
+        raise
+
+@routes.route('/enviar-informe/<string:visita_id>', methods=['POST', 'OPTIONS'])
+def enviar_informe(visita_id):
+    """Envía el informe de visita por correo electrónico manualmente"""
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    
+    try:
+        data = request.json
+        email_destino = data.get('email_destino')
+        
+        if not email_destino:
+            return jsonify({'message': 'El correo de destino es requerido'}), 400
+        
+        _enviar_informe_email(visita_id, email_destino)
         
         return jsonify({
             'message': 'Informe enviado exitosamente',
@@ -1092,6 +1086,7 @@ def enviar_informe(visita_id):
         
     except Exception as e:
         print(f"DEBUG: Error al enviar correo: {str(e)}", flush=True)
+        import traceback
         traceback.print_exc()
         return jsonify({'message': f'Error al enviar correo: {str(e)}'}), 500
 
