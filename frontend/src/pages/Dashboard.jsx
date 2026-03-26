@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, Dialog, DialogContent, DialogTitle, DialogActions, TextField, Alert, Skeleton } from '@mui/material';
+import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, IconButton, Dialog, DialogContent, DialogTitle, DialogActions, TextField, Alert, Skeleton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axiosConfig';
 import Navbar from '../components/Navbar';
 import Loader from '../components/Loader';
 import AddIcon from '@mui/icons-material/Add';
-import BusinessIcon from '@mui/icons-material/Business';
-import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
-import AssignmentIcon from '@mui/icons-material/Assignment';
 import { Download, Delete, Email } from '@mui/icons-material';
 
 const Dashboard = () => {
@@ -219,124 +216,61 @@ const Dashboard = () => {
             Panel de Control
           </Typography>
           
-          {/* Tarjetas de acciones rápidas */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <AssignmentIcon sx={{ fontSize: 40, color: '#1976d2', mb: 2 }} />
-                  <Typography variant="h6" gutterBottom>
-                    Nueva Visita
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Crear un nuevo informe de visita técnica
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-                  <Button 
-                    variant="contained" 
-                    onClick={() => navigate('/visita')}
-                    startIcon={<AddIcon />}
-                    fullWidth
-                  >
-                    Crear Visita
-                  </Button>
-                </CardActions>
-              </Card>
+          {/* Botones de acciones rápidas simplificados */}
+          <Grid container spacing={2} sx={{ mb: 4 }}>
+            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+              <Button 
+                variant="contained" 
+                onClick={() => navigate('/visita')}
+                startIcon={<AddIcon />}
+                fullWidth
+                sx={{ py: 2, borderRadius: 2, flexDirection: 'column', gap: 1 }}
+              >
+                Crear Visita
+              </Button>
             </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <BusinessIcon sx={{ fontSize: 40, color: '#1976d2', mb: 2 }} />
-                  <Typography variant="h6" gutterBottom>
-                    Registrar Cliente
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Agregar un nuevo cliente al sistema
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-                  <Button 
-                    variant="contained" 
-                    onClick={() => navigate('/clientes/new')}
-                    startIcon={<AddIcon />}
-                    fullWidth
-                  >
-                    Nuevo Cliente
-                  </Button>
-                </CardActions>
-              </Card>
+            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+              <Button 
+                variant="contained" 
+                onClick={() => navigate('/clientes/new')}
+                startIcon={<AddIcon />}
+                fullWidth
+                sx={{ py: 2, borderRadius: 2, flexDirection: 'column', gap: 1, bgcolor: '#9c27b0' }}
+              >
+                Nuevo Cliente
+              </Button>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <BusinessIcon sx={{ fontSize: 40, color: '#1976d2', mb: 2 }} />
-                  <Typography variant="h6" gutterBottom>
-                    Registrar Proveedor
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Administra tus proveedores para órdenes de compra
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-                  <Button
-                    variant="contained"
-                    onClick={() => navigate('/proveedores/nuevo')}
-                    startIcon={<AddIcon />}
-                    fullWidth
-                  >
-                    Nuevo Proveedor
-                  </Button>
-                </CardActions>
-              </Card>
+            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+              <Button
+                variant="contained"
+                onClick={() => navigate('/proveedores/nuevo')}
+                startIcon={<AddIcon />}
+                fullWidth
+                sx={{ py: 2, borderRadius: 2, flexDirection: 'column', gap: 1, bgcolor: '#2e7d32' }}
+              >
+                Nuevo Proveedor
+              </Button>
             </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <SupervisorAccountIcon sx={{ fontSize: 40, color: '#1976d2', mb: 2 }} />
-                  <Typography variant="h6" gutterBottom>
-                    Registrar Supervisor
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Agregar supervisores y técnicos
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-                  <Button 
-                    variant="contained" 
-                    onClick={() => navigate('/supervisores/new')}
-                    startIcon={<AddIcon />}
-                    fullWidth
-                  >
-                    Nuevo Supervisor
-                  </Button>
-                </CardActions>
-              </Card>
+            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+              <Button 
+                variant="contained" 
+                onClick={() => navigate('/supervisores/new')}
+                startIcon={<AddIcon />}
+                fullWidth
+                sx={{ py: 2, borderRadius: 2, flexDirection: 'column', gap: 1, bgcolor: '#ed6c02' }}
+              >
+                Nuevo Supervisor
+              </Button>
             </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <BusinessIcon sx={{ fontSize: 40, color: '#1976d2', mb: 2 }} />
-                  <Typography variant="h6" gutterBottom>
-                    Mi Empresa
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Configurar datos de la empresa
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-                  <Button 
-                    variant="outlined" 
-                    onClick={() => navigate('/empresa')}
-                    fullWidth
-                  >
-                    Configurar
-                  </Button>
-                </CardActions>
-              </Card>
+            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+              <Button 
+                variant="outlined" 
+                onClick={() => navigate('/empresa')}
+                fullWidth
+                sx={{ py: 2, borderRadius: 2, flexDirection: 'column', gap: 1 }}
+              >
+                Configurar Empresa
+              </Button>
             </Grid>
           </Grid>
 
