@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction, Dialog, DialogContent, DialogTitle, DialogActions, TextField, Alert, Skeleton } from '@mui/material';
+import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, Dialog, DialogContent, DialogTitle, DialogActions, TextField, Alert, Skeleton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axiosConfig';
 import Navbar from '../components/Navbar';
@@ -8,7 +8,7 @@ import AddIcon from '@mui/icons-material/Add';
 import BusinessIcon from '@mui/icons-material/Business';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { Download, Visibility, Delete, Email } from '@mui/icons-material';
+import { Download, Delete, Email } from '@mui/icons-material';
 
 const Dashboard = () => {
   const [visitas, setVisitas] = useState([]);
