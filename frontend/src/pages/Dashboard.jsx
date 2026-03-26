@@ -401,50 +401,50 @@ const Dashboard = () => {
                   <ListItem 
                     key={v.id} 
                     sx={{ 
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { xs: 'flex-start', sm: 'center' },
                       '&:hover': { backgroundColor: '#f5f5f5' },
                       borderRadius: 1,
-                      mb: 1,
-                      border: '1px solid #e0e0e0'
+                      mb: 2,
+                      p: 2,
+                      border: '1px solid #e0e0e0',
+                      gap: { xs: 1, sm: 2 }
                     }}
                   >
                     <ListItemText 
                       primary={`Visita ${v.id} - ${v.cliente}`} 
                       secondary={`Fecha: ${v.fecha} | Supervisor: ${v.supervisor}`} 
                     />
-                    <ListItemSecondaryAction>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      gap: 1, 
+                      mt: { xs: 1, sm: 0 },
+                      width: { xs: '100%', sm: 'auto' },
+                      justifyContent: { xs: 'flex-end', sm: 'center' }
+                    }}>
                       <IconButton 
-                        edge="end" 
-                        onClick={() => navigate(`/visita/${v.id}`)}
-                        sx={{ mr: 1 }}
-                        title="Ver detalles"
-                      >
-                        <Visibility />
-                      </IconButton>
-                      <IconButton 
-                        edge="end" 
                         onClick={() => handleDownloadPDF(v.id)}
-                        sx={{ mr: 1 }}
+                        disabled={loadingPDF}
                         title="Descargar PDF"
+                        sx={{ color: '#1e3a8a', bgcolor: 'rgba(30, 58, 138, 0.05)' }}
                       >
                         <Download />
                       </IconButton>
                       <IconButton 
-                        edge="end" 
                         onClick={() => handleOpenEmailDialog(v)}
-                        sx={{ mr: 1, color: '#EA4335' }}
                         title="Enviar por correo"
+                        sx={{ color: '#EA4335', bgcolor: 'rgba(234, 67, 53, 0.05)' }}
                       >
                         <Email />
                       </IconButton>
                       <IconButton 
-                        edge="end" 
                         onClick={() => handleDeleteVisita(v.id)}
                         title="Eliminar visita"
-                        sx={{ color: 'red' }}
+                        sx={{ color: 'red', bgcolor: 'rgba(255, 0, 0, 0.05)' }}
                       >
                         <Delete />
                       </IconButton>
-                    </ListItemSecondaryAction>
+                    </Box>
           </ListItem>
         ))}
       </List>

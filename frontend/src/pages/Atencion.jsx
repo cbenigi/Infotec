@@ -158,22 +158,24 @@ const Atencion = () => {
                   </Typography>
                 )}
 
-                <Box display="flex" gap={1} mt={2}>
-                  <IconButton 
-                    size="small" 
-                    color="primary" 
-                    onClick={() => handleView(item)}
-                  >
-                    <ViewIcon />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    color="secondary" 
-                    onClick={() => handleEdit(item)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                </Box>
+                {(item.tipo !== 'visita') && (
+                  <Box display="flex" gap={1} mt={2}>
+                    <IconButton 
+                      size="small" 
+                      color="primary" 
+                      onClick={() => handleView(item)}
+                    >
+                      <ViewIcon />
+                    </IconButton>
+                    <IconButton 
+                      size="small" 
+                      color="secondary" 
+                      onClick={() => handleEdit(item)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Box>
+                )}
               </CardContent>
             </Card>
           </Grid>
