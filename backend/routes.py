@@ -138,19 +138,16 @@ def handle_exception(e):
     print(f"TRACEBACK: {traceback.format_exc()}")
     return jsonify({'message': f'Error interno: {str(e)}'}), 500
 
-# @routes.before_request
-# def log_request_info():
-#     print(f"REQUEST: {request.method} {request.path}")
-#     print(f"HEADERS: {dict(request.headers)}")
-#     print(f"CONTENT_TYPE: {request.content_type}")
-#     if request.is_json:
-#         print(f"JSON_DATA: {request.get_json()}")
-#     else:
-#         print(f"FORM_DATA: {request.form}")
-#         print(f"RAW_DATA: {request.get_data()}")
+@routes.before_request
+def log_request_info():
+    print(f"DEBUG REQUEST: {request.method} {request.path}", flush=True)
+    # print(f"HEADERS: {dict(request.headers)}")
+    # if request.is_json:
+    #     print(f"JSON_DATA: {request.get_json()}")
 
 # Autenticación básica
-@routes.route('/login', methods=['GET', 'POST', 'OPTIONS'])
+@routes.route('/login', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+@routes.route('/api/login', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
 def login():
     # Responder preflight CORS
     if request.method == 'OPTIONS':
