@@ -7,10 +7,14 @@ from flask_cors import CORS
 from models import db
 from config import config
 
+from datetime import timedelta
+
 # Cargar variables de entorno desde .env
 load_dotenv()
 
 app = Flask(__name__)
+# Duración de sesión permanente (30 días)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
 # Configurar según el entorno
 config_name = os.environ.get('FLASK_ENV', 'default')

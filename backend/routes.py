@@ -160,8 +160,33 @@ def login():
     if user and user.check_password(data['password']):
         session['user_id'] = user.id
         session['rol'] = user.rol
-        return jsonify({'message': 'Login exitoso', 'rol': user.rol}), 200
+        # Si se solicita persistencia (ej. desde PWA)
+        if data.get('remember'):
+            session.permanent = True
+        return jsonify({
+            'message': 'Login exitoso', 
+            'rol': user.rol,
+            'nombre': user.nombre
+        }), 200
     return jsonify({'message': 'Credenciales inválidas'}), 401
+
+@routes.route('/check-session', methods=['GET'])
+def check_session():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'logged_in': False}), 200
+    
+    user = User.query.get(user_id)
+    if not user:
+        session.clear()
+        return jsonify({'logged_in': False}), 200
+        
+    return jsonify({
+        'logged_in': True,
+        'user_id': user.id,
+        'rol': user.rol,
+        'nombre': user.nombre
+    }), 200
 
 @routes.route('/logout', methods=['POST'])
 def logout():

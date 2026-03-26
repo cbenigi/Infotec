@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TextField,
   Button,
@@ -23,20 +23,45 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  // Verificar si ya hay una sesión activa al cargar
+  useEffect(() => {
+    const verifySession = async () => {
+      try {
+        const res = await axios.get('/check-session');
+        if (res.data.logged_in) {
+          localStorage.setItem('rol', res.data.rol);
+          localStorage.setItem('userName', res.data.nombre);
+          localStorage.setItem('userId', String(res.data.user_id));
+          
+          const targetRoute = res.data.rol === 'nomina' ? '/dashboard/nomina' : '/dashboard';
+          navigate(targetRoute);
+        }
+      } catch (err) {
+        console.error('Error al verificar sesión:', err);
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+    verifySession();
+  }, [navigate]);
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post('/login', { email, password });
-      localStorage.setItem('token', 'basic'); // Simular token
-      localStorage.setItem('rol', res.data.rol);
+      // Detectar si es PWA (modo standalone)
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches;
       
-      // Obtener información del usuario
-      const usersRes = await axios.get('/usuarios');
-      const currentUser = usersRes.data.find(u => u.email === email);
-      if (currentUser) {
-        localStorage.setItem('userName', currentUser.nombre);
-        localStorage.setItem('userId', String(currentUser.id));
-      }
+      const res = await axios.post('/login', { 
+        email, 
+        password,
+        remember: isPWA // Activar sesión persistente solo en PWA
+      });
+      
+      localStorage.setItem('token', 'basic'); 
+      localStorage.setItem('rol', res.data.rol);
+      localStorage.setItem('userName', res.data.nombre);
+      // El backend ahora devuelve nombre directamente
       
       const targetRoute = res.data.rol === 'nomina' ? '/dashboard/nomina' : '/dashboard';
       navigate(targetRoute);
@@ -113,7 +138,12 @@ const Login = () => {
         padding: 4,
         backgroundColor: 'transparent'
       }}>
-        <Paper elevation={6} sx={{ p: 5, maxWidth: 450, width: '100%', borderRadius: 3 }}>
+        {checkingSession ? (
+          <Box sx={{ color: '#1976d2', textAlign: 'center' }}>
+            <Typography>Cargando sesión...</Typography>
+          </Box>
+        ) : (
+          <Paper elevation={6} sx={{ p: 5, maxWidth: 450, width: '100%', borderRadius: 3 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography component="h1" variant="h4" sx={{ fontWeight: 600, color: '#1976d2', mb: 1 }}>
               Iniciar Sesión
@@ -196,7 +226,8 @@ const Login = () => {
               Regístrate aquí
             </Link>
           </Box>
-        </Paper>
+          </Paper>
+        )}
       </Grid>
     </Grid>
     </Box>
