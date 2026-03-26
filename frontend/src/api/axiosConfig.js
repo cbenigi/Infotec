@@ -11,4 +11,12 @@ const apiUrl = process.env.NODE_ENV === 'production'
 
 axios.defaults.baseURL = apiUrl;
 
+// Interceptor para asegurar que las rutas sean relativas al baseURL
+axios.interceptors.request.use((config) => {
+  if (config.url && config.url.startsWith('/')) {
+    config.url = config.url.substring(1);
+  }
+  return config;
+});
+
 export default axios;

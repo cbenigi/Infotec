@@ -29,7 +29,7 @@ const Login = () => {
     const verifySession = async () => {
       try {
         const isPWA = window.matchMedia('(display-mode: standalone)').matches;
-        const res = await axios.get('/check-session');
+        const res = await axios.get('check-session');
         
         // Solo auto-login si es PWA. En PC siempre pedir login.
         if (res.data.logged_in && isPWA) {
@@ -52,7 +52,7 @@ const Login = () => {
       // Detectar si es PWA (modo standalone)
       const isPWA = window.matchMedia('(display-mode: standalone)').matches;
       
-      const res = await axios.post('/login', { 
+      const res = await axios.post('login', { 
         email, 
         password,
         remember: isPWA // Activar sesión persistente solo en PWA
