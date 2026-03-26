@@ -28,8 +28,11 @@ const Login = () => {
   useEffect(() => {
     const verifySession = async () => {
       try {
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches;
         const res = await axios.get('/check-session');
-        if (res.data.logged_in) {
+        
+        // Solo auto-login si es PWA. En PC siempre pedir login.
+        if (res.data.logged_in && isPWA) {
           localStorage.setItem('rol', res.data.rol);
           localStorage.setItem('userName', res.data.nombre);
           localStorage.setItem('userId', String(res.data.user_id));
@@ -58,7 +61,9 @@ const Login = () => {
       localStorage.setItem('token', 'basic'); 
       localStorage.setItem('rol', res.data.rol);
       localStorage.setItem('userName', res.data.nombre);
-      // El backend ahora devuelve nombre directamente
+      localStorage.setItem('userId', String(res.data.user_id));
+      
+      console.log('Login exitoso:', res.data);
       
       const targetRoute = res.data.rol === 'nomina' ? '/dashboard/nomina' : '/dashboard';
       navigate(targetRoute);
