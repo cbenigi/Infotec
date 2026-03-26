@@ -2,8 +2,8 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://web-production-9d6e7.up.railway.app/$1"
+      "source": "/api/:path*",
+      "destination": "https://web-production-9d6e7.up.railway.app/:path*"
     },
     {
       "source": "/(.*)",

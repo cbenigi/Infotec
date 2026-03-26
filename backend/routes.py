@@ -150,11 +150,15 @@ def handle_exception(e):
 #         print(f"RAW_DATA: {request.get_data()}")
 
 # Autenticación básica
-@routes.route('/login', methods=['POST', 'OPTIONS'])
+@routes.route('/login', methods=['GET', 'POST', 'OPTIONS'])
 def login():
     # Responder preflight CORS
     if request.method == 'OPTIONS':
         return ('', 200)
+    
+    if request.method == 'GET':
+        return jsonify({'message': 'GET not supported for login, use POST'}), 200
+        
     data = request.json
     user = User.query.filter_by(email=data['email']).first()
     if user and user.check_password(data['password']):
