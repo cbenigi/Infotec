@@ -19,7 +19,8 @@ import {
   Select,
   MenuItem,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Skeleton
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -99,9 +100,22 @@ const Atencion = () => {
   const renderSearchResults = () => {
     if (loading) {
       return (
-        <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
-        </Box>
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          {[1, 2, 3].map((i) => (
+            <Grid item xs={12} md={6} lg={4} key={i}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent>
+                  <Skeleton variant="text" width="60%" height={32} />
+                  <Skeleton variant="text" width="40%" />
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                    <Skeleton variant="circular" width={32} height={32} />
+                    <Skeleton variant="circular" width={32} height={32} />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       );
     }
 

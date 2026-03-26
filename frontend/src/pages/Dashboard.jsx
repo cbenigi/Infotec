@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction, Dialog, DialogContent, DialogTitle, DialogActions, TextField, Alert } from '@mui/material';
+import { Container, Typography, List, ListItem, ListItemText, Button, Box, Grid, Paper, Card, CardContent, CardActions, IconButton, ListItemSecondaryAction, Dialog, DialogContent, DialogTitle, DialogActions, TextField, Alert, Skeleton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axiosConfig';
 import Navbar from '../components/Navbar';
@@ -12,6 +12,7 @@ import { Download, Visibility, Delete, Email } from '@mui/icons-material';
 
 const Dashboard = () => {
   const [visitas, setVisitas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [loadingPDF, setLoadingPDF] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [selectedVisita, setSelectedVisita] = useState(null);
@@ -22,6 +23,8 @@ const Dashboard = () => {
   const [gestionandoSolicitud, setGestionandoSolicitud] = useState(false);
   const navigate = useNavigate();
   const rol = localStorage.getItem('rol') || 'aseo';
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [offlineVisitas, setOfflineVisitas] = useState([]);
 
   const handleDownloadPDF = async (visitaId) => {
     setLoadingPDF(true);
@@ -96,43 +99,78 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchVisitas = async () => {
+  const syncOfflineVisitas = async () => {
+    const pending = JSON.parse(localStorage.getItem('pending_visitas') || '[]');
+    if (pending.length === 0) return;
+
+    setIsSyncing(true);
+    let successCount = 0;
+    const stillPending = [];
+
+    for (const visita of pending) {
       try {
-        // Intentar por empresa primero
-        let url = '/visitas';
-        try {
-          const emp = await axios.get('/empresa');
-          if (emp.data && emp.data.exists && emp.data.id) {
-            url = `/visitas?empresa_id=${emp.data.id}`;
-          }
-        } catch { /* sin empresa, seguir */ }
-
-        const role = localStorage.getItem('rol');
-        if (url === '/visitas' && role === 'admin') {
-          url = '/visitas?all=true';
-        }
-        if (url === '/visitas') {
-          const supervisorId = localStorage.getItem('userId');
-          if (supervisorId) url = `/visitas?supervisor_id=${supervisorId}`;
-        }
-
-        const res = await axios.get(url);
-        setVisitas(res.data);
+        const { id, offline, ...cleanData } = visita;
+        await axios.post('/visita', cleanData);
+        successCount++;
       } catch (err) {
-        console.error('Error fetching visitas:', err);
+        console.error('Individual sync error:', err);
+        stillPending.push(visita);
       }
-    };
+    }
 
-    fetchVisitas();
+    localStorage.setItem('pending_visitas', JSON.stringify(stillPending));
+    setOfflineVisitas(stillPending);
+    setIsSyncing(false);
 
-    // Refrescar cuando se cree/actualice una visita o cuando la pestaña recupere foco
-    const handleUpdated = () => fetchVisitas();
-    const handleVisibility = () => { if (document.visibilityState === 'visible') fetchVisitas(); };
+    if (successCount > 0) {
+      alert(`✅ Se sincronizaron ${successCount} visitas pendientes.`);
+      // fetchVisitas se llamará vía visitaUpdated o manualmente
+      window.dispatchEvent(new Event('visitaUpdated'));
+    }
+  };
+
+  const fetchVisitasData = async () => {
+    try {
+      setLoading(true);
+      // Mostrar offline rápido
+      setOfflineVisitas(JSON.parse(localStorage.getItem('pending_visitas') || '[]'));
+
+      let url = '/visitas';
+      try {
+        const emp = await axios.get('/empresa');
+        if (emp.data?.exists && emp.data.id) url = `/visitas?empresa_id=${emp.data.id}`;
+      } catch {}
+
+      const role = localStorage.getItem('rol');
+      if (url === '/visitas' && role === 'admin') url = '/visitas?all=true';
+      if (url === '/visitas') {
+        const subId = localStorage.getItem('userId');
+        if (subId) url = `/visitas?supervisor_id=${subId}`;
+      }
+
+      const res = await axios.get(url);
+      setVisitas(res.data);
+    } catch (err) {
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVisitasData();
+    syncOfflineVisitas();
+
+    const handleUpdated = () => fetchVisitasData();
+    const handleVisibility = () => { if (document.visibilityState === 'visible') fetchVisitasData(); };
+    
     window.addEventListener('visitaUpdated', handleUpdated);
+    window.addEventListener('online', syncOfflineVisitas);
     document.addEventListener('visibilitychange', handleVisibility);
+    
     return () => {
       window.removeEventListener('visitaUpdated', handleUpdated);
+      window.removeEventListener('online', syncOfflineVisitas);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
@@ -304,10 +342,60 @@ const Dashboard = () => {
 
           {/* Lista de visitas recientes */}
           <Paper elevation={2} sx={{ p: 3 }}>
+            {/* Visitas Offline Pendientes */}
+            {offlineVisitas.length > 0 && (
+              <Box sx={{ mb: 4 }}>
+                <Alert 
+                  severity="warning" 
+                  action={
+                    <Button color="inherit" size="small" onClick={syncOfflineVisitas} disabled={isSyncing}>
+                      {isSyncing ? 'Sincronizando...' : 'Sincronizar ahora'}
+                    </Button>
+                  }
+                  sx={{ mb: 2, borderRadius: 2 }}
+                >
+                  Tienes {offlineVisitas.length} visita(s) guardadas localmente esperando conexión.
+                </Alert>
+                <List>
+                  {offlineVisitas.map((v) => (
+                    <ListItem 
+                      key={v.id} 
+                      sx={{ 
+                        bgcolor: 'rgba(255, 152, 0, 0.05)',
+                        border: '1px dashed #ff9800',
+                        borderRadius: 1,
+                        mb: 1
+                      }}
+                    >
+                      <ListItemText 
+                        primary={`[OFFLINE] Visita - ${v.cliente_nombre || 'Cliente'}`} 
+                        secondary={`Pendiente de sincronizar`} 
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+            )}
+
             <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
               Visitas Recientes
             </Typography>
-            {visitas.length > 0 ? (
+            {loading ? (
+              <List>
+                {[1, 2, 3].map((i) => (
+                  <ListItem key={i} sx={{ border: '1px solid #e0e0e0', borderRadius: 1, mb: 1, p: 2 }}>
+                    <ListItemText
+                      primary={<Skeleton variant="text" width="40%" height={30} />}
+                      secondary={<Skeleton variant="text" width="60%" />}
+                    />
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Skeleton variant="circular" width={40} height={40} />
+                      <Skeleton variant="circular" width={40} height={40} />
+                    </Box>
+                  </ListItem>
+                ))}
+              </List>
+            ) : visitas.length > 0 ? (
               <List>
         {visitas.map((v) => (
                   <ListItem 

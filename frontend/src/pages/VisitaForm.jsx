@@ -132,7 +132,6 @@ const VisitaForm = () => {
       return;
     }
 
-    setLoading(true);
     try {
       const visitaData = {
         ...form,
@@ -154,6 +153,27 @@ const VisitaForm = () => {
       window.dispatchEvent(new Event('visitaUpdated'));
       navigate('/dashboard');
     } catch (err) {
+      console.error('Error al guardar visita:', err);
+      
+      // Si el error es de red o el servidor no responde
+      if (!id && (!err.response || err.message === 'Network Error')) {
+        const pendingVisitas = JSON.parse(localStorage.getItem('pending_visitas') || '[]');
+        pendingVisitas.push({
+          ...form,
+          id: `OFFLINE_${Date.now()}`,
+          offline: true,
+          zonas: [
+            ...zonas.aseo.map(z => ({ ...z, seccion: 'Aseo y Limpieza' })),
+            ...zonas.seguridad.map(z => ({ ...z, seccion: 'Seguridad y Salud' })),
+            ...zonas.colaborador.map(z => ({ ...z, seccion: 'Colaborador' }))
+          ]
+        });
+        localStorage.setItem('pending_visitas', JSON.stringify(pendingVisitas));
+        alert('📦 ¡Sin conexión! La visita se guardó localmente en el dispositivo. Podrás sincronizarla cuando recuperes internet.');
+        navigate('/dashboard');
+        return;
+      }
+      
       alert('Error al guardar visita: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
