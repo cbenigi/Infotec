@@ -23,7 +23,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const [checkingSession, setCheckingSession] = useState(true);
 
   // Verificar si ya hay una sesión activa al cargar
   useEffect(() => {
@@ -40,8 +39,6 @@ const Login = () => {
         }
       } catch (err) {
         console.error('Error al verificar sesión:', err);
-      } finally {
-        setCheckingSession(false);
       }
     };
     verifySession();
@@ -138,12 +135,7 @@ const Login = () => {
         padding: 4,
         backgroundColor: 'transparent'
       }}>
-        {checkingSession ? (
-          <Box sx={{ color: '#1976d2', textAlign: 'center' }}>
-            <Typography>Cargando sesión...</Typography>
-          </Box>
-        ) : (
-          <Paper elevation={6} sx={{ p: 5, maxWidth: 450, width: '100%', borderRadius: 3 }}>
+        <Paper elevation={6} sx={{ p: 5, maxWidth: 450, width: '100%', borderRadius: 3 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography component="h1" variant="h4" sx={{ fontWeight: 600, color: '#1976d2', mb: 1 }}>
               Iniciar Sesión
@@ -227,7 +219,6 @@ const Login = () => {
             </Link>
           </Box>
           </Paper>
-        )}
       </Grid>
     </Grid>
     </Box>
