@@ -40,20 +40,22 @@ CORS(app,
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
 # Cookies de sesión
-if app.config.get('DEBUG') or os.environ.get('FLASK_ENV') == 'development':
-    # Entorno de desarrollo (Local): Secure=False para soportar HTTP (necesario para acceso desde IP/móvil)
-    app.config.update(
-        SESSION_COOKIE_SAMESITE='Lax',
-        SESSION_COOKIE_SECURE=False,
-    )
-    print("🍪 Cookies configuradas para DESARROLLO (Secure=False, SameSite=Lax)")
-else:
+is_production = os.environ.get('FLASK_ENV') == 'production' or not (app.config.get('DEBUG') or os.environ.get('FLASK_ENV') == 'development')
+
+if is_production:
     # Entorno de producción (Deploy): Secure=True y SameSite=None para soportar cross-site
     app.config.update(
         SESSION_COOKIE_SAMESITE='None',
         SESSION_COOKIE_SECURE=True,
     )
     print("🍪 Cookies configuradas para PRODUCCIÓN (Secure=True, SameSite=None)")
+else:
+    # Entorno de desarrollo (Local): Secure=False para soportar HTTP
+    app.config.update(
+        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SECURE=False,
+    )
+    print("🍪 Cookies configuradas para DESARROLLO (Secure=False, SameSite=Lax)")
 
 # Inicializar base de datos
 db.init_app(app)

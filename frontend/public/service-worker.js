@@ -1,4 +1,4 @@
-const CACHE_NAME = 'proclym-v3';
+const CACHE_NAME = 'proclym-v4';
 const urlsToCache = [
   '/',
   '/index.html',
