@@ -1,14 +1,9 @@
-const CACHE_NAME = 'proclym-v1';
+const CACHE_NAME = 'proclym-v2';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/static/js/main.chunk.js',
-  '/static/js/0.chunk.js',
-  '/static/js/bundle.js',
   '/manifest.json',
-  '/favicon.png',
-  '/logo192.png',
-  '/logo512.png'
+  '/favicon.png'
 ];
 
 self.addEventListener('install', event => {
