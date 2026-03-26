@@ -43,12 +43,13 @@ CORS(app,
 is_production = os.environ.get('FLASK_ENV') == 'production' or not (app.config.get('DEBUG') or os.environ.get('FLASK_ENV') == 'development')
 
 if is_production:
-    # Entorno de producción (Deploy): Secure=True y SameSite=None para soportar cross-site
+    # Entorno de producción: Usar 'Lax' porque el proxy de Vercel (/api) lo vuelve del mismo dominio.
+    # Secure=True es esencial para HTTPS.
     app.config.update(
-        SESSION_COOKIE_SAMESITE='None',
+        SESSION_COOKIE_SAMESITE='Lax',
         SESSION_COOKIE_SECURE=True,
     )
-    print("🍪 Cookies configuradas para PRODUCCIÓN (Secure=True, SameSite=None)")
+    print("🍪 Cookies configuradas para PRODUCCIÓN (Secure=True, SameSite=Lax via Proxy)")
 else:
     # Entorno de desarrollo (Local): Secure=False para soportar HTTP
     app.config.update(

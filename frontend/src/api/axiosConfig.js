@@ -4,7 +4,11 @@ import axios from 'axios';
 axios.defaults.withCredentials = true;
 
 // Configurar la URL base
-const apiUrl = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000`;
+// Configurar la URL base. En producción usar el proxy de Vercel (/api)
+const apiUrl = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : (process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000`);
+
 axios.defaults.baseURL = apiUrl;
 
 export default axios;
