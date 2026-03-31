@@ -1040,13 +1040,23 @@ def _enviar_informe_email(visita_id, emails_destino):
             raise Exception("Configuración de correo no encontrada")
         
         # Intentar con SendGrid primero
-        if current_app.config.get('USE_SENDGRID') and current_app.config.get('SENDGRID_API_KEY'):
+        use_sendgrid = current_app.config.get('USE_SENDGRID')
+        sg_key = current_app.config.get('SENDGRID_API_KEY')
+        default_sender = current_app.config.get('MAIL_DEFAULT_SENDER')
+        
+        print(f"DEBUG MAIL: USE_SENDGRID={use_sendgrid}, HAS_KEY={bool(sg_key)}, SENDER={default_sender}", flush=True)
+
+        if use_sendgrid and sg_key:
+            print("DEBUG: Intentando envío vía SendGrid SDK...", flush=True)
             from sendgrid import SendGridAPIClient
             from sendgrid.helpers.mail import Mail as SendGridMail, Attachment, FileContent, FileName, FileType, Disposition
             import base64
             
+            if not default_sender:
+                print("WARNING: MAIL_DEFAULT_SENDER no está configurado. El envío podría fallar.", flush=True)
+
             sg_mail = SendGridMail(
-                from_email=current_app.config.get('MAIL_DEFAULT_SENDER'),
+                from_email=default_sender,
                 to_emails=emails_destino,
                 subject=asunto,
                 html_content=cuerpo_html
@@ -1064,10 +1074,14 @@ def _enviar_informe_email(visita_id, emails_destino):
             )
             sg_mail.attachment = attached_file
             
-            sg = SendGridAPIClient(current_app.config.get('SENDGRID_API_KEY'))
-            sg.send(sg_mail)
+            sg = SendGridAPIClient(api_key=sg_key)
+            response = sg.send(sg_mail)
+            print(f"DEBUG SendGrid SDK: Status Code {response.status_code}", flush=True)
+            # print(f"DEBUG SendGrid SDK: Body {response.body}", flush=True)
+            # print(f"DEBUG SendGrid SDK: Headers {response.headers}", flush=True)
         else:
             # Fallback a SMTP tradicional
+            print(f"DEBUG: Enviando vía SMTP tradicional a {emails_destino}...", flush=True)
             for email in emails_destino:
                 msg = Message(
                     subject=asunto,
@@ -1081,6 +1095,7 @@ def _enviar_informe_email(visita_id, emails_destino):
                         data=pdf_file.read()
                     )
                 mail.send(msg)
+            print("DEBUG: SMTP enviado exitosamente", flush=True)
         
         return True
     except Exception as e:

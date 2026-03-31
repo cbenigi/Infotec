@@ -68,7 +68,10 @@ print(f"📧 Configuración de correo:")
 print(f"   - Servidor: {app.config.get('MAIL_SERVER', 'No configurado')}")
 print(f"   - Puerto: {app.config.get('MAIL_PORT', 'No configurado')}")
 print(f"   - Usuario: {app.config.get('MAIL_USERNAME', 'No configurado')}")
+print(f"   - Remitente Default: {app.config.get('MAIL_DEFAULT_SENDER', 'No configurado')}")
 print(f"   - TLS: {app.config.get('MAIL_USE_TLS', False)}")
+print(f"   - Usar SendGrid: {app.config.get('USE_SENDGRID', False)}")
+print(f"   - SendGrid Key: {'Configurada' if app.config.get('SENDGRID_API_KEY') else 'No configurada'}")
 
 # Crear tablas
 with app.app_context():
