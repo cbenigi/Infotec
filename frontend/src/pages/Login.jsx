@@ -82,6 +82,7 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
