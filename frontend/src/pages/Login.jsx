@@ -211,9 +211,16 @@ const Login = () => {
               borderRadius: 2,
               boxShadow: 3
             }}
+            disabled={loading}
           >
-            Iniciar Sesión
+            {loading ? 'Iniciando...' : 'Iniciar Sesión'}
           </Button>
+
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Link component={RouterLink} to="/forgot-password" variant="body2" sx={{ fontWeight: 600 }}>
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </Box>
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

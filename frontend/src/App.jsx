@@ -16,6 +16,7 @@ import CotizacionForm from './pages/CotizacionForm';
 import OrdenCompraHistorial from './pages/OrdenCompraHistorial';
 import OrdenCompraForm from './pages/OrdenCompraForm';
 import ProveedorForm from './pages/ProveedorForm';
+import ForgotPassword from './pages/ForgotPassword';
 
 const theme = createTheme({
   palette: {
@@ -46,6 +47,7 @@ function App() {
           <Route path="/orden-compra/nueva" element={<OrdenCompraForm />} />
           <Route path="/orden-compra/:id" element={<OrdenCompraForm />} />
           <Route path="/proveedores/nuevo" element={<ProveedorForm />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </Router>

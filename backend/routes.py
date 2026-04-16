@@ -55,7 +55,15 @@ def _generar_consecutivo_orden():
 def _obtener_empresa_actual(user_id):
     if not user_id:
         return None
-    return Empresa.query.filter_by(user_id=user_id).first()
+    # Check if owner
+    emp = Empresa.query.filter_by(user_id=user_id).first()
+    if emp:
+        return emp
+    # Check if collaborator (shared access)
+    rel = EmpresaNominaRelacion.query.filter_by(user_id=user_id).first()
+    if rel:
+        return rel.empresa
+    return None
 
 def _resolver_nombre_comprador(comprador_tipo, comprador_id):
     if comprador_tipo == 'cliente':
@@ -194,6 +202,47 @@ def logout():
     session.clear()
     return jsonify({'message': 'Logout exitoso'}), 200
 
+@routes.route('/reset-password', methods=['POST', 'OPTIONS'])
+def reset_password():
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    
+    data = request.json
+    email = data.get('email', '').strip()
+    nit = data.get('nit', '').strip()
+    new_password = data.get('new_password', '')
+    
+    if not email or not nit or not new_password:
+        return jsonify({'message': 'Email, NIT y nueva contraseña son requeridos'}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'Usuario no encontrado con ese correo'}), 404
+    
+    # Buscar empresas con ese NIT
+    empresas = Empresa.query.filter_by(nit=nit).all()
+    if not empresas:
+        return jsonify({'message': 'No se encontró ninguna empresa registrada con ese NIT'}), 403
+    
+    # Verificar si el usuario tiene acceso a alguna de esas empresas
+    tiene_acceso = False
+    for emp in empresas:
+        if _usuario_tiene_acceso_empresa(user.id, emp.id):
+            tiene_acceso = True
+            break
+    
+    if not tiene_acceso:
+        return jsonify({'message': 'El NIT proporcionado no corresponde a ninguna empresa vinculada a tu cuenta'}), 403
+    
+    # Cambiar contraseña
+    try:
+        user.set_password(new_password)
+        db.session.commit()
+        return jsonify({'message': 'Contraseña restablecida exitosamente. Ahora puedes iniciar sesión.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error al restablecer contraseña: {str(e)}'}), 500
+
 # CRUD Usuarios (solo admin)
 @routes.route('/usuarios', methods=['GET'])
 def get_usuarios():
@@ -281,13 +330,21 @@ def get_empresa():
         return jsonify({'message': 'No autenticado'}), 401
 
     empresa = Empresa.query.filter_by(user_id=user_id).first()
-    if not empresa:
-        return jsonify({'exists': False}), 200
+    if empresa:
+        return jsonify({
+            'exists': True,
+            **_serialize_empresa(empresa, current_user_id=user_id)
+        }), 200
     
-    return jsonify({
-        'exists': True,
-        **_serialize_empresa(empresa, current_user_id=user_id)
-    }), 200
+    # Check if collaborator
+    rel = EmpresaNominaRelacion.query.filter_by(user_id=user_id).first()
+    if rel:
+        return jsonify({
+            'exists': True,
+            **_serialize_empresa(rel.empresa, current_user_id=user_id, es_compartida=True)
+        }), 200
+
+    return jsonify({'exists': False}), 200
 
 @routes.route('/empresa', methods=['POST', 'OPTIONS'])
 def create_empresa():
@@ -459,8 +516,8 @@ def solicitar_acceso_empresa(empresa_id):
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'message': 'No autenticado'}), 401
-    if session.get('rol') != 'nomina':
-        return jsonify({'message': 'Solo usuarios de nómina pueden solicitar acceso'}), 403
+    if session.get('rol') not in ('nomina', 'aseo'):
+        return jsonify({'message': 'Solo usuarios de nómina o aseo pueden solicitar acceso'}), 403
 
     empresa = Empresa.query.get_or_404(empresa_id)
     if empresa.user_id == user_id:
@@ -771,7 +828,7 @@ def create_visita():
         user_id = session.get('user_id')
         print(f"DEBUG: Creando visita - user_id en sesión: {user_id}", flush=True)
         if user_id:
-            emp = Empresa.query.filter_by(user_id=user_id).first()
+            emp = _obtener_empresa_actual(user_id)
             print(f"DEBUG: Empresa encontrada para user_id {user_id}: {emp.id if emp else 'None'}", flush=True)
             if emp:
                 empresa_id = emp.id
@@ -867,7 +924,7 @@ def update_visita(visita_id):
         if not visita.empresa_id:
             user_id = session.get('user_id')
             if user_id:
-                emp = Empresa.query.filter_by(user_id=user_id).first()
+                emp = _obtener_empresa_actual(user_id)
                 if emp:
                     visita.empresa_id = emp.id
         
@@ -926,8 +983,8 @@ def get_visitas():
         if not user_id and not supervisor_id_q:
             return jsonify({'message': 'No autorizado'}), 401
 
-        # Si el usuario tiene empresa, priorizar filtro por empresa
-        empresa = Empresa.query.filter_by(user_id=user_id).first() if user_id else None
+        # Si el usuario tiene empresa (propia o compartida), priorizar filtro por empresa
+        empresa = _obtener_empresa_actual(user_id) if user_id else None
 
         if all_flag and user and user.rol == 'admin':
             visitas = Visita.query.order_by(Visita.fecha.desc()).all()
@@ -1263,7 +1320,7 @@ def get_cotizaciones():
             return jsonify({'message': 'Usuario no encontrado'}), 404
         
         # Obtener empresa del usuario
-        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        empresa = _obtener_empresa_actual(user_id)
         if not empresa:
             return jsonify({'message': 'No hay empresa asociada al usuario'}), 404
         
@@ -1299,7 +1356,7 @@ def get_cotizacion(id):
         # Verificar permisos
         user_id = session.get('user_id')
         user = User.query.get(user_id)
-        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        empresa = _obtener_empresa_actual(user_id)
         
         if cotizacion.empresa_id != empresa.id:
             return jsonify({'message': 'No tienes permiso para ver esta cotización'}), 403
@@ -1342,7 +1399,7 @@ def create_cotizacion():
             return jsonify({'message': 'Usuario no encontrado'}), 404
         
         # Obtener empresa del usuario
-        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        empresa = _obtener_empresa_actual(user_id)
         if not empresa:
             return jsonify({'message': 'No hay empresa asociada al usuario'}), 404
         
@@ -1394,7 +1451,7 @@ def update_cotizacion(id):
         cotizacion = Cotizacion.query.get_or_404(id)
         
         # Verificar permisos
-        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        empresa = _obtener_empresa_actual(user_id)
         if cotizacion.empresa_id != empresa.id:
             return jsonify({'message': 'No tienes permiso para editar esta cotización'}), 403
         
@@ -1444,7 +1501,7 @@ def delete_cotizacion(id):
         cotizacion = Cotizacion.query.get_or_404(id)
         
         # Verificar permisos
-        empresa = Empresa.query.filter_by(user_id=user_id).first()
+        empresa = _obtener_empresa_actual(user_id)
         if cotizacion.empresa_id != empresa.id:
             return jsonify({'message': 'No tienes permiso para eliminar esta cotización'}), 403
         
