@@ -22,6 +22,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Verificar si ya hay una sesión activa al cargar
@@ -48,6 +49,7 @@ const Login = () => {
   }, [navigate]);
 
   const handleLogin = async () => {
+    setLoading(true);
     try {
       // Detectar si es PWA (modo standalone)
       const isPWA = window.matchMedia('(display-mode: standalone)').matches;
@@ -77,8 +79,9 @@ const Login = () => {
       } else {
         alert('Error de conexión. Verifica tu conexión a internet.');
       }
+    } finally {
+      setLoading(false);
     }
-  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
