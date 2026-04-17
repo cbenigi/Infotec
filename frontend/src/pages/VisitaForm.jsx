@@ -87,7 +87,7 @@ const VisitaForm = () => {
     try {
       const response = await axios.get('/usuarios');
       const supervisoresData = response.data.filter(user =>
-        ['supervisor', 'tecnico', 'admin', 'aseo'].includes(user.rol)
+        user.rol === 'supervisor'
       );
       setSupervisores(supervisoresData);
     } catch (err) {
@@ -314,19 +314,25 @@ const VisitaForm = () => {
                   label="Fecha"
                   type="date"
                   value={form.fecha}
-                  onChange={(e) => setForm({ ...form, fecha: e.target.value })}
                   fullWidth
                   InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                  helperText="Fecha capturada automáticamente"
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
-                  label="Hora"
+                  label="Hora de Inicio"
                   type="time"
                   value={form.hora}
-                  onChange={(e) => setForm({ ...form, hora: e.target.value })}
                   fullWidth
                   InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                  helperText="Hora capturada automáticamente"
                 />
               </Grid>
             </Grid>
