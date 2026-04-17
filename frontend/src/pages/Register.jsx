@@ -123,6 +123,7 @@ const Register = () => {
             variant="outlined"
           >
             <MenuItem value="aseo">Aseo</MenuItem>
+            <MenuItem value="supervisor">Supervisor</MenuItem>
             <MenuItem value="nomina">Nómina</MenuItem>
           </TextField>
 

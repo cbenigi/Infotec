@@ -4,6 +4,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    REPORT_SECRET = os.environ.get('REPORT_SECRET') or 'dev-report-secret'
     
     # Configuración de archivos
     UPLOAD_FOLDER = '/app/uploads'

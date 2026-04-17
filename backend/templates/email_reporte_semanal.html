@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Semanal de Visitas</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f7f9; }
+        .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); color: white; padding: 40px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+        .header p { margin: 10px 0 0; opacity: 0.9; }
+        .content { padding: 30px; }
+        .stats-summary { display: flex; justify-content: space-between; margin-bottom: 30px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .stat-item { text-align: center; flex: 1; }
+        .stat-value { display: block; font-size: 28px; font-weight: bold; color: #1e3a8a; }
+        .stat-label { font-size: 12px; color: #64748b; text-transform: uppercase; }
+        .chart-container { margin: 30px 0; text-align: center; background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .chart-container img { max-width: 100%; height: auto; border-radius: 4px; }
+        .table-container { margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 12px; background-color: #f1f5f9; color: #475569; font-size: 13px; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        .footer { background: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+        .btn { display: inline-block; padding: 12px 24px; background-color: #1d4ed8; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; margin-top: 20px; }
+        .period-info { color: #1e3a8a; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if empresa_logo %}
+            <img src="{{ empresa_logo }}" alt="Logo" style="width: 100px; height: auto; margin-bottom: 15px;">
+            {% endif %}
+            <h1>Reporte Semanal de Supervisión</h1>
+            <p>Empresa: <strong>{{ empresa_nombre }}</strong></p>
+        </div>
+        
+        <div class="content">
+            <p>Cordial saludo, <strong>{{ owner_nombre }}</strong>.</p>
+            <p>Adjuntamos el reporte consolidado de las visitas técnicas realizadas por su equipo de supervisores durante el periodo: <br>
+            <span class="period-info">{{ fecha_inicio }} — {{ fecha_fin }}</span></p>
+
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-value">{{ total_visitas }}</span>
+                    <span class="stat-label">Total Visitas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ total_supervisores }}</span>
+                    <span class="stat-label">Supervisores Activos</span>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 style="margin-top: 0; color: #334155; font-size: 16px;">Distribución de Visitas</h3>
+                <img src="{{ chart_url }}" alt="Gráfica de Visitas">
+            </div>
+
+            <div class="table-container">
+                <h3 style="color: #334155; font-size: 16px;">Detalle por Supervisor</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Supervisor</th>
+                            <th style="text-align: right;">Cant. Visitas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in detail %}
+                        <tr>
+                            <td>{{ item.nombre }}</td>
+                            <td style="text-align: right; font-weight: 600;">{{ item.cantidad }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ dashboard_url }}" class="btn">Ir al Dashboard</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; {{ year }} PROCLYM &bull; Sistema de Gestión Técnica</p>
+            <p>Este es un correo automático generado por el sistema. Por favor no responda a este mensaje.</p>
+        </div>
+    </div>
+</body>
+</html>

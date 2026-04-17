@@ -21,9 +21,11 @@ from models import (
 )
 from sqlalchemy import or_
 from werkzeug.security import check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 import traceback
 import re
+import json
+import urllib.parse
 
 # Inicializar Mail
 mail = Mail()
@@ -516,7 +518,7 @@ def solicitar_acceso_empresa(empresa_id):
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'message': 'No autenticado'}), 401
-    if session.get('rol') not in ('nomina', 'aseo'):
+    if session.get('rol') not in ('nomina', 'aseo', 'supervisor'):
         return jsonify({'message': 'Solo usuarios de nómina o aseo pueden solicitar acceso'}), 403
 
     empresa = Empresa.query.get_or_404(empresa_id)
@@ -1860,8 +1862,146 @@ def generar_pdf_orden(id):
         pdf_path = generator.generar_pdf(id)
         if not pdf_path or not os.path.exists(pdf_path):
             return jsonify({'message': 'No se pudo generar el PDF'}), 500
+
         return send_file(pdf_path, as_attachment=True, download_name=f'orden-compra-{orden.numero}.pdf')
     except Exception as e:
         print(f"Error al generar PDF de orden: {str(e)}")
         traceback.print_exc()
         return jsonify({'message': f'Error al generar PDF de orden: {str(e)}'}), 500
+
+# --- Reportes Semanales ---
+
+def _get_weekly_dates():
+    """Retorna fecha de inicio (Lunes previo) y fin (Sábado previo) en el periodo de reporte"""
+    # Usar hora actual (asumida en UTC o local segun el servidor, pero ajustaremos a Colombia)
+    # Colombia es UTC-5. Si el servidor está en UTC, restamos 5 horas.
+    ahora = datetime.utcnow() - timedelta(hours=5)
+    
+    # Si hoy es lunes (weekday 0), queremos el lunes pasado (hace 7 días) al sábado pasado (hace 2 días)
+    # Si hoy no es lunes, igual calculamos respecto al último lunes transcurrido.
+    dias_desde_lunes = ahora.weekday()
+    ultimo_lunes = (ahora - timedelta(days=dias_desde_lunes + 7)).date()
+    ultimo_sabado = (ultimo_lunes + timedelta(days=5))
+    
+    return ultimo_lunes, ultimo_sabado
+
+def _generate_chart_url(data):
+    """Genera una URL de QuickChart para la gráfica de visitas"""
+    labels = [item['nombre'] for item in data]
+    counts = [item['cantidad'] for item in data]
+    
+    chart_config = {
+        'type': 'bar',
+        'data': {
+            'labels': labels,
+            'datasets': [{
+                'label': 'Visitas por Supervisor',
+                'data': counts,
+                'backgroundColor': 'rgba(29, 78, 216, 0.7)',
+                'borderColor': 'rgb(29, 78, 216)',
+                'borderWidth': 1
+            }]
+        },
+        'options': {
+            'plugins': {
+                'datalabels': {
+                    'anchor': 'end',
+                    'align': 'top',
+                    'color': '#1e3a8a',
+                    'font': {'weight': 'bold'}
+                }
+            },
+            'scales': {
+                'yAxes': [{ 'ticks': { 'beginAtZero': True, 'stepSize': 1 } }]
+            }
+        }
+    }
+    
+    params = urllib.parse.quote(json.dumps(chart_config))
+    return f"https://quickchart.io/chart?c={params}"
+
+def _enviar_reporte_semanal_empresa(empresa):
+    """Genera y envía el reporte semanal para una empresa específica"""
+    try:
+        owner = empresa.user
+        if not owner or not owner.email:
+            print(f"DEBUG REPORT: Empresa {empresa.nombre} no tiene dueño con email.")
+            return False
+
+        fecha_inicio, fecha_fin = _get_weekly_dates()
+        
+        # Obtener visitas de la empresa en el rango, excluyendo al dueño
+        visitas = Visita.query.filter(
+            Visita.empresa_id == empresa.id,
+            Visita.fecha >= fecha_inicio,
+            Visita.fecha <= fecha_fin,
+            Visita.supervisor_id != empresa.user_id
+        ).all()
+
+        if not visitas:
+            print(f"DEBUG REPORT: No hay visitas para {empresa.nombre} en el periodo.")
+            # Opcional: enviar reporte vacío o no enviar nada. El usuario pidió reporte de cuantas visitas, 
+            # si son 0 igual es información valiosa.
+            # return False 
+
+        # Agrupar por supervisor
+        stats = {}
+        for v in visitas:
+            sup_nombre = v.supervisor.nombre
+            stats[sup_nombre] = stats.get(sup_nombre, 0) + 1
+        
+        detail = [{'nombre': k, 'cantidad': v} for k, v in sorted(stats.items(), key=lambda x: x[1], reverse=True)]
+        
+        total_visitas = len(visitas)
+        total_supervisores = len(stats)
+        chart_url = _generate_chart_url(detail) if detail else "https://quickchart.io/chart?c=%7Btype:'bar',data:%7Blabels:['Sin%20Visitas'],datasets:%5B%7Blabel:'Visitas',data:%5B0%5D%7D%5D%7D%7D"
+
+        asunto = f"Reporte Semanal de Visitas: {fecha_inicio.strftime('%d/%b')} - {fecha_fin.strftime('%d/%b')}"
+        
+        cuerpo_html = render_template(
+            'email_reporte_semanal.html',
+            empresa_nombre=empresa.nombre,
+            empresa_logo=empresa.logo_url,
+            owner_nombre=owner.nombre,
+            fecha_inicio=fecha_inicio.strftime('%d/%m/%Y'),
+            fecha_fin=fecha_fin.strftime('%d/%m/%Y'),
+            total_visitas=total_visitas,
+            total_supervisores=total_supervisores,
+            chart_url=chart_url,
+            detail=detail,
+            dashboard_url=request.host_url,
+            year=datetime.now().year
+        )
+
+        msg = Message(
+            subject=asunto,
+            recipients=[owner.email],
+            html=cuerpo_html
+        )
+        
+        mail.send(msg)
+        print(f"DEBUG REPORT: Reporte enviado a {owner.email} para empresa {empresa.nombre}")
+        return True
+    except Exception as e:
+        print(f"ERROR enviando reporte semanal para {empresa.nombre}: {str(e)}")
+        return False
+
+@routes.route('/api/admin/trigger-weekly-reports', methods=['GET'])
+def trigger_weekly_reports():
+    """Trigger manual o vía cron para enviar todos los reportes semanales"""
+    secret = request.args.get('secret')
+    expected_secret = current_app.config.get('REPORT_SECRET')
+    
+    if not expected_secret or secret != expected_secret:
+        return jsonify({'message': 'No autorizado'}), 401
+    
+    empresas = Empresa.query.all()
+    count = 0
+    for emp in empresas:
+        if _enviar_reporte_semanal_empresa(emp):
+            count += 1
+            
+    return jsonify({
+        'message': f'Proceso completado. Reportes enviados exitosamente: {count}/{len(empresas)}',
+        'timestamp': datetime.now().isoformat()
+    }), 200
