@@ -28,11 +28,12 @@ const VisitaForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [clientes, setClientes] = useState([]);
-  const [supervisores, setSupervisores] = useState([]);
+  const currentUserId = localStorage.getItem('userId');
+  const currentUserName = localStorage.getItem('userName');
 
   const [form, setForm] = useState({
     cliente_id: '',
-    supervisor_id: '',
+    supervisor_id: currentUserId || '',
     fecha: new Date().toISOString().split('T')[0],
     hora: new Date().toTimeString().slice(0, 5), // Formato HH:MM
     conclusiones: ''
@@ -68,7 +69,6 @@ const VisitaForm = () => {
 
   useEffect(() => {
     loadClientes();
-    loadSupervisores();
     if (id) {
       loadVisita();
     }
@@ -82,19 +82,6 @@ const VisitaForm = () => {
       console.error('Error cargando clientes:', err);
     }
   };
-
-  const loadSupervisores = async () => {
-    try {
-      const response = await axios.get('/usuarios');
-      const supervisoresData = response.data.filter(user =>
-        user.rol === 'supervisor'
-      );
-      setSupervisores(supervisoresData);
-    } catch (err) {
-      console.error('Error cargando supervisores:', err);
-    }
-  };
-
 
   const addZona = (seccion) => {
     const nuevaZona = {
@@ -295,19 +282,15 @@ const VisitaForm = () => {
                 </FormControl>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Supervisor *</InputLabel>
-                  <Select
-                    value={form.supervisor_id}
-                    onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
-                  >
-                    {supervisores.map(supervisor => (
-                      <MenuItem key={supervisor.id} value={supervisor.id}>
-                        {supervisor.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <TextField
+                  label="Supervisor"
+                  value={currentUserName || 'Cargando...'}
+                  fullWidth
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                  helperText="Supervisor asignado automáticamente"
+                />
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
