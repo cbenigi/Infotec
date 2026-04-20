@@ -135,11 +135,21 @@ const Dashboard = () => {
       let url = '/visitas';
       try {
         const emp = await axios.get('/empresa');
-        if (emp.data?.exists && emp.data.id) url = `/visitas?empresa_id=${emp.data.id}`;
+        if (emp.data?.exists && emp.data.id) {
+          // Si es el dueño, pedir todas para ver al equipo. Si no, solo lo de la empresa.
+          if (emp.data.es_propietario) {
+            url = `/visitas?empresa_id=${emp.data.id}&all=true`;
+          } else {
+            url = `/visitas?empresa_id=${emp.data.id}`;
+          }
+        }
       } catch {}
 
       const role = localStorage.getItem('rol');
+      // Si la URL sigue siendo básica y es admin, pedir todo
       if (url === '/visitas' && role === 'admin') url = '/visitas?all=true';
+      
+      // Solo si no se ha definido una empresa o admin, filtrar por supervisor individual
       if (url === '/visitas') {
         const subId = localStorage.getItem('userId');
         if (subId) url = `/visitas?supervisor_id=${subId}`;

@@ -987,12 +987,16 @@ def get_visitas():
 
         # Si el usuario tiene empresa (propia o compartida), priorizar filtro por empresa
         empresa = _obtener_empresa_actual(user_id) if user_id else None
-
-        if all_flag and user and user.rol == 'admin':
+        
+        # El dueño o admin puede ver todo si usa all=true
+        if all_flag and user and (user.rol == 'admin' or (empresa and empresa.user_id == user_id)):
             visitas = Visita.query.order_by(Visita.fecha.desc()).all()
         elif empresa_id_q:
             visitas = Visita.query.filter_by(empresa_id=empresa_id_q).order_by(Visita.fecha.desc()).all()
         elif empresa:
+            # Si es dueño, mostrar todo lo de su empresa. 
+            # Si el supervisor no vinculó la empresa, pero el dueño quiere ver todo, 
+            # podríamos ampliar esto, pero por ahora filtramos por empresa_id.
             visitas = Visita.query.filter_by(empresa_id=empresa.id).order_by(Visita.fecha.desc()).all()
         elif supervisor_id_q:
             visitas = Visita.query.filter_by(supervisor_id=supervisor_id_q).order_by(Visita.fecha.desc()).all()
@@ -1327,8 +1331,9 @@ def get_cotizaciones():
             return jsonify({'message': 'No hay empresa asociada al usuario'}), 404
         
         # Filtrar cotizaciones por empresa
-        if user.rol == 'admin':
-            # Admin puede ver todas las cotizaciones de la empresa
+        is_owner = empresa.user_id == user_id
+        if user.rol == 'admin' or is_owner:
+            # Admin o Dueño puede ver todas las cotizaciones de la empresa
             cotizaciones = Cotizacion.query.filter_by(empresa_id=empresa.id).order_by(Cotizacion.fecha_creacion.desc()).all()
         else:
             # Supervisores solo ven sus propias cotizaciones
@@ -1572,7 +1577,8 @@ def get_ordenes_compra():
             return jsonify({'message': 'Debes registrar una empresa antes de gestionar órdenes de compra'}), 400
 
         query = OrdenCompra.query.filter_by(empresa_id=empresa.id).order_by(OrdenCompra.fecha_creacion.desc())
-        if user.rol != 'admin':
+        is_owner = empresa.user_id == user_id
+        if user.rol != 'admin' and not is_owner:
             query = query.filter_by(supervisor_id=user_id)
 
         ordenes = query.all()
