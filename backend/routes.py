@@ -176,6 +176,7 @@ def login():
             session.permanent = True
         return jsonify({
             'message': 'Login exitoso', 
+            'user_id': user.id,
             'rol': user.rol,
             'nombre': user.nombre
         }), 200
@@ -293,6 +294,7 @@ def create_usuario():
         
         return jsonify({
             'message': 'Usuario creado y sesión iniciada',
+            'user_id': user.id,
             'rol': user.rol,
             'nombre': user.nombre
         }), 201

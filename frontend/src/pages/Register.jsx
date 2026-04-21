@@ -16,10 +16,17 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      await axios.post('/usuarios', form);
+      const res = await axios.post('/usuarios', form);
       
-      // Guardar nombre del usuario
+      // Guardar datos básicos
       localStorage.setItem('userName', form.nombre);
+      if (res.data.user_id) {
+        localStorage.setItem('userId', String(res.data.user_id));
+      }
+      if (res.data.rol) {
+        localStorage.setItem('rol', res.data.rol);
+      }
+      localStorage.setItem('token', 'basic');
       
       // Verificar si el usuario tiene empresa registrada
       const empresaRes = await axios.get('/empresa');

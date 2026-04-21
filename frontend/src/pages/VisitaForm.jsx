@@ -114,8 +114,8 @@ const VisitaForm = () => {
   };
 
   const handleSubmit = async () => {
-    if (!form.cliente_id || !form.supervisor_id) {
-      alert('Por favor selecciona cliente y supervisor');
+    if (!form.cliente_id || !form.supervisor_id || form.supervisor_id === 'undefined') {
+      alert('Error: No se detectó tu identificación de supervisor. Por favor, cierra sesión e ingresa nuevamente.');
       return;
     }
 
