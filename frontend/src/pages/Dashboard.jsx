@@ -261,17 +261,19 @@ const Dashboard = () => {
                 Nuevo Proveedor
               </Button>
             </Grid>
-            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
-              <Button 
-                variant="contained" 
-                onClick={() => navigate('/supervisores/new')}
-                startIcon={<AddIcon />}
-                fullWidth
-                sx={{ py: 2, borderRadius: 2, flexDirection: 'column', gap: 1, bgcolor: '#ed6c02' }}
-              >
-                Nuevo Supervisor
-              </Button>
-            </Grid>
+            {rol !== 'supervisor' && (
+              <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+                <Button 
+                  variant="contained" 
+                  onClick={() => navigate('/supervisores/new')}
+                  startIcon={<AddIcon />}
+                  fullWidth
+                  sx={{ py: 2, borderRadius: 2, flexDirection: 'column', gap: 1, bgcolor: '#ed6c02' }}
+                >
+                  Nuevo Supervisor
+                </Button>
+              </Grid>
+            )}
             <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
               <Button 
                 variant="outlined" 
